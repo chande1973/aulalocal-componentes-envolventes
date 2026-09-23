@@ -72,6 +72,13 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
     private val _isProfileEditUnlocked = MutableStateFlow(false)
     val isProfileEditUnlocked = _isProfileEditUnlocked.asStateFlow()
 
+    private val _classEndedNotice = MutableStateFlow<String?>(null)
+    val classEndedNotice = _classEndedNotice.asStateFlow()
+
+    fun dismissClassEndedNotice() {
+        _classEndedNotice.value = null
+    }
+
     fun unlockProfileEdit() {
         _isProfileEditUnlocked.value = true
     }
@@ -445,6 +452,7 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                         },
                         onExpelled = { 
                             unlockAndDisconnectStudent()
+                            _classEndedNotice.value = getApplication<Application>().getString(R.string.msg_class_ended)
                             viewModelScope.launch { _uiEvents.emit(getApplication<Application>().getString(R.string.msg_class_ended)) }
                         },
                         onFailure = { 

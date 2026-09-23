@@ -34,10 +34,45 @@ fun StudentDashboardBanners(
     isStudyModeActive: Boolean,
     teacherMsg: String,
     versionUpdateMsg: String? = null,
+    classEndedMsg: String? = null,
     onDismissVersionMsg: () -> Unit = {},
+    onDismissClassEndedMsg: () -> Unit = {},
     onConnectClick: () -> Unit
 ) {
     Column {
+        // Banner de Clase Finalizada por el Profesor
+        if (!classEndedMsg.isNullOrEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                colors = CardDefaults.cardColors(containerColor = StatusSuccess.copy(alpha = 0.15f)),
+                border = BorderStroke(1.dp, StatusSuccess.copy(alpha = 0.6f)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.CheckCircle, null, tint = StatusSuccess)
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            text = "CLASE FINALIZADA",
+                            color = StatusSuccess,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 11.sp,
+                            letterSpacing = 1.sp
+                        )
+                        Text(
+                            text = classEndedMsg,
+                            color = TextPrimary,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    IconButton(onClick = onDismissClassEndedMsg) {
+                        Icon(Icons.Default.Close, null, tint = TextSecondary, modifier = Modifier.size(16.dp))
+                    }
+                }
+            }
+        }
+
         // Banner de Actualización de Versión de Curso
         if (!versionUpdateMsg.isNullOrEmpty()) {
             Card(

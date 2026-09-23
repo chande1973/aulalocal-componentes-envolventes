@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -49,7 +50,7 @@ fun TeacherUnitCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(
-                    imageVector = if (isActive) Icons.Default.Sensors else Icons.Default.MenuBook,
+                    imageVector = if (isActive) Icons.Default.Sensors else Icons.AutoMirrored.Filled.MenuBook,
                     contentDescription = null,
                     tint = if (isActive) StatusSuccess else Color.Gray,
                     modifier = Modifier.size(24.dp)
@@ -122,19 +123,6 @@ fun TeacherUnitCard(
                 )
             }
         }
-    }
-}
-
-@Composable
-fun TeacherToggle(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit, activeColor: Color) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(45.dp)) {
-        Text(label, fontSize = 8.sp, color = Color.Gray)
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(checkedThumbColor = activeColor),
-            modifier = Modifier.scale(0.7f)
-        )
     }
 }
 

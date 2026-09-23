@@ -212,12 +212,15 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
             Column(Modifier.padding(padding).fillMaxSize().padding(16.dp)) {
                 if (activeTab == StudentTab.Class && studyingUnit == null) {
                     val versionUpdateMsg by mainViewModel.courseVersionUpdateMessage.collectAsStateWithLifecycle()
+                    val classEndedNotice by studentViewModel.classEndedNotice.collectAsStateWithLifecycle()
                     StudentDashboardBanners(
                         isListenerMode = isListenerMode,
                         isStudyModeActive = isStudyModeActive,
                         teacherMsg = teacherMsg,
                         versionUpdateMsg = versionUpdateMsg,
+                        classEndedMsg = classEndedNotice,
                         onDismissVersionMsg = { mainViewModel.dismissVersionNotification() },
+                        onDismissClassEndedMsg = { studentViewModel.dismissClassEndedNotice() },
                         onConnectClick = { showConnectionDialog = true }
                     )
                 }
