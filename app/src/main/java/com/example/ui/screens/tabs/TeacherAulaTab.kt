@@ -13,6 +13,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -24,11 +26,13 @@ import com.example.data.SyncedStudent
 import com.example.data.LocalNetworkManager
 import com.example.ui.components.StudentRowTeacher
 import com.example.ui.theme.*
+import org.json.JSONArray
 
 @Composable
 fun TeacherAulaTab(
     isServerRunning: Boolean,
     liveSection: String,
+    liveActiveUnit: Int = 1,
     sections: List<LocalSection>,
     allConnectedStudents: List<SyncedStudent>,
     onAddSection: (String, Int) -> Unit,
@@ -135,6 +139,61 @@ fun TeacherAulaTab(
                             )
                             Text(liveSection, style = MaterialTheme.typography.headlineMedium, color = Color.White, fontWeight = FontWeight.ExtraBold)
                         }
+                    }
+                }
+
+                val officialStudents = allConnectedStudents.filter { LocalNetworkManager.areSectionsEqual(it.sectionName, liveSection) }
+                val totalOfficial = officialStudents.size
+                val readStudentsCount = officialStudents.count { student ->
+                    val readsList = try {
+                        JSONArray(student.readProgressString)
+                    } catch (e: Exception) {
+                        JSONArray()
+                    }
+                    var isRead = false
+                    for (i in 0 until readsList.length()) {
+                        if (readsList.optInt(i) == liveActiveUnit) isRead = true
+                    }
+                    isRead
+                }
+                val readPct = if (totalOfficial > 0) (readStudentsCount.toFloat() / totalOfficial.toFloat()) else 0f
+
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    colors = CardDefaults.cardColors(containerColor = CosmicDarkSurface),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, AccentCyan.copy(alpha = 0.3f))
+                ) {
+                    Column(Modifier.padding(14.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.AutoMirrored.Filled.MenuBook, null, tint = AccentCyan, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    text = "Progreso de Lectura (Unidad $liveActiveUnit)",
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White,
+                                    fontSize = 13.sp
+                                )
+                            }
+                            Text(
+                                text = "$readStudentsCount / $totalOfficial (${(readPct * 100).toInt()}%)",
+                                fontWeight = FontWeight.ExtraBold,
+                                color = AccentCyan,
+                                fontSize = 13.sp
+                            )
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        LinearProgressIndicator(
+                            progress = { readPct },
+                            modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
+                            color = AccentCyan,
+                            trackColor = Color.DarkGray.copy(alpha = 0.5f)
+                        )
                     }
                 }
             }

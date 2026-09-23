@@ -269,7 +269,8 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
                     onGoToAula = { activeTab = 1 }
                 )
                 1 -> TeacherAulaTab(
-                    isServerRunning = isServerRunning, liveSection = liveSection, sections = sections,
+                    isServerRunning = isServerRunning, liveSection = liveSection, liveActiveUnit = liveActiveUnit,
+                    sections = sections,
                     allConnectedStudents = allConnectedStudents,
                     onAddSection = { name, weeks -> teacherViewModel.addSection(name, weeks, {}, {}) },
                     onSelectSection = { teacherViewModel.selectSection(it) },

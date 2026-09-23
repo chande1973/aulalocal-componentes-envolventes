@@ -278,7 +278,8 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
                             isLocked = isLocked,
                             enabledExams = enabledExams,
                             studyProgress = studyProgress,
-                            onTakeExam = { isTakingExam = true }
+                            onTakeExam = { isTakingExam = true },
+                            onMarkRead = { studentViewModel.markUnitAsRead(it) }
                         )
                     }
                 }

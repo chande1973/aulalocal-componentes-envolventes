@@ -5,14 +5,18 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.OndemandVideo
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,6 +31,7 @@ import com.example.data.model.UnitData
 import com.example.ui.components.VideoPlayer
 import com.example.ui.theme.AccentAmber
 import com.example.ui.theme.AccentCyan
+import com.example.ui.theme.CosmicDarkSurface
 import com.example.ui.theme.StatusError
 import com.example.ui.theme.StatusSuccess
 import java.util.Locale
@@ -38,49 +43,178 @@ fun StudentStudyContent(
     isLocked: Boolean,
     enabledExams: String,
     studyProgress: List<UnitProgress> = emptyList(),
-    onTakeExam: () -> Unit
+    onTakeExam: () -> Unit,
+    onMarkRead: (Int) -> Unit = {}
 ) {
+    val scrollState = rememberScrollState()
+    val maxScroll = scrollState.maxValue
+    val currentScroll = scrollState.value
+    val scrollProgress = if (maxScroll > 0) (currentScroll.toFloat() / maxScroll.toFloat()).coerceIn(0f, 1f) else 1f
+    val isScrollAtBottom = scrollProgress >= 0.90f || maxScroll == 0
+
     val examActive = isLocked && enabledExams.split(",").filter { it.isNotEmpty() }.contains(unit.index.toString())
     val unitProgress = studyProgress.find { it.unitIndex == unit.index }
     val hasCompletedExam = unitProgress?.examCompleted == true || unitProgress?.examGrade != null
+    var isReadLocal by remember(unit.index, unitProgress?.isRead) { mutableStateOf(unitProgress?.isRead == true) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 8.dp)
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scrollState)
     ) {
-        // 1. PRIMERO: Lectura Teórica del Tema
+        // BARRA DE PROGRESO DE LECTURA (Gamificada)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            colors = CardDefaults.cardColors(containerColor = CosmicDarkSurface),
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, AccentCyan.copy(alpha = 0.2f))
+        ) {
+            Column(Modifier.padding(12.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = if (isReadLocal) Icons.Default.CheckCircle else Icons.Default.MenuBook,
+                            contentDescription = null,
+                            tint = if (isReadLocal) StatusSuccess else AccentCyan,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = if (isReadLocal) "Lectura Completada" else "Avance de Lectura",
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            fontSize = 12.sp
+                        )
+                    }
+                    Text(
+                        text = if (isReadLocal) "100%" else "${(scrollProgress * 100).toInt()}%",
+                        fontWeight = FontWeight.ExtraBold,
+                        color = if (isReadLocal) StatusSuccess else AccentCyan,
+                        fontSize = 12.sp
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
+                LinearProgressIndicator(
+                    progress = { if (isReadLocal) 1f else scrollProgress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = if (isReadLocal) StatusSuccess else AccentCyan,
+                    trackColor = Color.DarkGray.copy(alpha = 0.5f)
+                )
+            }
+        }
+
+        // 1. LECTURA TEÓRICA DEL TEMA
         Text(
             text = unit.topicText,
             color = Color.White,
             lineHeight = 22.sp,
             fontSize = 16.sp,
-            modifier = Modifier.padding(bottom = 24.dp)
+            modifier = Modifier.padding(bottom = 20.dp)
         )
 
-        // 2. SEGUNDO: Video Explicativo de la Clase (después de la lectura)
+        // Botón de Confirmación de Lectura (si aún no está leída)
+        if (!isReadLocal) {
+            Button(
+                onClick = {
+                    isReadLocal = true
+                    onMarkRead(unit.index)
+                },
+                enabled = isScrollAtBottom,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .padding(bottom = 16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = StatusSuccess,
+                    disabledContainerColor = Color.DarkGray.copy(alpha = 0.5f)
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(Icons.Default.Check, null)
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = if (isScrollAtBottom) "📖 COMPLETAR LECTURA Y DESBLOQUEAR VIDEO" else "📜 DESPLÁZATE HASTA EL FINAL PARA COMPLETAR",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp
+                )
+            }
+        }
+
+        // 2. VIDEO EXPLICATIVO (CANDADO ESTRICTO SI NO HA LEÍDO)
         if (videoUri != null || !unit.videoFile.isNullOrEmpty()) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     Icons.Default.OndemandVideo,
                     contentDescription = null,
-                    tint = AccentCyan,
+                    tint = if (isReadLocal) AccentCyan else Color.Gray,
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
                     text = "Video Explicativo de la Clase",
-                    color = AccentCyan,
+                    color = if (isReadLocal) AccentCyan else Color.Gray,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
                 )
             }
 
-            if (videoUri != null) {
+            if (!isReadLocal) {
+                // CANDADO ESTRICTO DE VIDEO
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp),
+                    colors = CardDefaults.cardColors(containerColor = CosmicDarkSurface),
+                    border = BorderStroke(1.dp, AccentAmber.copy(alpha = 0.4f)),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(20.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(AccentAmber.copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Lock, null, tint = AccentAmber, modifier = Modifier.size(24.dp))
+                        }
+                        Spacer(Modifier.width(16.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                text = "🔒 Video Bloqueado",
+                                fontWeight = FontWeight.Bold,
+                                color = AccentAmber,
+                                fontSize = 14.sp
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = "Lee todo el contenido teórico de la clase y presiona 'Completar Lectura' para desbloquear el video.",
+                                color = Color.LightGray,
+                                fontSize = 11.sp,
+                                lineHeight = 15.sp
+                            )
+                        }
+                    }
+                }
+            } else if (videoUri != null) {
                 VideoPlayer(videoUri = videoUri)
                 Spacer(Modifier.height(24.dp))
             } else {
@@ -89,7 +223,7 @@ fun StudentStudyContent(
             }
         }
 
-        // 3. TERCERO: Evaluación (Examen / Estado Completado)
+        // 3. EVALUACIÓN (EXAMEN / RECUPERATIVO)
         if (hasCompletedExam) {
             Card(
                 modifier = Modifier
@@ -105,7 +239,7 @@ fun StudentStudyContent(
                 ) {
                     Icon(
                         Icons.Default.CheckCircle,
-                        contentDescription = null, 
+                        contentDescription = null,
                         tint = StatusSuccess,
                         modifier = Modifier.size(28.dp)
                     )

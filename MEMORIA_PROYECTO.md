@@ -122,6 +122,12 @@ COURSE_INFO|Título del Curso|Versión|Descripción del Curso
       > **`✅ CLASE FINALIZADA`**  
       > *"La clase de hoy ha concluido. Tu asistencia ha sido registrada."*
 
+14. **Gamificación de Lectura, Candado Estricto de Video y Monitoreo del Profesor**:
+    - **Barra de Avance de Lectura**: Muestra el progreso de desplazamiento en tiempo real (`0%` a `100%`) en la pantalla del alumno (`StudentStudyContent.kt`).
+    - **Candado de Video Estricto**: El video explicativo permanece bloqueado (`🔒 Video Bloqueado`) hasta que el alumno se desplace al final del texto y presione **`[ 📖 COMPLETAR LECTURA Y DESBLOQUEAR VIDEO ]`**.
+    - **Monitoreo Grupal en Tiempo Real**: En la pestaña Aula del profesor (`TeacherAulaTab.kt`), se muestra la tarjeta de avance de lectura de la clase en vivo (`📖 Progreso de Lectura: X / Y Alumnos - Z%`).
+    - **Monitoreo Individual por Alumno**: En el diálogo detallado del alumno (`StudentDetailAndRecuperativoDialog`), se muestra el estado de lectura de cada unidad (`📖 Lectura: Completada` vs `⏳ Lectura: Pendiente`).
+
 ---
 
 ## 📌 5. Bitácora de Siguientes Pasos y Mejoras Solicitadas por el Usuario
@@ -133,6 +139,7 @@ COURSE_INFO|Título del Curso|Versión|Descripción del Curso
 - [x] **Mejora 5**: Nueva semaforización pedagógica (Inicio limpio en **AL DÍA** 🔵) y Sistema de **Racha de Constancia (🔥)**.
 - [x] **Mejora 6**: Simplificación del control de unidades del profesor a un único botón unificado **`[ 🟢 IMPARTIR CLASE ]`**.
 - [x] **Mejora 7**: Banner visual permanente de **`CLASE FINALIZADA`** en la pantalla principal del alumno.
+- [x] **Mejora 8**: Gamificación de lectura, Candado Estricto de Video (Lectura ➔ Video) y Monitoreo de Lectura Grupal e Individual para el profesor.
 - [ ] *(Espacio para ir anotando las siguientes observaciones a medida que se pruebe la app)*
 
 ---

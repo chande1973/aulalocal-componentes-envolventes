@@ -19,6 +19,7 @@ import com.example.data.SyncedStudent
 import com.example.data.model.UnitData
 import com.example.ui.theme.*
 import kotlinx.coroutines.flow.Flow
+import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
@@ -73,6 +74,18 @@ fun StudentDetailAndRecuperativoDialog(
                         val gradeStr = gradesObj.optString(unit.index.toString(), "")
                         val hasGrade = gradeStr.isNotEmpty()
 
+                        val readsList = remember(student.readProgressString) {
+                            try {
+                                JSONArray(student.readProgressString)
+                            } catch (e: Exception) {
+                                JSONArray()
+                            }
+                        }
+                        var isUnitRead = false
+                        for (i in 0 until readsList.length()) {
+                            if (readsList.optInt(i) == unit.index) isUnitRead = true
+                        }
+
                         Card(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                             colors = CardDefaults.cardColors(containerColor = CosmicDarkSurface),
@@ -85,12 +98,21 @@ fun StudentDetailAndRecuperativoDialog(
                             ) {
                                 Column(Modifier.weight(1f)) {
                                     Text("Unidad ${unit.index}: ${unit.title}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                                    Text(
-                                        text = if (hasGrade) "Nota: $gradeStr / 20" else "Estado: Sin presentar",
-                                        fontSize = 11.sp,
-                                        color = if (hasGrade) AccentCyan else Color.Gray,
-                                        fontWeight = if (hasGrade) FontWeight.Bold else FontWeight.Normal
-                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = if (isUnitRead) "📖 Lectura: Completada" else "⏳ Lectura: Pendiente",
+                                            fontSize = 10.sp,
+                                            color = if (isUnitRead) StatusSuccess else Color.Gray,
+                                            fontWeight = if (isUnitRead) FontWeight.Bold else FontWeight.Normal
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(
+                                            text = if (hasGrade) "|  Nota: $gradeStr / 20" else "|  Examen: Sin presentar",
+                                            fontSize = 10.sp,
+                                            color = if (hasGrade) AccentCyan else Color.Gray,
+                                            fontWeight = if (hasGrade) FontWeight.Bold else FontWeight.Normal
+                                        )
+                                    }
                                 }
 
                                 if (hasGrade) {
