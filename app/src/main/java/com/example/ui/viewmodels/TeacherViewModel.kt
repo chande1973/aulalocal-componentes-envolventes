@@ -176,6 +176,16 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
             val section = dao.getSectionByName(sectionName) ?: return@launch
             val profile = dao.getUserProfile() ?: return@launch
 
+            // Habilitar automáticamente la lectura de la unidad al impartirla
+            val reads = section.enabledReadUnits.split(",").filter { it.isNotEmpty() }.toMutableSet()
+            reads.add(unitIndex.toString())
+            val newReads = reads.joinToString(",")
+            
+            if (newReads != section.enabledReadUnits) {
+                dao.insertSection(section.copy(enabledReadUnits = newReads))
+                _enabledReadUnits.value = newReads
+            }
+
             // Determinar si el examen está activo para esta nueva unidad
             val isExamNow = section.enabledExamUnits.split(",").filter { it.isNotEmpty() }.contains(unitIndex.toString())
             _liveIsExamActive.value = isExamNow
@@ -184,14 +194,14 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
                 teacher = "${profile.firstName} ${profile.lastName}",
                 section = sectionName,
                 unit = unitIndex,
-                reading = _liveIsReadingActive.value,
+                reading = true,
                 exam = isExamNow,
-                reads = section.enabledReadUnits,
+                reads = newReads,
                 exams = section.enabledExamUnits,
                 msg = _teacherMessage.value,
                 total = section.totalClasses
             )
-            _uiEvents.emit("Unidad $unitIndex marcada como activa para los alumnos")
+            _uiEvents.emit("✅ Impartiendo Unidad $unitIndex en vivo para los alumnos")
         }
     }
 

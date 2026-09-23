@@ -110,6 +110,12 @@ COURSE_INFO|Título del Curso|Versión|Descripción del Curso
     - Se integró la tarjeta **`🔥 Racha de Constancia`** (`StreakCard`) en la vista de estatus (`StudentStatusTab.kt`).
     - Contabiliza y premia la asistencia consecutiva y unidades completadas con mensajes motivacionales (*"🔥 ¡Vas genial! Llevas N interacciones en racha"*).
 
+12. **Simplificación del Control de Unidades del Profesor (`[ 🟢 IMPARTIR CLASE ]`)**:
+    - Se eliminó la duplicidad confusa de controles (tarjeta vs. switch "Leer").
+    - Se unificó en un único botón principal de acción directa: **`[ 🟢 IMPARTIR CLASE ]`** / **`[ 📡 IMPARTIENDO EN VIVO ]`**.
+    - Un solo clic activa la unidad para la transmisión en vivo por la red local Y desbloquea su contenido de lectura para todos los estudiantes en un solo paso.
+    - Se mantiene el chip independiente **`[ 📝 EXAMEN ]`** para activar evaluaciones según el criterio del profesor.
+
 ---
 
 ## 📌 5. Bitácora de Siguientes Pasos y Mejoras Solicitadas por el Usuario
@@ -119,6 +125,7 @@ COURSE_INFO|Título del Curso|Versión|Descripción del Curso
 - [x] **Mejora 3**: Reordenamiento pedagógico de la pantalla de unidad (Lectura Teórica -> Video -> Examen).
 - [x] **Mejora 4**: Menú de Configuración en el alumno con acceso a Consola de Logs (🐛) y Edición de datos protegida con Autorización del Profesor (remota por Wi-Fi o PIN Maestro `1234`).
 - [x] **Mejora 5**: Nueva semaforización pedagógica (Inicio limpio en **AL DÍA** 🔵) y Sistema de **Racha de Constancia (🔥)**.
+- [x] **Mejora 6**: Simplificación del control de unidades del profesor a un único botón unificado **`[ 🟢 IMPARTIR CLASE ]`**.
 - [ ] *(Espacio para ir anotando las siguientes observaciones a medida que se pruebe la app)*
 
 ---

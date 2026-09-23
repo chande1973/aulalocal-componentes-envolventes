@@ -68,10 +68,8 @@ fun TeacherUnitsTab(
                     TeacherUnitCard(
                         unit = unit,
                         isActive = liveActiveUnit == unit.index,
-                        isRead = enabledReads.split(",").contains(unit.index.toString()),
                         isExam = enabledExams.split(",").contains(unit.index.toString()),
                         onActivate = { onActivateUnit(unit.index) },
-                        onToggleRead = { onToggleRead(unit.index, it) },
                         onToggleExam = { onToggleExam(unit.index, it) }
                     )
                 }
