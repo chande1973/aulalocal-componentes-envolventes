@@ -279,7 +279,8 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
                             enabledExams = enabledExams,
                             studyProgress = studyProgress,
                             onTakeExam = { isTakingExam = true },
-                            onMarkRead = { studentViewModel.markUnitAsRead(it) }
+                            onMarkRead = { studentViewModel.markUnitAsRead(it) },
+                            onUpdateReadingProgress = { idx, pct, scroll -> studentViewModel.updateReadingProgress(idx, pct, scroll) }
                         )
                     }
                 }

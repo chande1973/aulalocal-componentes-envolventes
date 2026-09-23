@@ -83,6 +83,8 @@ data class AttendanceRecord(
 data class UnitProgress(
     @PrimaryKey val unitIndex: Int, // 1 to 11
     val isRead: Boolean = false,
+    val readPercentage: Int = 0,
+    val lastScrollPosition: Int = 0,
     val isChallengeDone: Boolean = false,
     val examGrade: Float? = null,
     val examCompleted: Boolean = false
@@ -199,6 +201,9 @@ interface ClassroomDao {
 
     @Query("UPDATE unit_progress SET isRead = :isRead WHERE unitIndex = :unitIndex")
     suspend fun updateReadProgress(unitIndex: Int, isRead: Boolean)
+
+    @Query("UPDATE unit_progress SET readPercentage = :percentage, lastScrollPosition = :scrollPos, isRead = CASE WHEN :percentage >= 100 THEN 1 ELSE isRead END WHERE unitIndex = :unitIndex")
+    suspend fun updateReadingProgressDetail(unitIndex: Int, percentage: Int, scrollPos: Int)
 
     @Query("UPDATE unit_progress SET isChallengeDone = :isChallengeDone WHERE unitIndex = :unitIndex")
     suspend fun updateChallengeProgress(unitIndex: Int, isChallengeDone: Boolean)

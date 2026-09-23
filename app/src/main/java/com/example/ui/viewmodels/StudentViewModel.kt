@@ -549,6 +549,18 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch(Dispatchers.IO) { dao.updateChallengeProgress(unitIndex, true) }
     }
 
+    fun updateReadingProgress(unitIndex: Int, percentage: Int, scrollPos: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val existing = dao.getProgressForUnit(unitIndex)
+            if (existing == null) {
+                dao.insertUnitProgress(UnitProgress(unitIndex = unitIndex, readPercentage = percentage, lastScrollPosition = scrollPos, isRead = percentage >= 100))
+            } else {
+                val newPct = maxOf(existing.readPercentage, percentage)
+                dao.updateReadingProgressDetail(unitIndex, newPct, scrollPos)
+            }
+        }
+    }
+
     fun saveExamGrade(unitIndex: Int, grade: Float) {
         viewModelScope.launch(Dispatchers.IO) { 
             // Primero aseguramos que la fila existe, luego actualizamos

@@ -44,7 +44,8 @@ fun StudentStudyContent(
     enabledExams: String,
     studyProgress: List<UnitProgress> = emptyList(),
     onTakeExam: () -> Unit,
-    onMarkRead: (Int) -> Unit = {}
+    onMarkRead: (Int) -> Unit = {},
+    onUpdateReadingProgress: (unitIndex: Int, percentage: Int, scrollPos: Int) -> Unit = { _, _, _ -> }
 ) {
     val scrollState = rememberScrollState()
     val maxScroll = scrollState.maxValue
@@ -56,6 +57,22 @@ fun StudentStudyContent(
     val unitProgress = studyProgress.find { it.unitIndex == unit.index }
     val hasCompletedExam = unitProgress?.examCompleted == true || unitProgress?.examGrade != null
     var isReadLocal by remember(unit.index, unitProgress?.isRead) { mutableStateOf(unitProgress?.isRead == true) }
+
+    // RESTAURAR POSICIÓN DE DESPLAZAMIENTO (Scroll Memory)
+    LaunchedEffect(unit.index) {
+        val initialScroll = unitProgress?.lastScrollPosition ?: 0
+        if (initialScroll > 0) {
+            scrollState.scrollTo(initialScroll)
+        }
+    }
+
+    // ACTUALIZAR PROGRESO CONTINUO DE LECTURA
+    val currentPct = if (isReadLocal) 100 else (scrollProgress * 100).toInt()
+    LaunchedEffect(currentScroll, currentPct) {
+        if (currentScroll > 0 || currentPct > 0) {
+            onUpdateReadingProgress(unit.index, currentPct, currentScroll)
+        }
+    }
 
     Column(
         modifier = Modifier

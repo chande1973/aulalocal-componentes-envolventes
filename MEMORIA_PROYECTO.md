@@ -128,6 +128,11 @@ COURSE_INFO|Título del Curso|Versión|Descripción del Curso
     - **Monitoreo Grupal en Tiempo Real**: En la pestaña Aula del profesor (`TeacherAulaTab.kt`), se muestra la tarjeta de avance de lectura de la clase en vivo (`📖 Progreso de Lectura: X / Y Alumnos - Z%`).
     - **Monitoreo Individual por Alumno**: En el diálogo detallado del alumno (`StudentDetailAndRecuperativoDialog`), se muestra el estado de lectura de cada unidad (`📖 Lectura: Completada` vs `⏳ Lectura: Pendiente`).
 
+15. **Memoria de Continuidad de Lectura (*Scroll Memory*) para Cursos de 36 Semanas**:
+    - **Persistencia de Desplazamiento**: `UnitProgress` guarda en Room DB la posición exacta de lectura (`lastScrollPosition`) y el porcentaje de avance acumulado (`readPercentage`).
+    - **Reanudación Automática**: Al reabrir una unidad en posteriores encuentros/clases de 2 horas, la pantalla se desplaza automáticamente al punto exacto donde se quedó el alumno.
+    - **Monitoreo Grupal Porcentual**: El profesor observa el porcentaje de avance acumulado real de la clase (`📖 Avance Grupal: X / Y Alumnos - Z% Promedio`).
+
 ---
 
 ## 📌 5. Bitácora de Siguientes Pasos y Mejoras Solicitadas por el Usuario
@@ -140,6 +145,7 @@ COURSE_INFO|Título del Curso|Versión|Descripción del Curso
 - [x] **Mejora 6**: Simplificación del control de unidades del profesor a un único botón unificado **`[ 🟢 IMPARTIR CLASE ]`**.
 - [x] **Mejora 7**: Banner visual permanente de **`CLASE FINALIZADA`** en la pantalla principal del alumno.
 - [x] **Mejora 8**: Gamificación de lectura, Candado Estricto de Video (Lectura ➔ Video) y Monitoreo de Lectura Grupal e Individual para el profesor.
+- [x] **Mejora 9**: Memoria de Continuidad de Lectura (*Scroll Memory*) y avance porcentual acumulado para clases de 36 semanas / 2 horas.
 - [ ] *(Espacio para ir anotando las siguientes observaciones a medida que se pruebe la app)*
 
 ---

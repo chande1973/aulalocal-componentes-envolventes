@@ -27,6 +27,7 @@ import com.example.data.LocalNetworkManager
 import com.example.ui.components.StudentRowTeacher
 import com.example.ui.theme.*
 import org.json.JSONArray
+import org.json.JSONObject
 
 @Composable
 fun TeacherAulaTab(
@@ -144,19 +145,23 @@ fun TeacherAulaTab(
 
                 val officialStudents = allConnectedStudents.filter { LocalNetworkManager.areSectionsEqual(it.sectionName, liveSection) }
                 val totalOfficial = officialStudents.size
-                val readStudentsCount = officialStudents.count { student ->
-                    val readsList = try {
-                        JSONArray(student.readProgressString)
-                    } catch (e: Exception) {
-                        JSONArray()
-                    }
-                    var isRead = false
+                var totalClassReadPercentage = 0f
+                var readStudentsCount = 0
+
+                officialStudents.forEach { student ->
+                    val readsList = try { JSONArray(student.readProgressString) } catch (e: Exception) { JSONArray() }
+                    var p = 0
                     for (i in 0 until readsList.length()) {
-                        if (readsList.optInt(i) == liveActiveUnit) isRead = true
+                        val item = readsList.opt(i)
+                        if (item is Int && item == liveActiveUnit) p = 100
+                        else if (item is JSONObject && item.optInt("unitIndex") == liveActiveUnit) {
+                            p = item.optInt("pct", 0)
+                        }
                     }
-                    isRead
+                    if (p >= 100) readStudentsCount++
+                    totalClassReadPercentage += p
                 }
-                val readPct = if (totalOfficial > 0) (readStudentsCount.toFloat() / totalOfficial.toFloat()) else 0f
+                val avgClassReadPct = if (totalOfficial > 0) (totalClassReadPercentage / (totalOfficial * 100f)).coerceIn(0f, 1f) else 0f
 
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
@@ -181,7 +186,7 @@ fun TeacherAulaTab(
                                 )
                             }
                             Text(
-                                text = "$readStudentsCount / $totalOfficial (${(readPct * 100).toInt()}%)",
+                                text = "$readStudentsCount / $totalOfficial (${(avgClassReadPct * 100).toInt()}%)",
                                 fontWeight = FontWeight.ExtraBold,
                                 color = AccentCyan,
                                 fontSize = 13.sp
@@ -189,7 +194,7 @@ fun TeacherAulaTab(
                         }
                         Spacer(Modifier.height(8.dp))
                         LinearProgressIndicator(
-                            progress = { readPct },
+                            progress = { avgClassReadPct },
                             modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
                             color = AccentCyan,
                             trackColor = Color.DarkGray.copy(alpha = 0.5f)
