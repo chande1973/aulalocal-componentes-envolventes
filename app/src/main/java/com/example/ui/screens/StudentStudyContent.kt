@@ -9,11 +9,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.OndemandVideo
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -51,12 +54,15 @@ fun StudentStudyContent(
     val maxScroll = scrollState.maxValue
     val currentScroll = scrollState.value
     val scrollProgress = if (maxScroll > 0) (currentScroll.toFloat() / maxScroll.toFloat()).coerceIn(0f, 1f) else 1f
-    val isScrollAtBottom = scrollProgress >= 0.90f || maxScroll == 0
+    val isScrollAtBottom = scrollProgress >= 0.88f || maxScroll == 0
 
     val examActive = isLocked && enabledExams.split(",").filter { it.isNotEmpty() }.contains(unit.index.toString())
     val unitProgress = studyProgress.find { it.unitIndex == unit.index }
     val hasCompletedExam = unitProgress?.examCompleted == true || unitProgress?.examGrade != null
     var isReadLocal by remember(unit.index, unitProgress?.isRead) { mutableStateOf(unitProgress?.isRead == true) }
+
+    // Control dinámico del tamaño de fuente (Lector Inteligente)
+    var fontSizeSp by remember { mutableIntStateOf(16) }
 
     // RESTAURAR POSICIÓN DE DESPLAZAMIENTO (Scroll Memory)
     LaunchedEffect(unit.index) {
@@ -80,16 +86,16 @@ fun StudentStudyContent(
             .padding(horizontal = 8.dp)
             .verticalScroll(scrollState)
     ) {
-        // BARRA DE PROGRESO DE LECTURA (Gamificada)
+        // BARRA SUPERIOR DE PROGRESO Y CONTROLES DE LECTURA
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
             colors = CardDefaults.cardColors(containerColor = CosmicDarkSurface),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(16.dp),
             border = BorderStroke(1.dp, AccentCyan.copy(alpha = 0.2f))
         ) {
-            Column(Modifier.padding(12.dp)) {
+            Column(Modifier.padding(14.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -100,7 +106,7 @@ fun StudentStudyContent(
                             imageVector = if (isReadLocal) Icons.Default.CheckCircle else Icons.Default.MenuBook,
                             contentDescription = null,
                             tint = if (isReadLocal) StatusSuccess else AccentCyan,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(
@@ -110,14 +116,41 @@ fun StudentStudyContent(
                             fontSize = 12.sp
                         )
                     }
-                    Text(
-                        text = if (isReadLocal) "100%" else "${(scrollProgress * 100).toInt()}%",
-                        fontWeight = FontWeight.ExtraBold,
-                        color = if (isReadLocal) StatusSuccess else AccentCyan,
-                        fontSize = 12.sp
-                    )
+
+                    // Controles de tamaño de letra (A- / A+)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            onClick = { if (fontSizeSp > 13) fontSizeSp-- },
+                            color = Color.DarkGray.copy(alpha = 0.4f),
+                            shape = CircleShape,
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(Icons.Default.Remove, "Reducir letra", tint = Color.White, modifier = Modifier.size(14.dp))
+                            }
+                        }
+                        Text(
+                            text = "${fontSizeSp}sp",
+                            fontSize = 10.sp,
+                            color = Color.Gray,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 6.dp)
+                        )
+                        Surface(
+                            onClick = { if (fontSizeSp < 22) fontSizeSp++ },
+                            color = Color.DarkGray.copy(alpha = 0.4f),
+                            shape = CircleShape,
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(Icons.Default.Add, "Aumentar letra", tint = Color.White, modifier = Modifier.size(14.dp))
+                            }
+                        }
+                    }
                 }
-                Spacer(Modifier.height(6.dp))
+
+                Spacer(Modifier.height(8.dp))
+
                 LinearProgressIndicator(
                     progress = { if (isReadLocal) 1f else scrollProgress },
                     modifier = Modifier
@@ -130,14 +163,97 @@ fun StudentStudyContent(
             }
         }
 
-        // 1. LECTURA TEÓRICA DEL TEMA
-        Text(
-            text = unit.topicText,
-            color = Color.White,
-            lineHeight = 22.sp,
-            fontSize = 16.sp,
-            modifier = Modifier.padding(bottom = 20.dp)
-        )
+        // TARJETA E-BOOK DE LECTURA TEÓRICA
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 20.dp),
+            colors = CardDefaults.cardColors(containerColor = CosmicDarkSurface),
+            shape = RoundedCornerShape(20.dp),
+            border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.15f))
+        ) {
+            Column(Modifier.padding(18.dp)) {
+                // Header de la Unidad en el E-Book
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "UNIDAD ${unit.index}",
+                        fontWeight = FontWeight.ExtraBold,
+                        color = AccentCyan,
+                        fontSize = 11.sp,
+                        letterSpacing = 1.sp
+                    )
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Timer, null, tint = Color.Gray, modifier = Modifier.size(12.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = "~10-15 min",
+                            fontSize = 10.sp,
+                            color = Color.Gray
+                        )
+                    }
+                }
+
+                Text(
+                    text = unit.title,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    lineHeight = 22.sp,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                HorizontalDivider(Modifier.padding(bottom = 16.dp), color = Color.Gray.copy(alpha = 0.2f))
+
+                // Parseador Tipográfico del Contenido Teórico
+                val lines = unit.topicText.split("\n")
+                lines.forEach { line ->
+                    val trimmed = line.trim()
+                    when {
+                        trimmed.startsWith("###") || trimmed.startsWith("##") || trimmed.startsWith("#") -> {
+                            val headerText = trimmed.removePrefix("#").removePrefix("#").removePrefix("#").trim()
+                            Text(
+                                text = headerText,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = AccentCyan,
+                                fontSize = (fontSizeSp + 2).sp,
+                                lineHeight = ((fontSizeSp + 2) * 1.3f).sp,
+                                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+                            )
+                        }
+                        trimmed.startsWith("-") || trimmed.startsWith("*") -> {
+                            val bulletText = trimmed.removePrefix("-").removePrefix("*").trim()
+                            Row(modifier = Modifier.padding(start = 8.dp, bottom = 6.dp)) {
+                                Text("•", color = AccentCyan, fontWeight = FontWeight.Bold, fontSize = fontSizeSp.sp)
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    text = bulletText,
+                                    color = Color.White.copy(alpha = 0.9f),
+                                    fontSize = fontSizeSp.sp,
+                                    lineHeight = (fontSizeSp * 1.45f).sp
+                                )
+                            }
+                        }
+                        trimmed.isNotEmpty() -> {
+                            Text(
+                                text = trimmed,
+                                color = Color.White.copy(alpha = 0.9f),
+                                fontSize = fontSizeSp.sp,
+                                lineHeight = (fontSizeSp * 1.45f).sp,
+                                modifier = Modifier.padding(bottom = 12.dp)
+                            )
+                        }
+                        else -> {
+                            Spacer(Modifier.height(6.dp))
+                        }
+                    }
+                }
+            }
+        }
 
         // Botón de Confirmación de Lectura (si aún no está leída)
         if (!isReadLocal) {
@@ -149,19 +265,19 @@ fun StudentStudyContent(
                 enabled = isScrollAtBottom,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp)
-                    .padding(bottom = 16.dp),
+                    .height(54.dp)
+                    .padding(bottom = 20.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = StatusSuccess,
                     disabledContainerColor = Color.DarkGray.copy(alpha = 0.5f)
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(14.dp)
             ) {
                 Icon(Icons.Default.Check, null)
                 Spacer(Modifier.width(8.dp))
                 Text(
                     text = if (isScrollAtBottom) "📖 COMPLETAR LECTURA Y DESBLOQUEAR VIDEO" else "📜 DESPLÁZATE HASTA EL FINAL PARA COMPLETAR",
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.ExtraBold,
                     fontSize = 11.sp
                 )
             }

@@ -133,6 +133,11 @@ COURSE_INFO|Título del Curso|Versión|Descripción del Curso
     - **Reanudación Automática**: Al reabrir una unidad en posteriores encuentros/clases de 2 horas, la pantalla se desplaza automáticamente al punto exacto donde se quedó el alumno.
     - **Monitoreo Grupal Porcentual**: El profesor observa el porcentaje de avance acumulado real de la clase (`📖 Avance Grupal: X / Y Alumnos - Z% Promedio`).
 
+16. **Diseño Estético E-Book "Modo Descanso" para Lecturas de 2 Horas**:
+    - **Lector Inteligente de Tamaño de Letra (`A-` / `A+`)**: Permite al alumno ajustar dinámicamente el tamaño de la fuente (`13sp` a `22sp`) según su comodidad visual.
+    - **Tarjeta E-Book con Formateador**: Estructura el texto teórico en una tarjeta con margen amplio y resalta automáticamente títulos y encabezados en color Cyan (`AccentCyan`) con viñetas organizadas.
+    - **Banner de Tiempo Estimado**: Indica el tiempo aproximado de lectura (`~10-15 min`) y el porcentaje de avance acumulado.
+
 ---
 
 ## 📌 5. Bitácora de Siguientes Pasos y Mejoras Solicitadas por el Usuario
@@ -146,6 +151,7 @@ COURSE_INFO|Título del Curso|Versión|Descripción del Curso
 - [x] **Mejora 7**: Banner visual permanente de **`CLASE FINALIZADA`** en la pantalla principal del alumno.
 - [x] **Mejora 8**: Gamificación de lectura, Candado Estricto de Video (Lectura ➔ Video) y Monitoreo de Lectura Grupal e Individual para el profesor.
 - [x] **Mejora 9**: Memoria de Continuidad de Lectura (*Scroll Memory*) y avance porcentual acumulado para clases de 36 semanas / 2 horas.
+- [x] **Mejora 10**: Rediseño estético E-Book "Modo Descanso" con controles de tamaño de letra (`A-` / `A+`), encabezados Cyan y tiempo de lectura estimado.
 - [ ] *(Espacio para ir anotando las siguientes observaciones a medida que se pruebe la app)*
 
 ---
