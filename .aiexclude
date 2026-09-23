@@ -1,0 +1,18 @@
+# Excluir directorios de construcción y cache para reducir el tamaño del contexto
+build/
+.gradle/
+.kotlin/
+.idea/
+bin/
+obj/
+
+# Excluir archivos binarios grandes
+*.apk
+*.zip
+*.jar
+*.jks
+
+# Excluir carpeta de materiales si contiene videos pesados
+AulaLocal_Materiales/videos/
+AulaLocal_Materiales/*.mp4
+AulaLocal_Materiales/*.mp3

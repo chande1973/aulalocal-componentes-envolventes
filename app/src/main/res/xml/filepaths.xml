@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <files-path name="logs" path="logs/" />
+    <files-path name="reports" path="." />
+    <!-- Permite compartir archivos guardados en el almacenamiento externo (como Descargas) -->
+    <external-path name="external_files" path="." />
+    <!-- Permite compartir archivos temporales guardados en la caché (como el ZIP del curso) -->
+    <cache-path name="cache_files" path="." />
+</paths>

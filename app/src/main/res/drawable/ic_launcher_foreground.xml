@@ -1,0 +1,52 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Lomo/Cubierta del libro (Base oscura) -->
+    <path
+        android:fillColor="#1E293B"
+        android:pathData="M22,82c0,0 15,-6 32,-6s32,6 32,6V52c0,0 -15,-6 -32,-6s-32,6 -32,6z" />
+
+    <!-- Páginas del libro (Efecto de hojas apiladas) -->
+    <path
+        android:fillColor="#E2E8F0"
+        android:pathData="M24,80c0,0 15,-6 30,-6s30,6 30,6V50c0,0 -15,-6 -30,-6s-30,6 -30,6z" />
+
+    <!-- Página superior (Blanco puro para contraste) -->
+    <path
+        android:fillColor="#F8FAFC"
+        android:pathData="M24,77c0,0 15,-6 30,-6s30,6 30,6V47c0,0 -15,-6 -30,-6s-30,6 -30,6z" />
+
+    <!-- Sombra central (Pliegue del libro) -->
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M53.5,41h1v30h-1z" />
+
+    <!-- Símbolo WiFi Estilo Glow -->
+    <!-- Punto central -->
+    <path
+        android:fillColor="#06B6D4"
+        android:pathData="M54,64a2.5,2.5 0,1 1,-0.001 0.001Z" />
+
+    <!-- Arcos del WiFi con mejor curvatura -->
+    <path
+        android:strokeWidth="2.8"
+        android:strokeColor="#06B6D4"
+        android:strokeLineCap="round"
+        android:pathData="M48.5,58.5C50,57 52,56.2 54,56.2C56,56.2 58,57 59.5,58.5" />
+
+    <path
+        android:strokeWidth="2.8"
+        android:strokeColor="#06B6D4"
+        android:strokeLineCap="round"
+        android:pathData="M43,53C46,50 49.5,48.5 54,48.5C58.5,48.5 62,50 65,53" />
+
+    <path
+        android:strokeWidth="2.8"
+        android:strokeColor="#06B6D4"
+        android:strokeLineCap="round"
+        android:pathData="M37.5,47.5C42,43 47.5,40.8 54,40.8C60.5,40.8 66,43 70.5,47.5" />
+
+</vector>

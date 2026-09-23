@@ -1,0 +1,6 @@
+{
+  "name": "Aula Local",
+  "description": "Clases offline, asistencia y evaluación en red local Wi-Fi sin necesidad de internet.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
