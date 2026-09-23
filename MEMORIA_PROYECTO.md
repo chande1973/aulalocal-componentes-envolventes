@@ -138,6 +138,10 @@ COURSE_INFO|Título del Curso|Versión|Descripción del Curso
     - **Tarjeta E-Book con Formateador**: Estructura el texto teórico en una tarjeta con margen amplio y resalta automáticamente títulos y encabezados en color Cyan (`AccentCyan`) con viñetas organizadas.
     - **Banner de Tiempo Estimado**: Indica el tiempo aproximado de lectura (`~10-15 min`) y el porcentaje de avance acumulado.
 
+17. **Icono Oficial de Instalación (Opción 1: Escudo Académico Conectado)**:
+    - Se configuró como el *Adaptive Launcher Icon* oficial de la app.
+    - Diseño vectorial con escudo protector Teal/Cyan, birrete académico blanco con borla dorada y ondas de señal Wi-Fi flotantes sobre fondo azul noche (`ic_launcher_background.xml` e `ic_launcher_foreground.xml`).
+
 ---
 
 ## 📌 5. Bitácora de Siguientes Pasos y Mejoras Solicitadas por el Usuario
@@ -152,6 +156,7 @@ COURSE_INFO|Título del Curso|Versión|Descripción del Curso
 - [x] **Mejora 8**: Gamificación de lectura, Candado Estricto de Video (Lectura ➔ Video) y Monitoreo de Lectura Grupal e Individual para el profesor.
 - [x] **Mejora 9**: Memoria de Continuidad de Lectura (*Scroll Memory*) y avance porcentual acumulado para clases de 36 semanas / 2 horas.
 - [x] **Mejora 10**: Rediseño estético E-Book "Modo Descanso" con controles de tamaño de letra (`A-` / `A+`), encabezados Cyan y tiempo de lectura estimado.
+- [x] **Mejora 11**: Configuración del icono de instalación oficial **Opción 1 (Escudo Académico Conectado)**.
 - [ ] *(Espacio para ir anotando las siguientes observaciones a medida que se pruebe la app)*
 
 ---

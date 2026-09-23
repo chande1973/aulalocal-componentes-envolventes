@@ -1,0 +1,53 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Escudo Central Cyan -->
+    <path
+        android:fillColor="#0D9488"
+        android:pathData="M54,26 L76,36 V56 C76,69 66,77 54,82 C42,77 32,69 32,56 V36 Z" />
+
+    <path
+        android:fillColor="#06B6D4"
+        android:pathData="M54,29 L73,38 V55 C73,67 64,74 54,79 C44,74 35,67 35,55 V38 Z" />
+
+    <!-- Birrete Académico (Blanco) -->
+    <!-- Rombo superior -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,42 L70,49 L54,56 L38,49 Z" />
+
+    <!-- Base/Gorro -->
+    <path
+        android:fillColor="#E2E8F0"
+        android:pathData="M44,53.5 V59 C44,61.5 48.5,63 54,63 C59.5,63 64,61.5 64,59 V53.5 L54,57 Z" />
+
+    <!-- Borla/Cinta -->
+    <path
+        android:strokeWidth="1.8"
+        android:strokeColor="#F59E0B"
+        android:strokeLineCap="round"
+        android:pathData="M66,49 V57" />
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M66,57m-1.5,0a1.5,1.5 0,1 1,3 0a1.5,1.5 0,1 1,-3 0" />
+
+    <!-- Señal Wi-Fi Flotante sobre el Birrete -->
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M54,39a1.8,1.8 0,1 1,-0.001 0.001Z" />
+
+    <path
+        android:strokeWidth="2.2"
+        android:strokeColor="#10B981"
+        android:strokeLineCap="round"
+        android:pathData="M49,34.5C50.5,33.2 52.2,32.5 54,32.5C55.8,32.5 57.5,33.2 59,34.5" />
+
+    <path
+        android:strokeWidth="2.2"
+        android:strokeColor="#10B981"
+        android:strokeLineCap="round"
+        android:pathData="M44.5,30C47.2,27.5 50.5,26 54,26C57.5,26 60.8,27.5 63.5,30" />
+</vector>

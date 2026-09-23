@@ -1,0 +1,48 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Libro 3D Abierto -->
+    <!-- Tapa izquierda -->
+    <path
+        android:fillColor="#312E81"
+        android:pathData="M22,76 L52,86 V56 L22,46 Z" />
+    <!-- Tapa derecha -->
+    <path
+        android:fillColor="#4338CA"
+        android:pathData="M56,86 L86,76 V46 L56,56 Z" />
+
+    <!-- Páginas izquierda -->
+    <path
+        android:fillColor="#E0E7FF"
+        android:pathData="M25,72 L52,82 V53 L25,43 Z" />
+    <!-- Páginas derecha -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M56,82 L83,72 V43 L56,53 Z" />
+
+    <!-- Faro de Luz Wi-Fi Neon (Cyan y Amber) -->
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M54,58a3,3 0,1 1,-0.001 0.001Z" />
+
+    <path
+        android:strokeWidth="3"
+        android:strokeColor="#00F2FE"
+        android:strokeLineCap="round"
+        android:pathData="M47,50 C49,48 51.5,47 54,47 C56.5,47 59,48 61,50" />
+
+    <path
+        android:strokeWidth="3"
+        android:strokeColor="#00F2FE"
+        android:strokeLineCap="round"
+        android:pathData="M41,42 C45,38 49.5,36 54,36 C58.5,36 63,38 67,42" />
+
+    <path
+        android:strokeWidth="3"
+        android:strokeColor="#00F2FE"
+        android:strokeLineCap="round"
+        android:pathData="M35,34 C40,29 47,26 54,26 C61,26 68,29 73,34" />
+</vector>
