@@ -219,6 +219,7 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
                         teacherMsg = teacherMsg,
                         versionUpdateMsg = versionUpdateMsg,
                         classEndedMsg = classEndedNotice,
+                        isReconnecting = isLocked && !isSyncing,
                         onDismissVersionMsg = { mainViewModel.dismissVersionNotification() },
                         onDismissClassEndedMsg = { studentViewModel.dismissClassEndedNotice() },
                         onConnectClick = { showConnectionDialog = true }

@@ -11,6 +11,7 @@ import com.example.data.AppDatabase
 import com.example.data.LocalNetworkManager
 import com.example.data.UserProfile
 import com.example.data.LocalSection
+import com.example.network.NetworkConstants
 import kotlinx.coroutines.*
 
 class ClassroomServerService : Service() {
@@ -114,9 +115,10 @@ class ClassroomServerService : Service() {
 
     private fun stopServer() {
         serviceScope.launch {
-            // Dar 2 segundos para que el comando FORCE_DISCONNECT llegue a los alumnos
+            // Transmitir comando oficial de cierre de clase a los alumnos antes de apagar el servidor
+            LocalNetworkManager.setPendingCommand(NetworkConstants.CMD_CLASS_FINALIZE_OFFICIAL)
+            delay(2500)
             LocalNetworkManager.stopTeacherServer()
-            delay(2000)
             withContext(Dispatchers.Main) {
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()

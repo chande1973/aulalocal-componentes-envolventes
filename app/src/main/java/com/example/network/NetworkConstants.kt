@@ -16,6 +16,7 @@ object NetworkConstants {
     // Comandos de Respuesta
     const val CMD_ATTENDANCE_CHECK = "attendance_check"
     const val CMD_FORCE_DISCONNECT = "FORCE_DISCONNECT"
+    const val CMD_CLASS_FINALIZE_OFFICIAL = "class_finalize_official"
     
     // Status
     const val STATUS_OK = "ok"

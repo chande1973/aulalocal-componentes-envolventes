@@ -21,6 +21,7 @@ import java.io.File
 import java.io.FileOutputStream
 import com.example.util.ZipUtils
 import com.example.R
+import com.example.network.NetworkConstants
 
 class StudentViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -146,7 +147,8 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                 
                 when (cmd) {
                     "attendance_check" -> _uiEvents.emit(getApplication<Application>().getString(R.string.msg_attendance_registered))
-                    "FORCE_DISCONNECT" -> {
+                    "FORCE_DISCONNECT", NetworkConstants.CMD_CLASS_FINALIZE_OFFICIAL -> {
+                        _classEndedNotice.value = getApplication<Application>().getString(R.string.msg_class_ended)
                         _uiEvents.emit(getApplication<Application>().getString(R.string.msg_class_ended))
                         unlockAndDisconnectStudent()
                     }
@@ -459,12 +461,8 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                             consecutiveFailures++
                             _isSyncing.value = false
                             
-                            // Si fallamos por más de 30 segundos (5-6 intentos), asumimos que la clase terminó
-                            if (consecutiveFailures >= 6) {
-                                unlockAndDisconnectStudent()
-                                viewModelScope.launch { _uiEvents.emit(getApplication<Application>().getString(R.string.msg_connection_lost)) }
-                            } else if (consecutiveFailures >= 2) {
-                                // Intentar redescubrir más rápido si hay fallos
+                            // Tolerancia a fallos de red: Reintentar silenciosamente sin desconectar al alumno
+                            if (consecutiveFailures >= 2) {
                                 viewModelScope.launch {
                                     LocalNetworkManager.discoverTeacher(
                                         onSuccess = { newIp, newPort, _, _ ->

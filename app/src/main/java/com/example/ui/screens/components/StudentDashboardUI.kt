@@ -35,11 +35,45 @@ fun StudentDashboardBanners(
     teacherMsg: String,
     versionUpdateMsg: String? = null,
     classEndedMsg: String? = null,
+    isReconnecting: Boolean = false,
     onDismissVersionMsg: () -> Unit = {},
     onDismissClassEndedMsg: () -> Unit = {},
     onConnectClick: () -> Unit
 ) {
     Column {
+        // Banner de Reconexión Inofensiva por Wi-Fi
+        if (isReconnecting && classEndedMsg.isNullOrEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                colors = CardDefaults.cardColors(containerColor = StatusWarning.copy(alpha = 0.15f)),
+                border = BorderStroke(1.dp, StatusWarning.copy(alpha = 0.6f)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        color = StatusWarning,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            text = "CONEXIÓN INESTABLE",
+                            color = StatusWarning,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 11.sp,
+                            letterSpacing = 1.sp
+                        )
+                        Text(
+                            text = "Sincronizando con el profesor por Wi-Fi...",
+                            color = TextPrimary,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+        }
         // Banner de Clase Finalizada por el Profesor
         if (!classEndedMsg.isNullOrEmpty()) {
             Card(
