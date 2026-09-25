@@ -150,6 +150,10 @@ COURSE_INFO|Título del Curso|Versión|Descripción del Curso
     - **Solución al Falso 100%**: Se corrigió el cálculo de `scrollProgress` en `StudentStudyContent.kt` durante el primer frame de medición no calculado. Ahora no asume 100% en frame 0 y exige desplazamiento real o clic en `[ 📖 COMPLETAR LECTURA ]`.
     - **Indicador de Eficiencia para el Profesor**: En `StudentDetailAndRecuperativoDialog`, el profesor ve el avance exacto de cada alumno con semáforo inteligente (`🟢 Completada 100%`, `🔵 En Progreso 50-99%`, `🟡 Iniciada 1-49%`, `🔴 Sin Iniciar 0%`).
 
+20. **Eliminación Definitiva de Marcado Automático de Lectura (Falso 100%)**:
+    - **Causa Raíz Encontrada y Eliminada**: Se identificó un disparador legacy en `StudentDashboardScreen.kt` (`LaunchedEffect(studyingUnit) { markUnitAsRead(...) }`) que marcaba las unidades como leídas al instante de abrirlas.
+    - **Resultado**: Se eliminó ese disparador. Ahora la lectura inicia estrictamente en `0%`, el video permanece bloqueado y solo se completa al desplazarse hasta el final del tema.
+
 ---
 
 ## 📌 5. Bitácora de Siguientes Pasos y Mejoras Solicitadas por el Usuario
@@ -166,7 +170,7 @@ COURSE_INFO|Título del Curso|Versión|Descripción del Curso
 - [x] **Mejora 10**: Rediseño estético E-Book "Modo Descanso" con controles de tamaño de letra (`A-` / `A+`), encabezados Cyan y tiempo de lectura estimado.
 - [x] **Mejora 11**: Configuración del icono de instalación oficial **Opción 1 (Escudo Académico Conectado)**.
 - [x] **Mejora 12**: Blindaje de Cierre de Clase contra caídas temporales de Wi-Fi y Protocolo de Cierre Explícito (`CMD_CLASS_FINALIZE_OFFICIAL`).
-- [x] **Mejora 13**: Corrección de cálculo de scroll en frame 0 (falso 100%) e Indicador de Eficiencia de Lectura por Alumno en el panel del profesor.
+- [x] **Mejora 13**: Corrección de cálculo de scroll e Eliminación Definitiva del disparador automático de marcado de lectura al abrir unidad.
 - [ ] **Plan Registrado**: Evaluación OCR Offline de Resúmenes en Cuaderno con Cámara + Rúbrica de 20 Pts (Contenido 10 Pts, Redacción 5 Pts, Ortografía 5 Pts) y Promedio Dinámico para $N$ Unidades (Detalles en [`PLAN_EVALUACION_OCR.md`](file:///media/edgar/f/Aulalocal/AulaLocal_Backup-desarrollo/PLAN_EVALUACION_OCR.md)).
 - [ ] *(Espacio para ir anotando las siguientes observaciones a medida que se pruebe la app)*
 

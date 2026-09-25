@@ -108,11 +108,6 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
         }
     }
 
-    // Mark unit as read automatically
-    LaunchedEffect(studyingUnit) {
-        studyingUnit?.let { studentViewModel.markUnitAsRead(it.index) }
-    }
-
     // Dialogs Management
     StudentDashboardDialogs(
         incomingMsg = incomingMsg,
