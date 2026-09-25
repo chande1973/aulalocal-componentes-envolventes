@@ -53,13 +53,19 @@ fun StudentStudyContent(
     val scrollState = rememberScrollState()
     val maxScroll = scrollState.maxValue
     val currentScroll = scrollState.value
-    val scrollProgress = if (maxScroll > 0) (currentScroll.toFloat() / maxScroll.toFloat()).coerceIn(0f, 1f) else 1f
-    val isScrollAtBottom = scrollProgress >= 0.88f || maxScroll == 0
 
     val examActive = isLocked && enabledExams.split(",").filter { it.isNotEmpty() }.contains(unit.index.toString())
     val unitProgress = studyProgress.find { it.unitIndex == unit.index }
     val hasCompletedExam = unitProgress?.examCompleted == true || unitProgress?.examGrade != null
     var isReadLocal by remember(unit.index, unitProgress?.isRead) { mutableStateOf(unitProgress?.isRead == true) }
+
+    // Calcular progreso real evitando falso 100% en el primer frame no medido
+    val scrollProgress = when {
+        isReadLocal -> 1f
+        maxScroll > 0 -> (currentScroll.toFloat() / maxScroll.toFloat()).coerceIn(0f, 1f)
+        else -> 0f
+    }
+    val isScrollAtBottom = isReadLocal || (maxScroll > 0 && scrollProgress >= 0.88f)
 
     // Control dinámico del tamaño de fuente (Lector Inteligente)
     var fontSizeSp by remember { mutableIntStateOf(16) }
@@ -72,10 +78,10 @@ fun StudentStudyContent(
         }
     }
 
-    // ACTUALIZAR PROGRESO CONTINUO DE LECTURA
+    // ACTUALIZAR PROGRESO CONTINUO DE LECTURA (Solo con desplazamiento medido)
     val currentPct = if (isReadLocal) 100 else (scrollProgress * 100).toInt()
-    LaunchedEffect(currentScroll, currentPct) {
-        if (currentScroll > 0 || currentPct > 0) {
+    LaunchedEffect(currentScroll, currentPct, isReadLocal) {
+        if (maxScroll > 0 || isReadLocal) {
             onUpdateReadingProgress(unit.index, currentPct, currentScroll)
         }
     }

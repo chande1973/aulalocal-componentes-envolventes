@@ -81,9 +81,26 @@ fun StudentDetailAndRecuperativoDialog(
                                 JSONArray()
                             }
                         }
-                        var isUnitRead = false
+                        var readPct = 0
                         for (i in 0 until readsList.length()) {
-                            if (readsList.optInt(i) == unit.index) isUnitRead = true
+                            val item = readsList.opt(i)
+                            if (item is Int && item == unit.index) readPct = 100
+                            else if (item is JSONObject && item.optInt("unitIndex") == unit.index) {
+                                readPct = item.optInt("pct", 0)
+                            }
+                        }
+
+                        val readingText = when {
+                            readPct >= 100 -> "🟢 Lectura: Completada (100%)"
+                            readPct >= 50 -> "🔵 Lectura: En Progreso ($readPct%)"
+                            readPct > 0 -> "🟡 Lectura: Iniciada ($readPct%)"
+                            else -> "🔴 Lectura: Sin Iniciar (0%)"
+                        }
+                        val readingColor = when {
+                            readPct >= 100 -> StatusSuccess
+                            readPct >= 50 -> AccentCyan
+                            readPct > 0 -> AccentAmber
+                            else -> Color.Gray
                         }
 
                         Card(
@@ -100,10 +117,10 @@ fun StudentDetailAndRecuperativoDialog(
                                     Text("Unidad ${unit.index}: ${unit.title}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(
-                                            text = if (isUnitRead) "📖 Lectura: Completada" else "⏳ Lectura: Pendiente",
+                                            text = readingText,
                                             fontSize = 10.sp,
-                                            color = if (isUnitRead) StatusSuccess else Color.Gray,
-                                            fontWeight = if (isUnitRead) FontWeight.Bold else FontWeight.Normal
+                                            color = readingColor,
+                                            fontWeight = if (readPct > 0) FontWeight.Bold else FontWeight.Normal
                                         )
                                         Spacer(Modifier.width(8.dp))
                                         Text(

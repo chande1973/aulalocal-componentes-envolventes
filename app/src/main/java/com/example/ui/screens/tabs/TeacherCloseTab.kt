@@ -17,6 +17,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.ui.theme.AccentAmber
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import com.example.ui.theme.AccentAmber
 import com.example.ui.theme.AccentCyan
 import com.example.ui.theme.AccentTeal
 import com.example.ui.theme.CosmicDarkSurface
@@ -31,7 +34,12 @@ fun TeacherCloseTab(
     onInjectData: (Int) -> Unit,
     onGenerateAllReports: () -> Unit
 ) {
-    Column(Modifier.fillMaxSize()) {
+    val scrollState = rememberScrollState()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+    ) {
         Text(stringResource(R.string.label_close_year_title), style = MaterialTheme.typography.titleLarge, color = Color.White)
         Spacer(Modifier.height(16.dp))
 
