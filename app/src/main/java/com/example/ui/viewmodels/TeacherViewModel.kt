@@ -12,6 +12,7 @@ import com.example.domain.ReportManager
 import com.example.domain.AttendanceManager
 import com.example.util.ZipUtils
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -330,6 +331,24 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
                 val newTotal = section.totalClasses + 1
                 dao.insertSection(section.copy(totalClasses = newTotal))
                 dao.insertProfile(profile.copy(lastSessionStartTime = 0L))
+                
+                // Actualizar config del servidor con nuevo totalClasses ANTES de apagar
+                // para que los alumnos reciban el total actualizado en su último sync
+                LocalNetworkManager.updateServerConfig(
+                    teacher = "${profile.firstName} ${profile.lastName}",
+                    section = sectionName,
+                    unit = _liveActiveUnitIndex.value,
+                    reading = _liveIsReadingActive.value,
+                    exam = _liveIsExamActive.value,
+                    reads = section.enabledReadUnits,
+                    exams = section.enabledExamUnits,
+                    msg = section.teacherMessage,
+                    total = newTotal
+                )
+                
+                // Esperar 4 segundos para que los alumnos hagan su último sync
+                // y reciban attendanceCount y totalClasses actualizados
+                delay(4000)
                 
                 stopClassServer()
                 _uiEvents.emit(getApplication<Application>().getString(R.string.msg_class_finished_attendance_saved))

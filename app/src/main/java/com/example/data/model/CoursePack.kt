@@ -113,6 +113,7 @@ data class ExamQuestion(
     @Json(name = "type") val type: String = "single_choice",
     @Json(name = "options") val options: List<String>,
     @Json(name = "correctIndex") val correctIndex: Int,
+    @Json(name = "explanation") val explanation: String = "",
     @Json(name = "weight") val weight: Int = 1
 )
 

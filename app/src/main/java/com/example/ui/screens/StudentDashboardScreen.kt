@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
+import com.example.data.AppLogger
 import com.example.data.model.UnitData
 import com.example.ui.MainViewModel
 import com.example.ui.components.ConnectionStatusIcon
@@ -105,6 +106,16 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
     LaunchedEffect(studentViewModel) {
         studentViewModel.uiEvents.collectLatest { event ->
             Toast.makeText(context, event, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Autocorrección de estado: Si la unidad tenía isRead=true pero isChallengeDone=false, reiniciar a estado inicial
+    LaunchedEffect(studyingUnit) {
+        studyingUnit?.let { unit ->
+            val p = studyProgress.find { it.unitIndex == unit.index }
+            if (p != null && p.isRead && !p.isChallengeDone) {
+                studentViewModel.resetUnitReadingProgress(unit.index)
+            }
         }
     }
 
@@ -236,15 +247,20 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
                             messages = inboxMessages,
                             onClearInbox = { studentViewModel.clearBuzon() }
                         )
-                        StudentTab.Status -> StudentStatusTab(
-                            profile = studentProfile,
-                            studyProgress = studyProgress,
-                            units = units,
-                            totalClasses = totalClasses, isLocked = isLocked,
-                            onAbandonClass = { studentViewModel.unlockAndDisconnectStudent() },
-                            onViewConsole = { showLogViewer = true },
-                            onReportBug = { com.example.data.AppLogger.shareLogFile(context) }
-                        )
+                        StudentTab.Status -> {
+                            val attendanceHistory by studentViewModel.getStudentAttendanceHistory(studentProfile?.cardId ?: "").collectAsStateWithLifecycle(emptyList())
+                            StudentStatusTab(
+                                profile = studentProfile,
+                                studyProgress = studyProgress,
+                                units = units,
+                                totalClasses = totalClasses,
+                                isLocked = isLocked,
+                                attendanceHistory = attendanceHistory,
+                                onAbandonClass = { studentViewModel.unlockAndDisconnectStudent() },
+                                onViewConsole = { showLogViewer = true },
+                                onReportBug = { AppLogger.shareLogFile(context) }
+                            )
+                        }
                         StudentTab.Profile -> StudentProfileTab(
                             profile = studentProfile,
                             isUnlocked = isProfileEditUnlocked,
@@ -276,6 +292,7 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
                             studyProgress = studyProgress,
                             onTakeExam = { isTakingExam = true },
                             onMarkRead = { studentViewModel.markUnitAsRead(it) },
+                            onMarkChallengeDone = { studentViewModel.markChallengeAsDone(it) },
                             onUpdateReadingProgress = { idx, pct, scroll -> studentViewModel.updateReadingProgress(idx, pct, scroll) }
                         )
                     }

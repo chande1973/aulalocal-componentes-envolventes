@@ -3,6 +3,7 @@ package com.example.ui.screens
 import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.OndemandVideo
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Warning
@@ -30,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.UnitProgress
+import com.example.data.model.Question
 import com.example.data.model.UnitData
 import com.example.ui.components.VideoPlayer
 import com.example.ui.theme.AccentAmber
@@ -48,6 +51,7 @@ fun StudentStudyContent(
     studyProgress: List<UnitProgress> = emptyList(),
     onTakeExam: () -> Unit,
     onMarkRead: (Int) -> Unit = {},
+    onMarkChallengeDone: (Int) -> Unit = {},
     onUpdateReadingProgress: (unitIndex: Int, percentage: Int, scrollPos: Int) -> Unit = { _, _, _ -> }
 ) {
     val scrollState = rememberScrollState()
@@ -57,7 +61,11 @@ fun StudentStudyContent(
     val examActive = isLocked && enabledExams.split(",").filter { it.isNotEmpty() }.contains(unit.index.toString())
     val unitProgress = studyProgress.find { it.unitIndex == unit.index }
     val hasCompletedExam = unitProgress?.examCompleted == true || unitProgress?.examGrade != null
-    var isReadLocal by remember(unit.index, unitProgress?.isRead) { mutableStateOf(unitProgress?.isRead == true) }
+    var isReadLocal by remember(unit.index, unitProgress?.isRead, unitProgress?.isChallengeDone) { 
+        mutableStateOf(unitProgress?.isRead == true && unitProgress?.isChallengeDone == true) 
+    }
+
+    var showChallengeDialog by remember { mutableStateOf(false) }
 
     // Calcular progreso real
     val scrollProgress = when {
@@ -85,6 +93,19 @@ fun StudentStudyContent(
         if (currentScroll > 0 || isReadLocal) {
             onUpdateReadingProgress(unit.index, currentPct, currentScroll)
         }
+    }
+
+    if (showChallengeDialog) {
+        ReadingChallengeDialog(
+            unit = unit,
+            onDismiss = { showChallengeDialog = false },
+            onSuccess = {
+                showChallengeDialog = false
+                isReadLocal = true
+                onMarkRead(unit.index)
+                onMarkChallengeDone(unit.index)
+            }
+        )
     }
 
     Column(
@@ -262,28 +283,26 @@ fun StudentStudyContent(
             }
         }
 
-        // Botón de Confirmación de Lectura (si aún no está leída)
+        // Botón de Confirmación con Mini-Reto de Comprensión
         if (!isReadLocal) {
             Button(
-                onClick = {
-                    isReadLocal = true
-                    onMarkRead(unit.index)
-                },
+                onClick = { showChallengeDialog = true },
                 enabled = isScrollAtBottom,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp)
                     .padding(bottom = 20.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = StatusSuccess,
+                    containerColor = AccentAmber,
                     disabledContainerColor = Color.DarkGray.copy(alpha = 0.5f)
                 ),
                 shape = RoundedCornerShape(14.dp)
             ) {
-                Icon(Icons.Default.Check, null)
+                Icon(Icons.Default.Psychology, null, tint = if (isScrollAtBottom) Color.Black else Color.Gray)
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = if (isScrollAtBottom) "📖 COMPLETAR LECTURA Y DESBLOQUEAR VIDEO" else "📜 DESPLÁZATE HASTA EL FINAL PARA COMPLETAR",
+                    text = if (isScrollAtBottom) "🎯 INICIAR MINI-RETO DE COMPRENSIÓN (+50 Pts 🔥)" else "📜 DESPLÁZATE HASTA EL FINAL PARA EL RETO",
+                    color = if (isScrollAtBottom) Color.Black else Color.White,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 11.sp
                 )
@@ -346,7 +365,7 @@ fun StudentStudyContent(
                             )
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                text = "Lee todo el contenido teórico de la clase y presiona 'Completar Lectura' para desbloquear el video.",
+                                text = "Lee todo el contenido de la clase y supera el Mini-Reto de Comprensión para desbloquear el video.",
                                 color = Color.LightGray,
                                 fontSize = 11.sp,
                                 lineHeight = 15.sp
@@ -425,6 +444,163 @@ fun StudentStudyContent(
             Spacer(Modifier.height(24.dp))
         }
     }
+}
+
+@Composable
+private fun ReadingChallengeDialog(
+    unit: UnitData,
+    onDismiss: () -> Unit,
+    onSuccess: () -> Unit
+) {
+    val challengeQuestions = remember(unit) {
+        val pool = if (unit.challengeQuestions.isNotEmpty()) unit.challengeQuestions else unit.examQuestions
+        if (pool.size >= 4) pool.shuffled().take(4) else pool.shuffled().take(minOf(4, pool.size))
+    }
+
+    var currentQuestionIdx by remember { mutableIntStateOf(0) }
+    var selectedOption by remember { mutableIntStateOf(-1) }
+    var isAnswerCorrect by remember { mutableStateOf<Boolean?>(null) }
+    var correctAnswersCount by remember { mutableIntStateOf(0) }
+
+    val question = challengeQuestions[currentQuestionIdx]
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Psychology, null, tint = AccentAmber)
+                Spacer(Modifier.width(8.dp))
+                Text("Mini-Reto: Unidad ${unit.index}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            }
+        },
+        text = {
+            Column {
+                Text(
+                    text = "Pregunta ${currentQuestionIdx + 1} de ${challengeQuestions.size}",
+                    fontSize = 11.sp,
+                    color = AccentCyan,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = question.questionText,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+
+                question.options.forEachIndexed { idx, option ->
+                    val isSelected = selectedOption == idx
+                    val buttonBg = when {
+                        isAnswerCorrect != null && isSelected && isAnswerCorrect == true -> StatusSuccess.copy(alpha = 0.3f)
+                        isAnswerCorrect != null && isSelected && isAnswerCorrect == false -> StatusError.copy(alpha = 0.3f)
+                        isSelected -> AccentCyan.copy(alpha = 0.2f)
+                        else -> CosmicDarkSurface
+                    }
+
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .clickable(enabled = isAnswerCorrect == null) {
+                                selectedOption = idx
+                                val correct = idx == question.correctIndex
+                                isAnswerCorrect = correct
+                                if (correct) correctAnswersCount++
+                            },
+                        shape = RoundedCornerShape(8.dp),
+                        color = buttonBg,
+                        border = BorderStroke(1.dp, if (isSelected) AccentCyan else Color.Gray.copy(alpha = 0.3f))
+                    ) {
+                        Text(
+                            text = option,
+                            fontSize = 12.sp,
+                            color = Color.White,
+                            modifier = Modifier.padding(12.dp)
+                        )
+                    }
+                }
+
+                if (isAnswerCorrect != null) {
+                    Spacer(Modifier.height(12.dp))
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isAnswerCorrect == true) StatusSuccess.copy(alpha = 0.15f) else StatusError.copy(alpha = 0.15f)
+                        ),
+                        border = BorderStroke(1.dp, if (isAnswerCorrect == true) StatusSuccess.copy(alpha = 0.5f) else StatusError.copy(alpha = 0.5f)),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Column(Modifier.padding(12.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = if (isAnswerCorrect == true) Icons.Default.CheckCircle else Icons.Default.Warning,
+                                    contentDescription = null,
+                                    tint = if (isAnswerCorrect == true) StatusSuccess else StatusError,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    text = if (isAnswerCorrect == true) "¡Respuesta Correcta! (+25 Pts 🔥)" else "Respuesta Incorrecta",
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = if (isAnswerCorrect == true) StatusSuccess else StatusError,
+                                    fontSize = 12.sp
+                                )
+                            }
+                            if (question.explanation.isNotBlank()) {
+                                Spacer(Modifier.height(6.dp))
+                                Text(
+                                    text = "💡 " + question.explanation,
+                                    color = Color.White,
+                                    fontSize = 11.sp,
+                                    lineHeight = 15.sp
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            if (isAnswerCorrect != null) {
+                Button(
+                    onClick = {
+                        if (isAnswerCorrect == true) {
+                            if (currentQuestionIdx + 1 < challengeQuestions.size) {
+                                currentQuestionIdx++
+                                selectedOption = -1
+                                isAnswerCorrect = null
+                            } else {
+                                onSuccess()
+                            }
+                        } else {
+                            // Reintentar la pregunta
+                            selectedOption = -1
+                            isAnswerCorrect = null
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = if (isAnswerCorrect == true) StatusSuccess else AccentAmber)
+                ) {
+                    Text(
+                        text = when {
+                            isAnswerCorrect == false -> "REINTENTAR PREGUNTA"
+                            currentQuestionIdx + 1 < challengeQuestions.size -> "SIGUIENTE PREGUNTA"
+                            else -> "🎉 DESBLOQUEAR VIDEO (+50 Pts 🔥)"
+                        },
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                        color = Color.Black
+                    )
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("CANCELAR", color = Color.Gray)
+            }
+        }
+    )
 }
 
 @Composable

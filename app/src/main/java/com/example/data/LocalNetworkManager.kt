@@ -259,7 +259,7 @@ object LocalNetworkManager {
         } else onFailure(res?.optString("message") ?: "Error en registro")
     }
 
-    suspend fun syncWithTeacher(ip: String, port: Int, cardId: String, first: String, last: String, email: String, avatar: String, section: String, read: List<Int>, challenge: List<Int>, grades: Map<Int, Float>, onSuccess: (Int, Boolean, Boolean, String, String, String, Int, Int, String?, JSONObject?, JSONObject?, Boolean, String) -> Unit, onExpelled: () -> Unit, onFailure: () -> Unit) {
+    suspend fun syncWithTeacher(ip: String, port: Int, cardId: String, first: String, last: String, email: String, avatar: String, section: String, read: List<Int>, challenge: List<Int>, grades: Map<Int, Float>, onSuccess: (JSONObject) -> Unit, onExpelled: () -> Unit, onFailure: () -> Unit) {
         val data = JSONObject().apply {
             put("cardId", cardId); put("firstName", first); put("lastName", last)
             put("email", email); put("avatar", avatar); put("sectionName", section)
@@ -271,14 +271,7 @@ object LocalNetworkManager {
         if (res.optString("status") == "expelled") { onExpelled(); return }
         if (res.optString("status") == "ok") {
             if (res.has("command")) _clientCommand.value = res.getString("command")
-            onSuccess(
-                res.getInt("activeUnitIndex"), res.optBoolean("isReadingActive", true), res.getBoolean("isExamActive"),
-                res.optString("enabledReadUnits", "1"), res.optString("enabledExamUnits", ""),
-                res.optString("teacherMessage", ""), res.optInt("totalClasses", 0),
-                res.optInt("personalAttendance", 0), res.optString("privateMessage", "").ifEmpty { null },
-                res.optJSONObject("pendingFile"), res.optJSONObject("privateFile"),
-                res.optBoolean("isListenerMode", false), res.optString("sessionId", "")
-            )
+            onSuccess(res)
         } else onFailure()
     }
 

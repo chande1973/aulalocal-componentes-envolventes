@@ -315,6 +315,10 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun getStudentAttendanceHistory(cardId: String): Flow<List<AttendanceRecord>> {
+        return dao.getAttendanceByStudentFlow(cardId)
+    }
+
     fun startStudentSyncLoop(ip: String, port: Int, cardId: String, firstName: String, lastName: String, email: String, avatar: String, section: String) {
         clientSyncJob?.cancel()
         clientSyncJob = viewModelScope.launch(Dispatchers.IO) {
@@ -339,7 +343,21 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                         read = readProgress,
                         challenge = challengeProgress,
                         grades = examGrades,
-                        onSuccess = { activeUnit, readingActive, examActive, enabledReads, enabledExams, message, totalClasses, personalAttendance, privateMsg, pendingFile, privateFile, isListener, sessionId ->
+                        onSuccess = { res ->
+                            val activeUnit = res.getInt("activeUnitIndex")
+                            val readingActive = res.optBoolean("isReadingActive", true)
+                            val examActive = res.getBoolean("isExamActive")
+                            val enabledReads = res.optString("enabledReadUnits", "1")
+                            val enabledExams = res.optString("enabledExamUnits", "")
+                            val message = res.optString("teacherMessage", "")
+                            val totalClasses = res.optInt("totalClasses", 0)
+                            val personalAttendance = res.optInt("personalAttendance", 0)
+                            val privateMsg = res.optString("privateMessage", "").ifEmpty { null }
+                            val pendingFile = res.optJSONObject("pendingFile")
+                            val privateFile = res.optJSONObject("privateFile")
+                            val isListener = res.optBoolean("isListenerMode", false)
+                            val sessionId = res.optString("sessionId", "")
+                            
                             consecutiveFailures = 0
                             _isSyncing.value = true
                             _lastSyncTime.value = System.currentTimeMillis()
@@ -386,6 +404,25 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                                 val currentProfile = dao.getUserProfile()
                                 if (currentProfile != null && currentProfile.attendanceCount != personalAttendance) {
                                     dao.insertProfile(currentProfile.copy(attendanceCount = personalAttendance))
+                                }
+                            }
+
+                            // NUEVO: Procesar historial de asistencia recibido del servidor
+                            // y guardarlo localmente en el dispositivo del alumno
+                            val historyArray = res.optJSONArray("attendanceHistory")
+                            if (historyArray != null && historyArray.length() > 0) {
+                                viewModelScope.launch(Dispatchers.IO) {
+                                    val cardId = dao.getUserProfile()?.cardId ?: return@launch
+                                    for (i in 0 until historyArray.length()) {
+                                        val item = historyArray.getJSONObject(i)
+                                        dao.insertAttendanceRecord(AttendanceRecord(
+                                            studentCardId = cardId,
+                                            studentName = "${lastName}, ${firstName}",
+                                            sectionName = section,
+                                            date = item.getLong("date"),
+                                            status = item.getString("status")
+                                        ))
+                                    }
                                 }
                             }
 
@@ -536,24 +573,41 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch(Dispatchers.IO) { 
             val existing = dao.getProgressForUnit(unitIndex)
             if (existing == null) {
-                dao.insertUnitProgress(UnitProgress(unitIndex = unitIndex, isRead = true))
+                dao.insertUnitProgress(UnitProgress(unitIndex = unitIndex, isRead = true, isChallengeDone = true, readPercentage = 100))
             } else {
                 dao.updateReadProgress(unitIndex, true)
+                dao.updateChallengeProgress(unitIndex, true)
             }
         }
     }
 
     fun markChallengeAsDone(unitIndex: Int) {
-        viewModelScope.launch(Dispatchers.IO) { dao.updateChallengeProgress(unitIndex, true) }
+        viewModelScope.launch(Dispatchers.IO) { 
+            dao.updateChallengeProgress(unitIndex, true)
+            dao.updateReadProgress(unitIndex, true)
+            dao.updateReadingProgressDetail(unitIndex, 100, 0)
+        }
+    }
+
+    fun resetUnitReadingProgress(unitIndex: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            dao.resetReadingProgress(unitIndex)
+        }
     }
 
     fun updateReadingProgress(unitIndex: Int, percentage: Int, scrollPos: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             val existing = dao.getProgressForUnit(unitIndex)
             if (existing == null) {
-                dao.insertUnitProgress(UnitProgress(unitIndex = unitIndex, readPercentage = percentage, lastScrollPosition = scrollPos, isRead = percentage >= 100))
+                dao.insertUnitProgress(UnitProgress(
+                    unitIndex = unitIndex,
+                    readPercentage = percentage,
+                    lastScrollPosition = scrollPos,
+                    isRead = false,
+                    isChallengeDone = false
+                ))
             } else {
-                val newPct = maxOf(existing.readPercentage, percentage)
+                val newPct = if (existing.isRead && existing.isChallengeDone) 100 else maxOf(existing.readPercentage, percentage)
                 dao.updateReadingProgressDetail(unitIndex, newPct, scrollPos)
             }
         }

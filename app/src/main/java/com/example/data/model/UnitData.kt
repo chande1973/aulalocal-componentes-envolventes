@@ -20,7 +20,8 @@ data class UnitData(
     val challengeOptions: List<String>,
     val challengeAnswer: String,
     val videoFile: String? = null,
-    val examQuestions: List<Question>,
+    val challengeQuestions: List<Question> = emptyList(),
+    val examQuestions: List<Question> = emptyList(),
     val extendedContent: List<ContentSection> = emptyList(),
     val labs: List<LabActivity> = emptyList()
 )
@@ -29,7 +30,8 @@ data class UnitData(
 data class Question(
     val questionText: String,
     val options: List<String>,
-    val correctIndex: Int
+    val correctIndex: Int,
+    val explanation: String = ""
 )
 
 @JsonClass(generateAdapter = true)

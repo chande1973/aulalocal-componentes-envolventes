@@ -108,11 +108,12 @@ fun SetupAssistantScreen(
         LazyColumn(
             modifier = Modifier
                 .padding(padding)
+                .navigationBarsPadding()
                 .fillMaxSize()
                 .background(CosmicDarkBg)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            contentPadding = PaddingValues(vertical = 24.dp)
+            contentPadding = PaddingValues(top = 24.dp, bottom = 120.dp)
         ) {
             item {
                 if (setupStep == 0) {

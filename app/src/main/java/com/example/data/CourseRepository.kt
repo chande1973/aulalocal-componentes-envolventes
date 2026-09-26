@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.util.UUID
 
 /**
  * Repositorio encargado de cargar, parsear y validar el Course Pack externo
@@ -135,7 +136,39 @@ class CourseRepository(
     private suspend fun loadFromCsv(rootDoc: DocumentFile, uri: Uri): LoadResult<CoursePack> = withContext(Dispatchers.IO) {
         try {
             val csvText = readFileToString(uri) ?: return@withContext LoadResult.Failure(listOf(ValidationError("clase.csv", "", "No se pudo leer el archivo CSV")))
-            val lines = csvText.lines().map { it.trim() }.filter { it.isNotBlank() }
+            
+            // Reconstrucción inteligente de filas lógicas multilínea
+            val rawLines = csvText.lines()
+            val lines = mutableListOf<String>()
+            var currentRow = StringBuilder()
+
+            for (rawLine in rawLines) {
+                val trimmed = rawLine.trim()
+                if (trimmed.isEmpty()) continue
+
+                val firstToken = trimmed.substringBefore("|").trim()
+                val isNewRowHeader = firstToken.equals("COURSE_INFO", ignoreCase = true) ||
+                        firstToken.equals("INDEX", ignoreCase = true) ||
+                        firstToken.equals("ID", ignoreCase = true) ||
+                        firstToken.toIntOrNull() != null
+
+                if (isNewRowHeader && (currentRow.isEmpty() || currentRow.toString().split("|").size >= 9)) {
+                    if (currentRow.isNotEmpty()) {
+                        lines.add(currentRow.toString())
+                    }
+                    currentRow = StringBuilder(trimmed)
+                } else {
+                    if (currentRow.isNotEmpty()) {
+                        currentRow.append("\n").append(trimmed)
+                    } else {
+                        currentRow.append(trimmed)
+                    }
+                }
+            }
+            if (currentRow.isNotEmpty()) {
+                lines.add(currentRow.toString())
+            }
+
             if (lines.isEmpty()) return@withContext LoadResult.Failure(listOf(ValidationError("clase.csv", "", "El archivo CSV está vacío")))
 
             val unitsMap = mutableMapOf<String, UnitPack>()
@@ -216,8 +249,49 @@ class CourseRepository(
                     allErrors.add(ValidationError(unitId, "/challenge", "⚠️ La opción correcta ('$qCorrect') no coincide con las opciones (${qOptions.joinToString(",")}) en '$title'.", "WARNING"))
                 }
 
-                // Validación de Examen (Sintaxis con * y ~)
+                // Validación de Examen y Retos (Sintaxis con * y ~)
                 val examQuestions = mutableListOf<ExamQuestion>()
+
+                // 1. Procesamiento de Preguntas del Mini-Reto (Columna 10 si existe, o Columna 6/7/8)
+                if (parts.size >= 11 && parts[10].trim().isNotEmpty() && parts[10].trim() != "null") {
+                    val challengeData = parts[10].trim()
+                    val cBlocks = challengeData.split("*")
+                    for ((cIdx, block) in cBlocks.withIndex()) {
+                        val cParts = block.split("~")
+                        if (cParts.size >= 3) {
+                            val cText = cParts[0].trim()
+                            val cOptions = cParts[1].split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                            val cCorrectIdx = cParts[2].trim().toIntOrNull() ?: 0
+                            val cExplanation = if (cParts.size >= 4) cParts[3].trim() else ""
+
+                            if (cText.isNotEmpty() && cOptions.size >= 2) {
+                                examQuestions.add(ExamQuestion(
+                                    id = UUID.randomUUID().toString(),
+                                    text = cText,
+                                    type = "challenge",
+                                    options = cOptions,
+                                    correctIndex = cCorrectIdx,
+                                    explanation = cExplanation,
+                                    weight = 1
+                                ))
+                            }
+                        }
+                    }
+                } else if (qText.isNotEmpty() && qOptions.isNotEmpty()) {
+                    // Fallback a columnas 6/7/8
+                    val cCorrectIdx = qOptions.indexOf(qCorrect).coerceAtLeast(0)
+                    examQuestions.add(ExamQuestion(
+                        id = UUID.randomUUID().toString(),
+                        text = qText,
+                        type = "challenge",
+                        options = qOptions,
+                        correctIndex = cCorrectIdx,
+                        explanation = "¡Excelente comprensión! Bien hecho.",
+                        weight = 1
+                    ))
+                }
+
+                // 2. Procesamiento de Preguntas del Examen Formal (Columna 9)
                 if (parts.size >= 10) {
                     val examData = parts[9].trim()
                     if (examData.isNotEmpty() && examData != "null") {
@@ -228,6 +302,7 @@ class CourseRepository(
                                 val text = qParts[0].trim()
                                 val options = qParts[1].split(",").map { it.trim() }.filter { it.isNotEmpty() }
                                 val correctIdx = qParts[2].trim().toIntOrNull() ?: 0
+                                val explanation = if (qParts.size >= 4) qParts[3].trim() else ""
 
                                 if (text.isEmpty()) {
                                     allErrors.add(ValidationError(unitId, "/exam", "⚠️ La pregunta ${qIdx + 1} del examen en '$title' no tiene enunciado.", "WARNING"))
@@ -245,10 +320,11 @@ class CourseRepository(
                                     type = "single_choice",
                                     options = options,
                                     correctIndex = correctIdx,
+                                    explanation = explanation,
                                     weight = 1
                                 ))
                             } else if (block.isNotBlank()) {
-                                allErrors.add(ValidationError(unitId, "/exam", "❌ Formato de examen incorrecto en pregunta ${qIdx + 1} de '$title'. Usar: 'Pregunta~Opción1,Opción2~ÍndiceCorrecto'", "ERROR"))
+                                allErrors.add(ValidationError(unitId, "/exam", "❌ Formato de examen incorrecto en pregunta ${qIdx + 1} de '$title'. Usar: 'Pregunta~Opción1,Opción2~ÍndiceCorrecto~Explicación'", "ERROR"))
                             }
                         }
                     }

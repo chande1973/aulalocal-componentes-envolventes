@@ -90,8 +90,16 @@ fun StudentDetailAndRecuperativoDialog(
                             }
                         }
 
+                        val challengesList = remember(student.challengeProgressString) {
+                            try { JSONArray(student.challengeProgressString) } catch (e: Exception) { JSONArray() }
+                        }
+                        var isChallengeDone = false
+                        for (i in 0 until challengesList.length()) {
+                            if (challengesList.optInt(i) == unit.index) isChallengeDone = true
+                        }
+
                         val readingText = when {
-                            readPct >= 100 -> "🟢 Lectura: Completada (100%)"
+                            readPct >= 100 -> "🟢 Lectura: Completada" + (if (isChallengeDone) " ⭐ Reto Superado" else "")
                             readPct >= 50 -> "🔵 Lectura: En Progreso ($readPct%)"
                             readPct > 0 -> "🟡 Lectura: Iniciada ($readPct%)"
                             else -> "🔴 Lectura: Sin Iniciar (0%)"

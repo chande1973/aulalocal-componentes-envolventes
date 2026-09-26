@@ -33,7 +33,10 @@ fun ExamScreen(
     studentViewModel: StudentViewModel,
     onDismiss: () -> Unit
 ) {
-    val questions = unit.examQuestions
+    // Separación pedagógica: El examen usa las preguntas restantes excluyendo las 2 del Mini-Reto
+    val questions = remember(unit) {
+        if (unit.examQuestions.size > 2) unit.examQuestions.drop(2) else unit.examQuestions
+    }
     var currentQuestionIndex by remember { mutableIntStateOf(0) }
     var selectedOptionIndex by remember { mutableIntStateOf(-1) }
     var score by remember { mutableIntStateOf(0) }

@@ -152,7 +152,27 @@ COURSE_INFO|Título del Curso|Versión|Descripción del Curso
 
 20. **Eliminación Definitiva de Marcado Automático de Lectura (Falso 100%)**:
     - **Causa Raíz Encontrada y Eliminada**: Se identificó un disparador legacy en `StudentDashboardScreen.kt` (`LaunchedEffect(studyingUnit) { markUnitAsRead(...) }`) que marcaba las unidades como leídas al instante de abrirlas.
-    - **Resultado**: Se eliminó ese disparador. Ahora la lectura inicia estrictamente en `0%`, el video permanece bloqueado y solo se completa al desplazarse hasta el final del tema.
+    - **Resultado**: Se eliminó ese disparador. Ahora la lectura inicia strictly en `0%`, el video permanece bloqueado y solo se completa al desplazarse hasta el final del tema.
+
+21. **Mini-Reto de Comprensión Lectora y Desbloqueo de Video (+50 Pts 🔥)**:
+    - **Trivia Activa de 2 Preguntas**: Al completar el desplazamiento de la lección teórica, se habilita el botón `[ 🎯 INICIAR MINI-RETO DE COMPRENSIÓN ]`.
+    - **Retroalimentación y Bonificación**: Al acertar las 2 preguntas de comprensión, la app otorga **+50 Puntos de Racha (🔥)**, marca la lectura como completada y desbloquea el video explicativo.
+    - **Insignia en Vista del Profesor**: En el expediente del alumno (`TeacherDialogs.kt`), aparece la insignia `⭐ Reto Superado`.
+
+22. **Fix: Entrada a Clase Activa - Estado de Sincronización Inmediato** (`StudentClassTab.kt`)**:
+    - **Problema**: Tras hacer check-in, el alumno veía la pantalla de "Bienvenido/Vincular carpeta" en lugar de "Sincronizando materiales..." porque `isLocked=true` pero `isSyncing=false` (primer sync no completado).
+    - **Solución**: Mostrar pantalla de sincronización en cuanto `isLocked=true`. Mensaje dinámico: "Sincronizando..." si `isSyncing=true`, o "Conectado. Esperando primera sincronización..." si `isSyncing=false`.
+
+23. **Fix Completo: Métricas e Historial de Asistencia al Finalizar Clase** (Opción B - Implementación Robusta):
+    - **Problema**: Al cerrar la clase, el alumno mostraba `totalClasses=0`, `attendanceCount` no actualizado, y historial vacío.
+    - **Causa raíz**: Servidor se apagaba antes del último sync del alumno; historial solo en BD del profesor.
+    - **Solución multi-archivo**:
+        - **`TeacherViewModel.kt`** (`incrementTotalClasses`): Actualiza `totalClasses` en config del servidor **antes** de apagar + espera 4s (`delay(4000)`) para último sync de alumnos.
+        - **`Entities.kt`**: Nuevo método DAO `getAttendanceByStudentList(cardId)` para consulta síncrona.
+        - **`ClassroomServer.kt`** (`ACTION_SYNC`): Envía `attendanceHistory` (JSONArray con `date` + `status`) en cada respuesta de sync.
+        - **`LocalNetworkManager.kt`** (`syncWithTeacher`): Callback simplificado para recibir `JSONObject` completo y acceder a campos nuevos sin romper firma.
+        - **`StudentViewModel.kt`** (`startStudentSyncLoop`): Procesa `attendanceHistory` recibido y lo guarda en BD local del alumno (`attendance_history`).
+    - **Resultado**: Alumno ahora ve `totalClasses` correcto, `attendanceCount` actualizado, **y historial fechado completo** en pestaña Estado.
 
 ---
 
@@ -171,6 +191,7 @@ COURSE_INFO|Título del Curso|Versión|Descripción del Curso
 - [x] **Mejora 11**: Configuración del icono de instalación oficial **Opción 1 (Escudo Académico Conectado)**.
 - [x] **Mejora 12**: Blindaje de Cierre de Clase contra caídas temporales de Wi-Fi y Protocolo de Cierre Explícito (`CMD_CLASS_FINALIZE_OFFICIAL`).
 - [x] **Mejora 13**: Corrección de cálculo de scroll e Eliminación Definitiva del disparador automático de marcado de lectura al abrir unidad.
+- [x] **Mejora 14**: Mini-Reto de Comprensión Lectora (Trivia de 2 preguntas, +50 Pts Racha 🔥 y Desbloqueo de Video).
 - [ ] **Plan Registrado**: Evaluación OCR Offline de Resúmenes en Cuaderno con Cámara + Rúbrica de 20 Pts (Contenido 10 Pts, Redacción 5 Pts, Ortografía 5 Pts) y Promedio Dinámico para $N$ Unidades (Detalles en [`PLAN_EVALUACION_OCR.md`](file:///media/edgar/f/Aulalocal/AulaLocal_Backup-desarrollo/PLAN_EVALUACION_OCR.md)).
 - [ ] *(Espacio para ir anotando las siguientes observaciones a medida que se pruebe la app)*
 

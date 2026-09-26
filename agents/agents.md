@@ -1,4 +1,4 @@
-# Estándares de Ingeniería y Diseño - Aula Local
+cd# Estándares de Ingeniería y Diseño - Aula Local
 
 Este documento define los criterios técnicos y de diseño que deben regir el desarrollo de la aplicación para garantizar un producto profesional, mantenible y eficiente.
 

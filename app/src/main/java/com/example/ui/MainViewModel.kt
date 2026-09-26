@@ -63,8 +63,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application), T
 
     private val _courseVersionUpdateMessage = MutableStateFlow<String?>(null)
     val courseVersionUpdateMessage = _courseVersionUpdateMessage.asStateFlow()
+    private var dismissedVersion: Int = 0
 
     fun dismissVersionNotification() {
+        dismissedVersion = _courseVersion.value
         _courseVersionUpdateMessage.value = null
     }
 
@@ -234,7 +236,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application), T
             val previousVersion = _courseVersion.value
             withContext(Dispatchers.Main) {
                 _courseName.value = pack.index.courseMeta.title
-                if (newVersion > previousVersion && previousVersion > 0) {
+                if (newVersion > previousVersion && previousVersion > 0 && newVersion != dismissedVersion) {
                     _courseVersionUpdateMessage.value = "¡Nueva versión (v$newVersion) del curso disponible! Se actualizó el contenido."
                 }
                 _courseVersion.value = newVersion

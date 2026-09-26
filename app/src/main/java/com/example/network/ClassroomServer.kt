@@ -18,6 +18,7 @@ import com.example.network.NetworkConstants.STATUS_NOT_FOUND
 import com.example.network.NetworkConstants.STATUS_OK
 import com.example.network.NetworkConstants.areSectionsEqual
 import kotlinx.coroutines.*
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -169,6 +170,17 @@ object ClassroomServer {
                         response.put("status", STATUS_OK)
                         response.put("personalAttendance", existing.attendanceCount) // Mandamos el acumulado real
                         response.put("isListenerMode", !areSectionsEqual(updated.sectionName, currentServerSection))
+                        
+                        // Enviar historial de asistencia del alumno
+                        val history = dao.getAttendanceByStudentList(cardId)
+                        val historyArray = JSONArray()
+                        history.forEach { record ->
+                            historyArray.put(JSONObject().apply {
+                                put("date", record.date)
+                                put("status", record.status)
+                            })
+                        }
+                        response.put("attendanceHistory", historyArray)
                         
                         // Mensajes y Archivos
                         if (updated.privateMessage.isNotEmpty()) {

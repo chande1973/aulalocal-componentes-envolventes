@@ -180,6 +180,9 @@ interface ClassroomDao {
     @Query("SELECT * FROM attendance_history WHERE studentCardId = :cardId ORDER BY date DESC")
     fun getAttendanceByStudentFlow(cardId: String): Flow<List<AttendanceRecord>>
 
+    @Query("SELECT * FROM attendance_history WHERE studentCardId = :cardId ORDER BY date DESC")
+    suspend fun getAttendanceByStudentList(cardId: String): List<AttendanceRecord>
+
     @Query("SELECT * FROM attendance_history ORDER BY date DESC")
     fun getAllAttendanceHistory(): Flow<List<AttendanceRecord>>
 
@@ -202,7 +205,10 @@ interface ClassroomDao {
     @Query("UPDATE unit_progress SET isRead = :isRead WHERE unitIndex = :unitIndex")
     suspend fun updateReadProgress(unitIndex: Int, isRead: Boolean)
 
-    @Query("UPDATE unit_progress SET readPercentage = :percentage, lastScrollPosition = :scrollPos, isRead = CASE WHEN :percentage >= 100 THEN 1 ELSE isRead END WHERE unitIndex = :unitIndex")
+    @Query("UPDATE unit_progress SET isRead = 0, isChallengeDone = 0, readPercentage = 0, lastScrollPosition = 0 WHERE unitIndex = :unitIndex")
+    suspend fun resetReadingProgress(unitIndex: Int)
+
+    @Query("UPDATE unit_progress SET readPercentage = :percentage, lastScrollPosition = :scrollPos WHERE unitIndex = :unitIndex")
     suspend fun updateReadingProgressDetail(unitIndex: Int, percentage: Int, scrollPos: Int)
 
     @Query("UPDATE unit_progress SET isChallengeDone = :isChallengeDone WHERE unitIndex = :unitIndex")

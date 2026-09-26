@@ -45,7 +45,9 @@ fun StudentClassTab(
     onLinkFolderClick: () -> Unit
 ) {
     if (units.isEmpty()) {
-        if (isLocked && isSyncing) {
+        // Si el alumno está conectado (isLocked=true) pero no tiene materiales,
+        // mostramos estado de sincronización aunque el primer sync no haya completado aún
+        if (isLocked) {
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -67,7 +69,7 @@ fun StudentClassTab(
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = "Sincronizando materiales con el profesor...", 
+                    text = if (isSyncing) "Sincronizando materiales con el profesor..." else "Conectado. Esperando primera sincronización...", 
                     color = Color.Gray, 
                     fontSize = 14.sp
                 )

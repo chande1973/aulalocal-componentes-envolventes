@@ -19,11 +19,20 @@ object UnitPackMapper {
             challengeOptions = pack.challenge.options.map { it.text },
             challengeAnswer = pack.challenge.options.firstOrNull { it.isCorrect }?.text ?: "",
             videoFile = pack.extendedContent.find { it.type == "VIDEO" }?.mediaFile,
-            examQuestions = pack.exam.questions.map { q ->
+            challengeQuestions = pack.exam.questions.filter { it.type == "challenge" }.map { q ->
                 Question(
                     questionText = q.text,
                     options = q.options,
                     correctIndex = q.correctIndex,
+                    explanation = q.explanation
+                )
+            },
+            examQuestions = pack.exam.questions.filter { it.type != "challenge" }.map { q ->
+                Question(
+                    questionText = q.text,
+                    options = q.options,
+                    correctIndex = q.correctIndex,
+                    explanation = q.explanation
                 )
             },
             extendedContent = pack.extendedContent.map { ext ->
