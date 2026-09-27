@@ -192,6 +192,14 @@ object LocalNetworkManager {
         _pendingCommand = com.example.network.NetworkConstants.CMD_FORCE_DISCONNECT
         
         CoroutineScope(Dispatchers.IO).launch {
+            databaseRef?.let { db ->
+                try {
+                    db.classroomDao().resetAllStudentsLastSeen()
+                } catch (e: Exception) {
+                    AppLogger.e(TAG, "Error reseteando lastSeen al detener servidor", e)
+                }
+            }
+
             // Notificar a los sockets de que cerramos (esto rompe el bloqueo de accept/receive)
             try { activeServerSocket?.close() } catch (e: Exception) {}
             try { activeUdpSocket?.close() } catch (e: Exception) {}

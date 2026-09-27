@@ -1,10 +1,14 @@
+@file:OptIn(FlowPreview::class)
+
 package com.example.ui.viewmodels
 
 import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.provider.OpenableColumns
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.*
@@ -14,12 +18,17 @@ import com.example.util.ZipUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import androidx.documentfile.provider.DocumentFile
 import com.example.R
+import com.example.util.TestDataInjector
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import java.io.File
+import java.util.UUID
 
 class TeacherViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -69,20 +78,28 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    @OptIn(ExperimentalCoroutinesApi::class)
     val syncedStudents: StateFlow<List<SyncedStudent>> by lazy {
-        _liveSelectedSection.flatMapLatest { section ->
-            if (section.isEmpty()) dao.getSyncedStudentsFlow()
-            else dao.getSyncedStudentsBySectionFlow(section)
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        // Diferir: solo emitir cuando haya sección seleccionada
+        _liveSelectedSection.filter { it.isNotEmpty() }
+            .flatMapLatest { section ->
+                dao.getSyncedStudentsBySectionFlow(section)
+            }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     }
 
-    // Alumnos de cualquier sección que han sido vistos recientemente (últimos 30 segundos)
+    // Alumnos de cualquier sección que han sido vistos recientemente (últimos 30 segundos) y cuando el servidor está encendido
     val allConnectedStudents: StateFlow<List<SyncedStudent>> by lazy {
-        dao.getSyncedStudentsFlow().map { list ->
-            val limit = System.currentTimeMillis() - 30000
-            list.filter { it.lastSeen > limit }
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        combine(dao.getSyncedStudentsFlow(), isServerRunningState) { list, isRunning ->
+            if (!isRunning) {
+                emptyList()
+            } else {
+                val limit = System.currentTimeMillis() - 30000
+                list.filter { it.lastSeen > limit }
+            }
+        }
+            .debounce(1000)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     }
 
     fun selectSection(name: String) {
@@ -114,7 +131,7 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
             // Si el servidor está en proceso de cierre, esperamos un poco
             if (LocalNetworkManager.isServerRunning.value) {
                 LocalNetworkManager.stopTeacherServer()
-                kotlinx.coroutines.delay(1500)
+                delay(1500)
             }
             
             _liveSelectedSection.value = sectionName
@@ -328,27 +345,15 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
                 
                 AttendanceManager.finalizeAttendance(dao, section, students)
 
-                val newTotal = section.totalClasses + 1
-                dao.insertSection(section.copy(totalClasses = newTotal))
+                val updatedStudents = dao.getSyncedStudentsBySectionList(sectionName)
+                val updatedSection = section.copy(totalClasses = section.totalClasses + 1)
+                
+                // Respaldo automático de reporte de asistencia en disco
+                ReportManager.generateAttendanceReport(getApplication(), updatedSection, updatedStudents)
+
+                dao.insertSection(updatedSection)
                 dao.insertProfile(profile.copy(lastSessionStartTime = 0L))
-                
-                // Actualizar config del servidor con nuevo totalClasses ANTES de apagar
-                // para que los alumnos reciban el total actualizado en su último sync
-                LocalNetworkManager.updateServerConfig(
-                    teacher = "${profile.firstName} ${profile.lastName}",
-                    section = sectionName,
-                    unit = _liveActiveUnitIndex.value,
-                    reading = _liveIsReadingActive.value,
-                    exam = _liveIsExamActive.value,
-                    reads = section.enabledReadUnits,
-                    exams = section.enabledExamUnits,
-                    msg = section.teacherMessage,
-                    total = newTotal
-                )
-                
-                // Esperar 4 segundos para que los alumnos hagan su último sync
-                // y reciban attendanceCount y totalClasses actualizados
-                delay(4000)
+                dao.resetAllStudentsLastSeen()
                 
                 stopClassServer()
                 _uiEvents.emit(getApplication<Application>().getString(R.string.msg_class_finished_attendance_saved))
@@ -498,7 +503,7 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun sharePrivateFile(cardId: String, uri: android.net.Uri) {
+    fun sharePrivateFile(cardId: String, uri: Uri) {
         viewModelScope.launch(Dispatchers.IO) {
             val student = dao.getStudentByCardId(cardId) ?: return@launch
             val context = getApplication<Application>()
@@ -506,8 +511,8 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
             var fileSize = 0L
 
             context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-                val sizeIndex = cursor.getColumnIndex(android.provider.OpenableColumns.SIZE)
+                val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
                 if (cursor.moveToFirst()) {
                     fileName = cursor.getString(nameIndex)
                     fileSize = cursor.getLong(sizeIndex)
@@ -528,21 +533,21 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
                 privateFileUri = uri.toString(),
                 privateFileName = fileName,
                 privateFileSize = fileSize,
-                privateFileId = java.util.UUID.randomUUID().toString()
+                privateFileId = UUID.randomUUID().toString()
             ))
             _uiEvents.emit("Archivo privado enviado a ${student.firstName}: $fileName")
         }
     }
 
-    fun shareFile(uri: android.net.Uri) {
+    fun shareFile(uri: Uri) {
         viewModelScope.launch(Dispatchers.IO) {
             val context = getApplication<Application>()
             var fileName = "archivo"
             var fileSize = 0L
             
             context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-                val sizeIndex = cursor.getColumnIndex(android.provider.OpenableColumns.SIZE)
+                val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
                 if (cursor.moveToFirst()) {
                     fileName = cursor.getString(nameIndex)
                     fileSize = cursor.getLong(sizeIndex)
@@ -606,11 +611,11 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
 
             _uiEvents.emit(getApplication<Application>().getString(R.string.msg_preparing_zip))
             
-            val cacheFile = java.io.File(context.cacheDir, "course_update.zip")
-            val success = com.example.util.ZipUtils.zipFolder(context, rootFolder, cacheFile)
+            val cacheFile = File(context.cacheDir, "course_update.zip")
+            val success = ZipUtils.zipFolder(context, rootFolder, cacheFile)
 
             if (success) {
-                val contentUri = androidx.core.content.FileProvider.getUriForFile(
+                val contentUri = FileProvider.getUriForFile(
                     context,
                     "${context.packageName}.fileprovider",
                     cacheFile
@@ -680,7 +685,7 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
                 return@launch
             }
             _uiEvents.emit("Inyectando datos para $weeks encuentros...")
-            com.example.util.TestDataInjector.injectSimulationData(dao, sectionName, weeks)
+            TestDataInjector.injectSimulationData(dao, sectionName, weeks)
             _uiEvents.emit("Simulación completada para $sectionName")
         }
     }

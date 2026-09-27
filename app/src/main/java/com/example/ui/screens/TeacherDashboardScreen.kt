@@ -35,15 +35,25 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: TeacherViewModel) {
     val context = LocalContext.current
+    // Diferir colecciones pesadas para evitar ANR en arranque
     val sections by teacherViewModel.sections.collectAsState()
-    val syncedStudents by teacherViewModel.syncedStudents.collectAsState()
-    val allConnectedStudents by teacherViewModel.allConnectedStudents.collectAsState()
     val units by mainViewModel.unitsFlow.collectAsState()
     val isServerRunning by teacherViewModel.isServerRunningState.collectAsState()
     val liveSection by teacherViewModel.liveSelectedSection.collectAsState()
     val liveActiveUnit by teacherViewModel.liveActiveUnitIndex.collectAsState()
     val enabledReads by teacherViewModel.enabledReadUnits.collectAsState()
     val enabledExams by teacherViewModel.enabledExamUnits.collectAsState()
+    
+    // Colecciones pesadas diferidas con valores por defecto
+    var syncedStudents by remember { mutableStateOf<List<SyncedStudent>>(emptyList()) }
+    var allConnectedStudents by remember { mutableStateOf<List<SyncedStudent>>(emptyList()) }
+    
+    LaunchedEffect(teacherViewModel) {
+        teacherViewModel.syncedStudents.collect { syncedStudents = it }
+    }
+    LaunchedEffect(teacherViewModel) {
+        teacherViewModel.allConnectedStudents.collect { allConnectedStudents = it }
+    }
     
     var activeTab by remember { mutableIntStateOf(0) }
 

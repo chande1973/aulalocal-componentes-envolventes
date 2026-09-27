@@ -29,6 +29,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.imePadding
+
 import com.example.R
 import com.example.data.UserProfile
 import com.example.data.model.LoadResult
@@ -56,6 +58,7 @@ fun SetupAssistantScreen(
     
     // Obtenemos el resultado de validación del ViewModel
     val wizardResult by mainViewModel.wizardValidationResult.collectAsState()
+    val loadingProgress by mainViewModel.loadingProgress.collectAsState()
     
     var isValidating by rememberSaveable { mutableStateOf(false) }
     var selectedFolderUriString by rememberSaveable { mutableStateOf<String?>(null) }
@@ -111,9 +114,11 @@ fun SetupAssistantScreen(
                 .navigationBarsPadding()
                 .fillMaxSize()
                 .background(CosmicDarkBg)
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 24.dp)
+                .imePadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            contentPadding = PaddingValues(top = 24.dp, bottom = 120.dp)
+            contentPadding = PaddingValues(top = 24.dp, bottom = 80.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
                 if (setupStep == 0) {
@@ -278,8 +283,73 @@ fun SetupAssistantScreen(
                                 Text(stringResource(R.string.course_content), fontWeight = FontWeight.Bold, color = Color.White)
                                 Text(stringResource(R.string.setup_select_folder_desc), fontSize = 10.sp, color = Color.Gray, textAlign = TextAlign.Center)
                                 Spacer(Modifier.height(12.dp))
-                                
-                                when (res) {
+
+                                if (loadingProgress.isLoading) {
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                                        colors = CardDefaults.cardColors(containerColor = AccentAmber.copy(alpha = 0.15f)),
+                                        border = BorderStroke(1.dp, AccentAmber.copy(alpha = 0.6f)),
+                                        shape = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Column(Modifier.padding(12.dp)) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(Icons.Default.Inventory, null, tint = AccentAmber, modifier = Modifier.size(18.dp))
+                                                Spacer(Modifier.width(10.dp))
+                                                Column(Modifier.weight(1f)) {
+                                                    Text(
+                                                        text = loadingProgress.step.ifEmpty { "ANALIZANDO MATERIALES" }.uppercase(),
+                                                        color = AccentAmber,
+                                                        fontWeight = FontWeight.ExtraBold,
+                                                        fontSize = 11.sp,
+                                                        letterSpacing = 1.sp
+                                                    )
+                                                    Text(
+                                                        text = loadingProgress.step.ifEmpty { "Procesando contenido..." },
+                                                        color = Color.White,
+                                                        fontSize = 11.sp,
+                                                        fontWeight = FontWeight.Medium
+                                                    )
+                                                }
+                                                if (loadingProgress.total > 0) {
+                                                    val pct = (loadingProgress.current.toFloat() / loadingProgress.total * 100).toInt().coerceIn(0, 100)
+                                                    Text(
+                                                        text = "$pct%",
+                                                        color = AccentAmber,
+                                                        fontWeight = FontWeight.ExtraBold,
+                                                        fontSize = 14.sp
+                                                    )
+                                                }
+                                            }
+                                            if (loadingProgress.currentFile.isNotEmpty()) {
+                                                Spacer(Modifier.height(4.dp))
+                                                Text(
+                                                    text = "📄 Procesando: ${loadingProgress.currentFile}",
+                                                    color = Color.LightGray,
+                                                    fontSize = 10.sp,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+                                            Spacer(Modifier.height(8.dp))
+                                            if (loadingProgress.total > 0) {
+                                                val pct = (loadingProgress.current.toFloat() / loadingProgress.total).coerceIn(0f, 1f)
+                                                LinearProgressIndicator(
+                                                    progress = { pct },
+                                                    modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+                                                    color = AccentAmber,
+                                                    trackColor = Color.DarkGray.copy(alpha = 0.5f)
+                                                )
+                                            } else {
+                                                LinearProgressIndicator(
+                                                    modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+                                                    color = AccentAmber,
+                                                    trackColor = Color.DarkGray.copy(alpha = 0.5f)
+                                                )
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    when (res) {
                                     is LoadResult.Success -> {
                                         Icon(Icons.Default.CheckCircle, null, tint = AccentTeal)
                                         Text("Materiales listos (v${res.data.index.courseMeta.version})", color = AccentTeal, fontSize = 11.sp, fontWeight = FontWeight.Bold)
@@ -314,6 +384,7 @@ fun SetupAssistantScreen(
                                         Spacer(Modifier.height(12.dp))
                                     }
                                     null -> {}
+                                    }
                                 }
 
                                 Button(

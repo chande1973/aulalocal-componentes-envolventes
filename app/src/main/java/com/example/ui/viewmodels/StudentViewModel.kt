@@ -91,6 +91,10 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
     private val _incomingFile = MutableStateFlow<JSONObject?>(null)
     val incomingFile = _incomingFile.asStateFlow()
 
+    // NUEVO: Para reintentos de descarga
+    private var pendingFileRetry: JSONObject? = null
+    fun getPendingFileRetry() = pendingFileRetry
+
     private val _isListenerMode = MutableStateFlow(false)
     val isListenerMode = _isListenerMode.asStateFlow()
     
@@ -107,8 +111,28 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
     private val _isSyncing = MutableStateFlow(false)
     val isSyncing = _isSyncing.asStateFlow()
 
+    // NUEVO: Estados detallados de actualización de contenido
+    private val _updateState = MutableStateFlow<UpdateState>(UpdateState.Idle)
+    val updateState = _updateState.asStateFlow()
+
     private val _lastSyncTime = MutableStateFlow(0L)
     val lastSyncTime = _lastSyncTime.asStateFlow()
+
+    // NUEVO: Estados de actualización
+    sealed interface UpdateState {
+        data object Idle : UpdateState
+        data class Connecting(val message: String = "Conectando con el profesor...") : UpdateState
+        data class Downloading(val progress: Float, val message: String = "Descargando actualización...") : UpdateState
+        data class Processing(
+            val message: String = "Procesando materiales...",
+            val step: String = "Instalando contenido",
+            val current: Int = 0,
+            val total: Int = 0,
+            val currentFile: String = ""
+        ) : UpdateState
+        data class Success(val message: String = "¡Actualización completada!") : UpdateState
+        data class Error(val message: String, val canRetry: Boolean = true) : UpdateState
+    }
 
     // El modo estudio independiente está activo si NO estamos bloqueados por un profesor
     val isStudyModeActive: StateFlow<Boolean> by lazy {
@@ -386,6 +410,36 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                                 }
                             }
 
+                            // NUEVO: Auto-descargar actualización de curso si hay archivo pendiente
+                            // y cambiaron las unidades habilitadas (nuevo contenido disponible)
+                            val isCourseUpdateFile = pendingFile?.optBoolean("isSystemUpdate", false) == true
+                            if (isCourseUpdateFile && enabledReads != oldReads) {
+                                pendingFile?.let { fileData ->
+                                    val fileId = fileData.optString("id")
+                                    val fileName = fileData.optString("name")
+                                    val fileSize = fileData.optLong("size")
+                                    if (fileId.isNotEmpty() && fileName.isNotEmpty() && fileSize > 0) {
+                                        _updateState.value = UpdateState.Connecting("Nueva actualización disponible...")
+                                        downloadSharedFile(
+                                            fileId = fileId,
+                                            fileName = fileName,
+                                            fileSize = fileSize,
+                                            onProgress = { progress -> 
+                                                _updateState.value = UpdateState.Downloading(progress, "Descargando actualización del curso...")
+                                            },
+                                            onComplete = { resultFile ->
+                                                if (resultFile != null) {
+                                                    _updateState.value = UpdateState.Processing("Instalando actualización...")
+                                                    // El proceso continúa en downloadSharedFile -> processCourseUpdate
+                                                } else {
+                                                    _updateState.value = UpdateState.Error("Error descargando actualización", canRetry = true)
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+
                             // DETECTAR CAMBIO DE SESIÓN (NUEVA CLASE)
                             if (lastSessionId.isNotEmpty() && sessionId != lastSessionId) {
                                 viewModelScope.launch(Dispatchers.Main) {
@@ -648,6 +702,32 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
         downloadJob = null
     }
 
+    // NUEVO: Función para reintentar descarga
+    fun retryDownload() {
+        pendingFileRetry?.let { fileData ->
+            val fileId = fileData.optString("id")
+            val fileName = fileData.optString("name")
+            val fileSize = fileData.optLong("size")
+            if (fileId.isNotEmpty() && fileName.isNotEmpty() && fileSize > 0) {
+                downloadSharedFile(
+                    fileId = fileId,
+                    fileName = fileName,
+                    fileSize = fileSize,
+                    onProgress = { progress -> 
+                        _updateState.value = UpdateState.Downloading(progress, "Descargando actualización del curso...")
+                    },
+                    onComplete = { resultFile ->
+                        if (resultFile != null) {
+                            _updateState.value = UpdateState.Processing("Instalando actualización...")
+                        } else {
+                            _updateState.value = UpdateState.Error("Error descargando actualización", canRetry = true)
+                        }
+                    }
+                )
+            }
+        }
+    }
+
     fun downloadSharedFile(fileId: String, fileName: String, fileSize: Long, onProgress: (Float) -> Unit, onComplete: (java.io.File?) -> Unit) {
         cancelDownload()
         downloadJob = viewModelScope.launch(Dispatchers.IO) {
@@ -657,6 +737,11 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
             if (ip.isEmpty()) return@launch
 
             val isCourseUpdate = fileName == "course_update.zip"
+
+            // NUEVO: Emitir estado de conexión
+            _updateState.value = UpdateState.Connecting("Conectando con el profesor...")
+            delay(500) // Pequeño delay para que se vea el estado
+            _updateState.value = UpdateState.Downloading(0f, "Descargando actualización del curso...")
 
             try {
                 val context = getApplication<Application>()
@@ -680,7 +765,10 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                                 val currentProgress = offset.toFloat() / fileSize
                                 if (currentProgress - lastReportedProgress >= 0.01f || offset == fileSize) {
                                     lastReportedProgress = currentProgress
-                                    withContext(Dispatchers.Main) { onProgress(currentProgress) }
+                                    withContext(Dispatchers.Main) { 
+                                        onProgress(currentProgress)
+                                        _updateState.value = UpdateState.Downloading(currentProgress, "Descargando actualización del curso...")
+                                    }
                                 }
                             } else throw Exception("Error en chunk")
                         }
@@ -775,6 +863,7 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
             } catch (e: Exception) {
                 if (e.message != "Cancelado") {
                     AppLogger.e("StudentViewModel", "Download failed", e)
+                    _updateState.value = UpdateState.Error("Error en descarga: ${e.message}", canRetry = true)
                 }
                 withContext(Dispatchers.Main) { onComplete(null) }
             }
@@ -818,9 +907,23 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
             val context = getApplication<Application>()
             val internalCourseDir = File(context.filesDir, "course_data")
             
-            _uiEvents.emit("Actualizando materiales del curso...")
+            _updateState.value = UpdateState.Processing(
+                message = "Descomprimiendo actualización del curso...",
+                step = "Descomprimiendo archivos",
+                current = 0,
+                total = 0,
+                currentFile = zipFile.name
+            )
             
-            val result = ZipUtils.unzip(zipFile, internalCourseDir)
+            val result = ZipUtils.unzip(zipFile, internalCourseDir) { currentFile, count ->
+                _updateState.value = UpdateState.Processing(
+                    message = "Instalando contenido del curso...",
+                    step = "Extrayendo recursos ($count)",
+                    current = count,
+                    total = 0,
+                    currentFile = currentFile
+                )
+            }
             
             if (result is ZipUtils.UnzipResult.Success) {
                 // Update profile to point to this internal folder
@@ -828,10 +931,13 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                 if (profile != null) {
                     val uri = Uri.fromFile(internalCourseDir)
                     dao.insertProfile(profile.copy(materialsFolderUri = uri.toString()))
-                    _uiEvents.emit("¡Curso actualizado con éxito!")
+                    _updateState.value = UpdateState.Success("¡Curso actualizado con éxito!")
+                    // Auto-limpiar estado de éxito después de 3s
+                    delay(3000)
+                    _updateState.value = UpdateState.Idle
                 }
             } else if (result is ZipUtils.UnzipResult.Error) {
-                _uiEvents.emit("Error de actualización: ${result.message}")
+                _updateState.value = UpdateState.Error("Error de actualización: ${result.message}", canRetry = true)
             }
             
             // Delete the zip file after processing

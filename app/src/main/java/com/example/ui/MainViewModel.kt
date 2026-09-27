@@ -74,6 +74,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application), T
     private val _wizardValidationResult = MutableStateFlow<LoadResult<CoursePack>?>(null)
     val wizardValidationResult = _wizardValidationResult.asStateFlow()
 
+    data class MaterialLoadingProgress(
+        val step: String = "",
+        val current: Int = 0,
+        val total: Int = 0,
+        val currentFile: String = "",
+        val isLoading: Boolean = false
+    )
+
+    private val _loadingProgress = MutableStateFlow(MaterialLoadingProgress())
+    val loadingProgress = _loadingProgress.asStateFlow()
+
     // Cached validated course pack for instant transition after wizard
     private var _validatedCoursePack: CoursePack? = null
 
@@ -166,7 +177,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application), T
 
     suspend fun validateAndCacheCoursePack(folderUri: Uri): LoadResult<CoursePack> {
         return withContext(Dispatchers.IO) {
-            val result = CourseManager.processCoursePack(courseRepository, folderUri)
+            _loadingProgress.value = MaterialLoadingProgress(step = "Accediendo a materiales...", isLoading = true)
+            val result = CourseManager.processCoursePack(courseRepository, folderUri) { step, current, total, file ->
+                _loadingProgress.value = MaterialLoadingProgress(
+                    step = step,
+                    current = current,
+                    total = total,
+                    currentFile = file,
+                    isLoading = true
+                )
+            }
             
             when (result) {
                 is LoadResult.Success -> {
@@ -181,6 +201,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application), T
                     _wizardValidationResult.value = LoadResult.Failure(result.errors)
                 }
             }
+            _loadingProgress.value = MaterialLoadingProgress(isLoading = false)
             result
         }
     }

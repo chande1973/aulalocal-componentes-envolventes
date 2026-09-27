@@ -57,7 +57,11 @@ object ZipUtils {
      * Unzips a file into a target directory.
      * Includes deep cleaning and disk space check.
      */
-    fun unzip(zipFile: File, targetDirectory: File): UnzipResult {
+    fun unzip(
+        zipFile: File,
+        targetDirectory: File,
+        onProgress: ((currentFile: String, extractedCount: Int) -> Unit)? = null
+    ): UnzipResult {
         // 1. Check disk space (approximation: 2x zip size)
         val requiredSpace = zipFile.length() * 2
         if (targetDirectory.freeSpace > 0 && targetDirectory.freeSpace < requiredSpace) {
@@ -66,7 +70,6 @@ object ZipUtils {
 
         try {
             // 2. Permission validation (for regular File)
-            // Note: targetDirectory might not exist yet, so we check parent or create it
             if (!targetDirectory.exists()) {
                 if (!targetDirectory.mkdirs()) {
                     return UnzipResult.Error("No se pudo crear el directorio de destino. Verifique los permisos.")
@@ -82,12 +85,17 @@ object ZipUtils {
 
             ZipInputStream(BufferedInputStream(FileInputStream(zipFile))).use { zis ->
                 var entry: ZipEntry? = zis.nextEntry
+                var extractedCount = 0
                 while (entry != null) {
-                    val file = File(targetDirectory, entry.name)
+                    val fileName = entry.name
+                    extractedCount++
+                    onProgress?.invoke(fileName, extractedCount)
+
+                    val file = File(targetDirectory, fileName)
                     
                     // Security check: Zip Slip vulnerability
                     if (!file.canonicalPath.startsWith(targetDirectory.canonicalPath)) {
-                        throw IOException("Entrada de ZIP maliciosa detectada: ${entry.name}")
+                        throw IOException("Entrada de ZIP maliciosa detectada: ${fileName}")
                     }
 
                     if (entry.isDirectory) {

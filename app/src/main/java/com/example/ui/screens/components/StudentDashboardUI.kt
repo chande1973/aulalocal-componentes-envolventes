@@ -13,10 +13,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
@@ -38,7 +40,10 @@ fun StudentDashboardBanners(
     isReconnecting: Boolean = false,
     onDismissVersionMsg: () -> Unit = {},
     onDismissClassEndedMsg: () -> Unit = {},
-    onConnectClick: () -> Unit
+    onConnectClick: () -> Unit,
+    onJoinNewClass: (() -> Unit)? = null,
+    updateState: StudentViewModel.UpdateState? = null,
+    onRetryDownload: (() -> Unit)? = null
 ) {
     Column {
         // Banner de Reconexión Inofensiva por Wi-Fi
@@ -82,26 +87,54 @@ fun StudentDashboardBanners(
                 border = BorderStroke(1.dp, StatusSuccess.copy(alpha = 0.6f)),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.CheckCircle, null, tint = StatusSuccess)
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(
-                            text = "CLASE FINALIZADA",
-                            color = StatusSuccess,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 11.sp,
-                            letterSpacing = 1.sp
-                        )
-                        Text(
-                            text = classEndedMsg,
-                            color = TextPrimary,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium
-                        )
+                Column {
+                    Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.CheckCircle, null, tint = StatusSuccess)
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                text = "CLASE FINALIZADA",
+                                color = StatusSuccess,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 11.sp,
+                                letterSpacing = 1.sp
+                            )
+                            Text(
+                                text = classEndedMsg,
+                                color = TextPrimary,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        IconButton(onClick = onDismissClassEndedMsg) {
+                            Icon(Icons.Default.Close, null, tint = TextSecondary, modifier = Modifier.size(16.dp))
+                        }
                     }
-                    IconButton(onClick = onDismissClassEndedMsg) {
-                        Icon(Icons.Default.Close, null, tint = TextSecondary, modifier = Modifier.size(16.dp))
+                    // NUEVO: CTA para unirse a nueva clase
+                    onJoinNewClass?.let {
+                        Column(Modifier.fillMaxWidth().padding(12.dp)) {
+                            HorizontalDivider(color = Color.White.copy(alpha = 0.2f))
+                            Button(
+                                onClick = it,
+                                modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(44.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(Icons.Default.Wifi, null, tint = Color.Black)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        "BUSCAR Y UNIRSE A NUEVA CLASE",
+                                        fontWeight = FontWeight.Black,
+                                        color = Color.Black,
+                                        fontSize = 13.sp
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -142,6 +175,229 @@ fun StudentDashboardBanners(
             }
         }
 
+        // NUEVO: Banner de estado de actualización de contenido (solo si no es Idle)
+        updateState?.let { state ->
+            if (state !is StudentViewModel.UpdateState.Idle) {
+                when (state) {
+                    is StudentViewModel.UpdateState.Connecting -> {
+                        Card(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                            colors = CardDefaults.cardColors(containerColor = AccentCyan.copy(alpha = 0.15f)),
+                            border = BorderStroke(1.dp, AccentCyan.copy(alpha = 0.6f)),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(18.dp),
+                                    color = AccentCyan,
+                                    strokeWidth = 2.dp
+                                )
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(
+                                        text = "ACTUALIZANDO CURSO",
+                                        color = AccentCyan,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        fontSize = 11.sp,
+                                        letterSpacing = 1.sp
+                                    )
+                                    Text(
+                                        text = state.message,
+                                        color = TextPrimary,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    is StudentViewModel.UpdateState.Downloading -> {
+                        Card(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                            colors = CardDefaults.cardColors(containerColor = AccentTeal.copy(alpha = 0.15f)),
+                            border = BorderStroke(1.dp, AccentTeal.copy(alpha = 0.6f)),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Column(Modifier.padding(12.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.CloudDownload, null, tint = AccentTeal, modifier = Modifier.size(18.dp))
+                                    Spacer(Modifier.width(12.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        Text(
+                                            text = "DESCARGANDO ACTUALIZACIÓN",
+                                            color = AccentTeal,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            fontSize = 11.sp,
+                                            letterSpacing = 1.sp
+                                        )
+                                        Text(
+                                            text = state.message,
+                                            color = TextPrimary,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                    Text(
+                                        text = "${(state.progress * 100).toInt()}%",
+                                        color = AccentTeal,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        fontSize = 14.sp
+                                    )
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                LinearProgressIndicator(
+                                    progress = { state.progress },
+                                    modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+                                    color = AccentTeal,
+                                    trackColor = Color.DarkGray.copy(alpha = 0.5f)
+                                )
+                            }
+                        }
+                    }
+                    is StudentViewModel.UpdateState.Processing -> {
+                        Card(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                            colors = CardDefaults.cardColors(containerColor = AccentAmber.copy(alpha = 0.15f)),
+                            border = BorderStroke(1.dp, AccentAmber.copy(alpha = 0.6f)),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Column(Modifier.padding(12.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Inventory, null, tint = AccentAmber, modifier = Modifier.size(18.dp))
+                                    Spacer(Modifier.width(10.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        Text(
+                                            text = state.step.ifEmpty { "INSTALANDO ACTUALIZACIÓN" }.uppercase(),
+                                            color = AccentAmber,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            fontSize = 11.sp,
+                                            letterSpacing = 1.sp
+                                        )
+                                        Text(
+                                            text = state.message,
+                                            color = TextPrimary,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                    if (state.total > 0) {
+                                        val pct = (state.current.toFloat() / state.total * 100).toInt().coerceIn(0, 100)
+                                        Text(
+                                            text = "$pct%",
+                                            color = AccentAmber,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            fontSize = 14.sp
+                                        )
+                                    }
+                                }
+                                if (state.currentFile.isNotEmpty()) {
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        text = "📄 Procesando: ${state.currentFile}",
+                                        color = TextSecondary,
+                                        fontSize = 10.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                if (state.total > 0) {
+                                    val pct = (state.current.toFloat() / state.total).coerceIn(0f, 1f)
+                                    LinearProgressIndicator(
+                                        progress = { pct },
+                                        modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+                                        color = AccentAmber,
+                                        trackColor = Color.DarkGray.copy(alpha = 0.5f)
+                                    )
+                                } else {
+                                    LinearProgressIndicator(
+                                        modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+                                        color = AccentAmber,
+                                        trackColor = Color.DarkGray.copy(alpha = 0.5f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    is StudentViewModel.UpdateState.Success -> {
+                        Card(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                            colors = CardDefaults.cardColors(containerColor = StatusSuccess.copy(alpha = 0.15f)),
+                            border = BorderStroke(1.dp, StatusSuccess.copy(alpha = 0.6f)),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.CheckCircle, null, tint = StatusSuccess, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(
+                                        text = "¡ACTUALIZACIÓN COMPLETADA!",
+                                        color = StatusSuccess,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        fontSize = 11.sp,
+                                        letterSpacing = 1.sp
+                                    )
+                                    Text(
+                                        text = state.message,
+                                        color = TextPrimary,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    is StudentViewModel.UpdateState.Error -> {
+                        Card(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                            colors = CardDefaults.cardColors(containerColor = StatusError.copy(alpha = 0.15f)),
+                            border = BorderStroke(1.dp, StatusError.copy(alpha = 0.6f)),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Column(Modifier.padding(12.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Error, null, tint = StatusError, modifier = Modifier.size(18.dp))
+                                    Spacer(Modifier.width(12.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        Text(
+                                            text = "ERROR DE ACTUALIZACIÓN",
+                                            color = StatusError,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            fontSize = 11.sp,
+                                            letterSpacing = 1.sp
+                                        )
+                                        Text(
+                                            text = state.message,
+                                            color = TextPrimary,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                }
+                                if (state.canRetry) {
+                                    Spacer(Modifier.height(8.dp))
+                                    Button(
+                                        onClick = { onRetryDownload?.invoke() },
+                                        modifier = Modifier.fillMaxWidth().height(40.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = StatusError),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Text(
+                                            "REINTENTAR",
+                                            fontWeight = FontWeight.Black,
+                                            color = Color.White,
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else -> {}
+                }
+            }
+        }
+
         // Banner de Modo Offline
         if (isStudyModeActive) {
             Card(
@@ -166,9 +422,9 @@ fun StudentDashboardBanners(
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text(
-                            text = stringResource(R.string.msg_offline_mode_desc), 
-                            color = TextPrimary, 
-                            fontSize = 11.sp, 
+                            text = stringResource(R.string.msg_offline_mode_desc),
+                            color = TextPrimary,
+                            fontSize = 11.sp,
                             lineHeight = 14.sp
                         )
                         Text(
@@ -257,7 +513,7 @@ fun StudentDashboardDialogs(
     }
 
     if (showLogViewer) LogViewerDialog(onDismiss = onLogDismiss)
-    
+
     if (showConnectionDialog) {
         ConnectionDialog(
             studentViewModel = studentViewModel,
@@ -273,11 +529,11 @@ fun StudentDashboardDialogs(
             onDismissRequest = { studentViewModel.dismissUnitUpdate() },
             title = { Text(stringResource(R.string.dialog_new_unit_title)) },
             text = { Text(stringResource(R.string.msg_new_unit_available, targetUnit?.title ?: "Unidad $pendingUnit")) },
-            confirmButton = { 
-                Button(onClick = { 
+            confirmButton = {
+                Button(onClick = {
                     targetUnit?.let { onUnitAccepted(it) }
-                    studentViewModel.acceptUnitUpdate() 
-                }) { Text(stringResource(R.string.btn_go_now)) } 
+                    studentViewModel.acceptUnitUpdate()
+                }) { Text(stringResource(R.string.btn_go_now)) }
             },
             dismissButton = { TextButton(onClick = { studentViewModel.dismissUnitUpdate() }) { Text(stringResource(R.string.btn_keep_here)) } }
         )
@@ -288,19 +544,19 @@ fun StudentDashboardDialogs(
         AlertDialog(
             onDismissRequest = onDoubtDismiss,
             title = { Text(stringResource(R.string.dialog_doubt_title, "")) },
-            text = { 
+            text = {
                 OutlinedTextField(
-                    value = doubtText, 
-                    onValueChange = { doubtText = it }, 
-                    label = { Text(stringResource(R.string.hint_write_doubt)) }, 
+                    value = doubtText,
+                    onValueChange = { doubtText = it },
+                    label = { Text(stringResource(R.string.hint_write_doubt)) },
                     modifier = Modifier.fillMaxWidth()
-                ) 
+                )
             },
-            confirmButton = { 
-                Button(onClick = { 
+            confirmButton = {
+                Button(onClick = {
                     studentViewModel.sendDoubtToTeacher(doubtText)
-                    onDoubtDismiss() 
-                }) { Text(stringResource(R.string.btn_send)) } 
+                    onDoubtDismiss()
+                }) { Text(stringResource(R.string.btn_send)) }
             }
         )
     }

@@ -8,8 +8,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -33,50 +35,146 @@ fun UnitCard(
     Card(
         Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp)
+            .padding(vertical = 8.dp)
             .clickable(isEnabled) { onClick() },
         colors = CardDefaults.cardColors(
             containerColor = if (isEnabled) CosmicDarkSurface else Color.DarkGray.copy(alpha = 0.05f)
         ),
-        border = if (isEnabled && !isRead) BorderStroke(1.dp, AccentCyan.copy(alpha = 0.3f)) else null,
-        shape = RoundedCornerShape(16.dp),
-        elevation = if (isEnabled && !isRead) CardDefaults.cardElevation(defaultElevation = 4.dp) else CardDefaults.cardElevation(0.dp)
+        border = BorderStroke(
+            1.dp,
+            if (isRead) StatusSuccess.copy(alpha = 0.5f)
+            else if (isEnabled) AccentCyan.copy(alpha = 0.4f)
+            else Color.Gray.copy(alpha = 0.15f)
+        ),
+        shape = RoundedCornerShape(20.dp),
+        elevation = if (isEnabled && !isRead) CardDefaults.cardElevation(defaultElevation = 6.dp) else CardDefaults.cardElevation(0.dp)
     ) {
-        Row(
-            Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(if (isEnabled) (if (isRead) StatusSuccess.copy(alpha = 0.1f) else AccentCyan.copy(alpha = 0.1f)) else Color.Gray.copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Center
+        Column(Modifier.padding(16.dp)) {
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = if (isEnabled) Icons.AutoMirrored.Filled.MenuBook else Icons.Default.Lock,
-                    contentDescription = null,
-                    tint = if (isEnabled) (if (isRead) StatusSuccess else AccentCyan) else Color.Gray,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Spacer(Modifier.width(16.dp))
-            Column {
-                Text(
-                    text = unit.title,
-                    color = if (isEnabled) TextPrimary else Color.Gray,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
-                )
-                if (isEnabled && isRead) {
+                // Badge de número de unidad
+                Box(
+                    Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(
+                            if (isEnabled) {
+                                if (isRead) StatusSuccess.copy(alpha = 0.15f)
+                                else AccentCyan.copy(alpha = 0.15f)
+                            } else Color.Gray.copy(alpha = 0.1f)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
-                        text = "Leída",
-                        color = StatusSuccess,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium
+                        text = String.format(Locale.ROOT, "%02d", unit.index),
+                        color = if (isEnabled) (if (isRead) StatusSuccess else AccentCyan) else Color.Gray,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 16.sp
                     )
                 }
+                Spacer(Modifier.width(16.dp))
+                Column(Modifier.weight(1f)) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = unit.title,
+                            color = if (isEnabled) TextPrimary else Color.Gray,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        // Estado / Badge
+                        Surface(
+                            color = if (isRead) StatusSuccess.copy(alpha = 0.15f) else if (isEnabled) AccentCyan.copy(alpha = 0.15f) else Color.Gray.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = if (isRead) Icons.Default.CheckCircle else if (isEnabled) Icons.AutoMirrored.Filled.MenuBook else Icons.Default.Lock,
+                                    contentDescription = null,
+                                    tint = if (isRead) StatusSuccess else if (isEnabled) AccentCyan else Color.Gray,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                                Spacer(Modifier.width(4.dp))
+                                Text(
+                                    text = if (isRead) "COMPLETADA" else if (isEnabled) "DISPONIBLE" else "BLOQUEADA",
+                                    color = if (isRead) StatusSuccess else if (isEnabled) AccentCyan else Color.Gray,
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    letterSpacing = 0.5.sp
+                                )
+                            }
+                        }
+                    }
+                    if (unit.description.isNotEmpty()) {
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = unit.description,
+                            color = TextSecondary,
+                            fontSize = 12.sp,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
             }
+
+            // Insignias de Recursos (Video, Teoría, Reto, Examen)
+            Spacer(Modifier.height(12.dp))
+            HorizontalDivider(color = Color.DarkGray.copy(alpha = 0.3f), thickness = 1.dp)
+            Spacer(Modifier.height(10.dp))
+            
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (unit.topicText.isNotEmpty() || unit.summary.isNotEmpty()) {
+                    ResourceBadge(icon = "📖", label = "Teoría")
+                }
+                if (!unit.videoFile.isNullOrEmpty() || unit.extendedContent.isNotEmpty()) {
+                    ResourceBadge(icon = "🎥", label = "Video/Media")
+                }
+                if (unit.challengeInstructions.isNotEmpty() || unit.challengeQuestions.isNotEmpty()) {
+                    ResourceBadge(icon = "⚡", label = "Reto")
+                }
+                if (unit.examQuestions.isNotEmpty()) {
+                    ResourceBadge(icon = "📝", label = "Examen (${unit.examQuestions.size})")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ResourceBadge(icon: String, label: String) {
+    Surface(
+        color = Color.DarkGray.copy(alpha = 0.25f),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = icon, fontSize = 11.sp)
+            Spacer(Modifier.width(4.dp))
+            Text(
+                text = label,
+                color = Color.LightGray,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }

@@ -73,8 +73,8 @@ fun StudentStudyContent(
         maxScroll > 0 -> (currentScroll.toFloat() / maxScroll.toFloat()).coerceIn(0f, 1f)
         else -> 0f
     }
-    // Habilitar botón de completado si ya está leída, si el texto es corto (maxScroll == 0) o si se desplazó al final
-    val isScrollAtBottom = isReadLocal || (maxScroll == 0) || (maxScroll > 0 && scrollProgress >= 0.88f)
+    // Habilitar botón de completado si ya está leída, si el texto es corto (maxScroll == 0) o si se desplazó al final (umbral tolerante 75%)
+    val isScrollAtBottom = isReadLocal || (maxScroll == 0) || (maxScroll > 0 && scrollProgress >= 0.75f)
 
     // Control dinámico del tamaño de fuente (Lector Inteligente)
     var fontSizeSp by remember { mutableIntStateOf(16) }
@@ -453,8 +453,33 @@ private fun ReadingChallengeDialog(
     onSuccess: () -> Unit
 ) {
     val challengeQuestions = remember(unit) {
-        val pool = if (unit.challengeQuestions.isNotEmpty()) unit.challengeQuestions else unit.examQuestions
-        if (pool.size >= 4) pool.shuffled().take(4) else pool.shuffled().take(minOf(4, pool.size))
+        val pool = mutableListOf<Question>()
+        if (unit.challengeQuestions.isNotEmpty()) {
+            pool.addAll(unit.challengeQuestions)
+        }
+        if (pool.isEmpty() && unit.examQuestions.isNotEmpty()) {
+            pool.addAll(unit.examQuestions)
+        }
+        
+        val result = mutableListOf<Question>()
+        if (pool.isNotEmpty()) {
+            while (result.size < 4) {
+                result.addAll(pool.shuffled())
+            }
+        } else {
+            result.add(
+                Question(
+                    questionText = "Pregunta de repaso de la Unidad ${unit.index}: ¿Comprendiste los conceptos principales explicados en la lección?",
+                    options = listOf("Sí, totalmente", "Más o menos", "No lo sé"),
+                    correctIndex = 0,
+                    explanation = "Has completado la lectura teórica de la unidad."
+                )
+            )
+            while (result.size < 4) {
+                result.add(result.first())
+            }
+        }
+        result.take(4)
     }
 
     var currentQuestionIdx by remember { mutableIntStateOf(0) }

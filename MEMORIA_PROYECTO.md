@@ -174,6 +174,11 @@ COURSE_INFO|Título del Curso|Versión|Descripción del Curso
         - **`StudentViewModel.kt`** (`startStudentSyncLoop`): Procesa `attendanceHistory` recibido y lo guarda en BD local del alumno (`attendance_history`).
     - **Resultado**: Alumno ahora ve `totalClasses` correcto, `attendanceCount` actualizado, **y historial fechado completo** en pestaña Estado.
 
+24. **Rediseño Estético y UX Moderno de la Vista del Alumno y Sincronización** (`StudentClassTab.kt` y `StudentComponents.kt`):
+    - **Tarjetas de Unidades Enriquecidas (`UnitCard`)**: Insignias dinámicas de recursos (*📖 Teoría*, *🎥 Video/Media*, *⚡ Reto*, *📝 Examen* con conteo), badges de número de unidad (`01`, `02`), descripciones de contenido y estados visuales limpios (*COMPLETADA*, *DISPONIBLE*, *BLOQUEADA*).
+    - **Tarjeta de Progreso General del Curso**: Muestra porcentaje global de avance, conteo de unidades leídas vs. totales y barra de progreso lineal.
+    - **Pantalla de Espera de Sincronización Avanzada**: Reemplazó el círculo giratorio simple por una pantalla inmersiva que incluye contenedor con icono de red, badge de **`📡 SESIÓN EN VIVO ACTIVA`**, barra de progreso lineal y consejos de conexión para el alumno.
+
 ---
 
 ## 📌 5. Bitácora de Siguientes Pasos y Mejoras Solicitadas por el Usuario
@@ -192,6 +197,7 @@ COURSE_INFO|Título del Curso|Versión|Descripción del Curso
 - [x] **Mejora 12**: Blindaje de Cierre de Clase contra caídas temporales de Wi-Fi y Protocolo de Cierre Explícito (`CMD_CLASS_FINALIZE_OFFICIAL`).
 - [x] **Mejora 13**: Corrección de cálculo de scroll e Eliminación Definitiva del disparador automático de marcado de lectura al abrir unidad.
 - [x] **Mejora 14**: Mini-Reto de Comprensión Lectora (Trivia de 2 preguntas, +50 Pts Racha 🔥 y Desbloqueo de Video).
+- [x] **Mejora 15**: Rediseño estético y UX avanzado de la vista del alumno, tarjetas de unidades enriquecidas y pantalla de espera de sincronización.
 - [ ] **Plan Registrado**: Evaluación OCR Offline de Resúmenes en Cuaderno con Cámara + Rúbrica de 20 Pts (Contenido 10 Pts, Redacción 5 Pts, Ortografía 5 Pts) y Promedio Dinámico para $N$ Unidades (Detalles en [`PLAN_EVALUACION_OCR.md`](file:///media/edgar/f/Aulalocal/AulaLocal_Backup-desarrollo/PLAN_EVALUACION_OCR.md)).
 - [ ] *(Espacio para ir anotando las siguientes observaciones a medida que se pruebe la app)*
 

@@ -118,6 +118,8 @@ fun IncomingFileDialog(
                 
                 if (isDownloading) {
                     Spacer(Modifier.height(16.dp))
+                    val downloadedKb = ((fileSize * downloadProgress) / 1024).toLong()
+                    val totalKb = fileSize / 1024
                     LinearProgressIndicator(
                         progress = { downloadProgress },
                         modifier = Modifier.fillMaxWidth().height(8.dp),
@@ -128,7 +130,10 @@ fun IncomingFileDialog(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Descargando: ${(downloadProgress * 100).toInt()}%", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Column {
+                            Text("Descargando: ${(downloadProgress * 100).toInt()}%", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text("$downloadedKb KB / $totalKb KB", fontSize = 10.sp, color = Color.Gray)
+                        }
                         TextButton(onClick = onDismiss, colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)) {
                             Text("CANCELAR", fontSize = 11.sp)
                         }

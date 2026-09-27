@@ -117,7 +117,7 @@ class ClassroomServerService : Service() {
         serviceScope.launch {
             // Transmitir comando oficial de cierre de clase a los alumnos antes de apagar el servidor
             LocalNetworkManager.setPendingCommand(NetworkConstants.CMD_CLASS_FINALIZE_OFFICIAL)
-            delay(2500)
+            delay(5000)
             LocalNetworkManager.stopTeacherServer()
             withContext(Dispatchers.Main) {
                 stopForeground(STOP_FOREGROUND_REMOVE)

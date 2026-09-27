@@ -18,6 +18,7 @@ import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
@@ -175,24 +176,36 @@ fun TeacherAulaTab(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
+                            ) {
                                 Icon(Icons.AutoMirrored.Filled.MenuBook, null, tint = AccentCyan, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(8.dp))
                                 Text(
-                                    text = "Progreso de Lectura (Unidad $liveActiveUnit)",
+                                    text = "Progreso Lectura (U.$liveActiveUnit)",
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White,
-                                    fontSize = 13.sp
+                                    fontSize = 13.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
-                            Text(
-                                text = "$readStudentsCount / $totalOfficial (${(avgClassReadPct * 100).toInt()}%)",
-                                fontWeight = FontWeight.ExtraBold,
-                                color = AccentCyan,
-                                fontSize = 13.sp
-                            )
+                            Spacer(Modifier.width(8.dp))
+                            Surface(
+                                color = AccentCyan.copy(alpha = 0.15f),
+                                shape = RoundedCornerShape(6.dp)
+                            ) {
+                                Text(
+                                    text = "$readStudentsCount / $totalOfficial (${(avgClassReadPct * 100).toInt()}%)",
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = AccentCyan,
+                                    fontSize = 12.sp,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
                         }
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.height(10.dp))
                         LinearProgressIndicator(
                             progress = { avgClassReadPct },
                             modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),

@@ -167,6 +167,9 @@ interface ClassroomDao {
     @Query("UPDATE synced_students SET checkpointCount = 0, lastCheckpointSeen = -1 WHERE sectionName = :sectionName")
     suspend fun resetSectionCheckpoints(sectionName: String)
 
+    @Query("UPDATE synced_students SET lastSeen = 0")
+    suspend fun resetAllStudentsLastSeen()
+
     @Query("DELETE FROM synced_students")
     suspend fun clearSyncedStudents()
 

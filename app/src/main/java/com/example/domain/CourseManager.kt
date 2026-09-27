@@ -16,10 +16,11 @@ object CourseManager {
      */
     suspend fun processCoursePack(
         repository: CourseRepository,
-        folderUri: Uri
+        folderUri: Uri,
+        onProgress: ((step: String, current: Int, total: Int, currentFile: String) -> Unit)? = null
     ): LoadResult<CoursePack> {
         return withContext(Dispatchers.IO) {
-            repository.loadCoursePack(folderUri)
+            repository.loadCoursePack(folderUri, onProgress)
         }
     }
 

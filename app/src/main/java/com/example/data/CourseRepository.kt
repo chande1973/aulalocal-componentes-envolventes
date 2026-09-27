@@ -22,8 +22,12 @@ class CourseRepository(
     private val moshi = CoursePackMoshi.moshi
     private val TAG = "CourseRepository"
 
-    suspend fun loadCoursePack(rootFolderUri: Uri): LoadResult<CoursePack> = withContext(Dispatchers.IO) {
+    suspend fun loadCoursePack(
+        rootFolderUri: Uri,
+        onProgress: ((step: String, current: Int, total: Int, currentFile: String) -> Unit)? = null
+    ): LoadResult<CoursePack> = withContext(Dispatchers.IO) {
         try {
+            onProgress?.invoke("Accediendo a la carpeta de materiales...", 1, 4, "Raíz")
             val rootDoc = try {
                 if (rootFolderUri.scheme == "file") {
                     val file = java.io.File(rootFolderUri.path ?: "")
@@ -47,12 +51,12 @@ class CourseRepository(
                 )))
             }
 
-            val csvFile = rootDoc.findFile("clase.csv")
+            val csvFile = rootDoc.findFile("clase.csv") ?: findFileRecursive(rootDoc, "clase.csv")
             if (csvFile != null) {
-                return@withContext loadFromCsv(rootDoc, csvFile.uri)
+                return@withContext loadFromCsv(rootDoc, csvFile.uri, onProgress)
             }
 
-            val indexFile = rootDoc.findFile("course_index.json")
+            val indexFile = rootDoc.findFile("course_index.json") ?: findFileRecursive(rootDoc, "course_index.json")
                 ?: return@withContext LoadResult.Failure(listOf(ValidationError(
                     file = "ROOT",
                     pointer = "",
@@ -81,8 +85,11 @@ class CourseRepository(
             val unitsMap = mutableMapOf<String, UnitPack>()
             val allErrors = mutableListOf<ValidationError>()
             val enabledUnits = courseIndex.units.filter { it.enabled }
-            
-            for (unitRef in enabledUnits) {
+            val totalUnits = enabledUnits.size
+
+            for ((idx, unitRef) in enabledUnits.withIndex()) {
+                val currentNum = idx + 1
+                onProgress?.invoke("Procesando unidad $currentNum de $totalUnits...", currentNum, totalUnits, unitRef.file)
                 val unitFile = findFileRecursive(rootDoc, unitRef.file)
                 if (unitFile == null) {
                     allErrors.add(ValidationError(unitRef.file, "", "Archivo de unidad no encontrado: ${unitRef.file}"))
@@ -133,8 +140,13 @@ class CourseRepository(
         }
     }
 
-    private suspend fun loadFromCsv(rootDoc: DocumentFile, uri: Uri): LoadResult<CoursePack> = withContext(Dispatchers.IO) {
+    private suspend fun loadFromCsv(
+        rootDoc: DocumentFile,
+        uri: Uri,
+        onProgress: ((step: String, current: Int, total: Int, currentFile: String) -> Unit)? = null
+    ): LoadResult<CoursePack> = withContext(Dispatchers.IO) {
         try {
+            onProgress?.invoke("Leyendo temario CSV (clase.csv)...", 1, 3, "clase.csv")
             val csvText = readFileToString(uri) ?: return@withContext LoadResult.Failure(listOf(ValidationError("clase.csv", "", "No se pudo leer el archivo CSV")))
             
             // Reconstrucción inteligente de filas lógicas multilínea
@@ -207,7 +219,14 @@ class CourseRepository(
             }
 
             // 2. Procesamiento y Validación Rápida de cada Línea
+            val totalDataRows = (lines.size - startIndex).coerceAtLeast(1)
+            onProgress?.invoke("Procesando temario del curso...", 2, 3, "clase.csv")
+
             for (i in startIndex until lines.size) {
+                val currentProcessed = i - startIndex + 1
+                if (currentProcessed % 2 == 0 || currentProcessed == totalDataRows) {
+                    onProgress?.invoke("Cargando Unidad $currentProcessed de $totalDataRows...", currentProcessed, totalDataRows, "clase.csv")
+                }
                 val line = lines[i]
                 val lineNum = i + 1
                 val parts = line.split("|")

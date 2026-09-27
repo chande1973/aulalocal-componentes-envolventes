@@ -55,6 +55,7 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
     val isListenerMode by studentViewModel.isListenerMode.collectAsStateWithLifecycle()
     val incomingMsg by studentViewModel.incomingPrivateMessage.collectAsStateWithLifecycle()
     val incomingFile by studentViewModel.incomingFile.collectAsStateWithLifecycle()
+    val updateState by studentViewModel.updateState.collectAsStateWithLifecycle()
 
     val studyProgress by mainViewModel.studyProgress.collectAsStateWithLifecycle()
     val inboxMessages by studentViewModel.inboxMessages.collectAsStateWithLifecycle()
@@ -195,6 +196,7 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
                 }
             },
             floatingActionButton = {
+                // Caso 1: En clase activa (isLocked) - FABs de Dudas + Presencia
                 if (activeTab == StudentTab.Class && isLocked && isSyncing && studyingUnit == null) {
                     Column(horizontalAlignment = Alignment.End) {
                         SmallFloatingActionButton(
@@ -213,6 +215,16 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
                         )
                     }
                 }
+                // Caso 2: Sin clase activa - FAB para buscar nueva clase
+                else if (activeTab == StudentTab.Class && !isLocked && studyingUnit == null) {
+                    ExtendedFloatingActionButton(
+                        onClick = { showConnectionDialog = true },
+                        containerColor = AccentCyan,
+                        icon = { Icon(Icons.Default.Wifi, null, tint = Color.Black) },
+                        text = { Text("BUSCAR CLASE", fontWeight = FontWeight.Black, color = Color.Black) },
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
             }
         ) { padding ->
             Column(Modifier.padding(padding).fillMaxSize().padding(16.dp)) {
@@ -228,7 +240,10 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
                         isReconnecting = isLocked && !isSyncing,
                         onDismissVersionMsg = { mainViewModel.dismissVersionNotification() },
                         onDismissClassEndedMsg = { studentViewModel.dismissClassEndedNotice() },
-                        onConnectClick = { showConnectionDialog = true }
+                        onConnectClick = { showConnectionDialog = true },
+                        onJoinNewClass = { showConnectionDialog = true },
+                        updateState = updateState,
+                        onRetryDownload = { studentViewModel.retryDownload() }
                     )
                 }
 
