@@ -153,7 +153,7 @@ object ReportManager {
         val attPct = if (totalClasses > 0) (attCount.toFloat() / totalClasses * 100).toInt() else 100
         sb.append("Clases Totales: $totalClasses | Asistencias: $attCount | Porcentaje: $attPct%\n")
         attendanceHistory.forEach { rec ->
-            val dateStr = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("es", "ES")).format(Date(rec.date))
+            val dateStr = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.forLanguageTag("es-ES")).format(Date(rec.date))
             sb.append("• [$dateStr] ${rec.status}\n")
         }
 
