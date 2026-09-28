@@ -370,7 +370,7 @@ fun AcademicStatusCard(
             }
             Spacer(Modifier.height(8.dp))
             LinearProgressIndicator(
-                progress = { if (totalClasses > 0) attendancePct else 1f },
+                progress = { if (totalClasses > 0) attendancePct.coerceIn(0f, 1f) else 1f },
                 modifier = Modifier.fillMaxWidth().height(10.dp).clip(CircleShape),
                 color = if (totalClasses == 0 || attendancePct >= 0.75f) StatusSuccess else StatusError,
                 trackColor = CosmicDarkCard

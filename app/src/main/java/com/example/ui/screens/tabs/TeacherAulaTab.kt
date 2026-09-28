@@ -112,7 +112,7 @@ fun TeacherAulaTab(
                         RadioButton(isSelected, { onSelectSection(section.name) })
                         Column(Modifier.weight(1f)) {
                             Text(section.name, color = Color.White, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
-                            val weeksText = "Encuentros: ${section.totalClasses} / ${section.plannedClasses}"
+                            val weeksText = "Clases dadas: ${section.totalClasses} | Semanas meta: ${section.plannedClasses}"
                             Text(weeksText, fontSize = 10.sp, color = Color.Gray)
                         }
                         IconButton(onClick = { onDeleteSection(section.id) }) {

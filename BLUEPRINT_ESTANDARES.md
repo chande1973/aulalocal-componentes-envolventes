@@ -31,6 +31,10 @@ Para que el curso sea intuitivo para los profesores, usa esta estructura:
 - **Regla:** Cada sesión de red debe ser única y aislada.
 - **Acción:** Usa un `sessionId` (UUID). Si cambia, el cliente limpia su memoria para evitar "fantasmas" de datos anteriores.
 
+### D. Planificación de Contexto Completo y Flujo de Datos Punta a Punta (End-to-End)
+- **Regla:** Quedan prohibidos los parches aislados o unidireccionales.
+- **Acción:** Al planificar cualquier cambio que afecte la interfaz, el modelo de datos o la red, es obligatorio diseñar y verificar todo el flujo **de punta a punta (End-to-End)**: emisor (UI/ViewModel), transporte (JSON/Red/Protocolo) y receptor (Servidor/DAO/Base de Datos), asegurando que ambos lados procesen y reflejen la información correctamente.
+
 ## 🪵 3. Sistema de Logging Eficiente
 - **Implementación:** Usa `Channels` de Coroutines para encolar logs.
 - **Beneficio:** Escritura en disco asíncrona que no bloquea la UI y ahorra batería.

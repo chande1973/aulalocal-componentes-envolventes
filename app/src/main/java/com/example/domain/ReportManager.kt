@@ -1,11 +1,18 @@
 package com.example.domain
 
 import android.content.Context
+import android.os.Environment
 import com.example.data.SyncedStudent
 import com.example.data.LocalSection
 import com.example.data.AppLogger
+import com.example.data.AttendanceRecord
+import com.example.data.UnitProgress
+import com.example.data.UserProfile
 import org.json.JSONObject
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 object ReportManager {
 
@@ -111,6 +118,59 @@ object ReportManager {
             file
         } catch (e: Exception) {
             AppLogger.e("ReportManager", "Error generating attendance report", e)
+            null
+        }
+    }
+
+    /**
+     * Genera un reporte / boleta personal de calificaciones y asistencia para el alumno.
+     */
+    fun generateStudentPersonalReport(
+        context: Context,
+        profile: UserProfile,
+        studyProgress: List<UnitProgress>,
+        attendanceHistory: List<AttendanceRecord>,
+        totalClasses: Int
+    ): File? {
+        val sb = StringBuilder()
+        sb.append("=== BOLETA ACADÉMICA PERSONAL ===\n")
+        sb.append("ESTUDIANTE: ${profile.lastName}, ${profile.firstName}\n")
+        sb.append("CÉDULA: ${profile.cardId}\n")
+        sb.append("SECCIÓN: ${profile.activeSection}\n\n")
+        
+        sb.append("--- CALIFICACIONES POR UNIDAD ---\n")
+        val examGrades = studyProgress.filter { it.examCompleted && it.examGrade != null }
+        val avg = if (examGrades.isNotEmpty()) examGrades.sumOf { it.examGrade!!.toDouble() }.toFloat() / examGrades.size else 0f
+        sb.append("Promedio Actual: ${"%.2f".format(Locale.US, avg)}\n")
+        studyProgress.forEach { p ->
+            if (p.examCompleted) {
+                sb.append("Unidad ${p.unitIndex}: Nota ${p.examGrade ?: 0f}\n")
+            }
+        }
+        
+        sb.append("\n--- HISTORIAL DE ASISTENCIA ---\n")
+        val attCount = profile.attendanceCount
+        val attPct = if (totalClasses > 0) (attCount.toFloat() / totalClasses * 100).toInt() else 100
+        sb.append("Clases Totales: $totalClasses | Asistencias: $attCount | Porcentaje: $attPct%\n")
+        attendanceHistory.forEach { rec ->
+            val dateStr = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("es", "ES")).format(Date(rec.date))
+            sb.append("• [$dateStr] ${rec.status}\n")
+        }
+
+        return try {
+            val fileName = "Boleta_${profile.cardId}_${System.currentTimeMillis()}.txt"
+            val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            val reportsDir = File(downloadsDir, "AulaLocal_Reportes")
+            val file = try {
+                if (!reportsDir.exists()) reportsDir.mkdirs()
+                File(reportsDir, fileName)
+            } catch (e: Exception) {
+                File(context.getExternalFilesDir(null), fileName)
+            }
+            file.writeText(sb.toString())
+            file
+        } catch (e: Exception) {
+            AppLogger.e("ReportManager", "Error generating student personal report", e)
             null
         }
     }

@@ -14,7 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.SyncedStudent
 import com.example.data.LocalSection
+import com.example.ui.components.TeacherReportDialog
 import com.example.ui.theme.*
 import org.json.JSONObject
 
@@ -103,6 +104,33 @@ fun TeacherMetricsTab(
                     Spacer(Modifier.width(4.dp))
                     Text("Asist", fontSize = 10.sp)
                 }
+            }
+
+            Spacer(Modifier.height(8.dp))
+            var showReportDialog by remember { mutableStateOf(false) }
+            Button(
+                onClick = { showReportDialog = true },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = AccentTeal.copy(alpha = 0.15f)),
+                border = BorderStroke(1.dp, AccentTeal)
+            ) {
+                Icon(Icons.Default.Download, null, tint = AccentTeal, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("📊 VER REPORTE CONSOLIDADO", fontWeight = FontWeight.Bold, color = AccentTeal)
+            }
+
+            if (showReportDialog) {
+                TeacherReportDialog(
+                    sectionName = liveSection,
+                    totalClasses = totalClases,
+                    students = syncedStudents,
+                    totalUnits = totalUnitsCount,
+                    onGenerateCsv = {
+                        onGenerateAcademicReport()
+                        showReportDialog = false
+                    },
+                    onDismiss = { showReportDialog = false }
+                )
             }
 
             Spacer(Modifier.height(16.dp))

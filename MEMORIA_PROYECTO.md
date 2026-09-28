@@ -198,7 +198,13 @@ COURSE_INFO|Título del Curso|Versión|Descripción del Curso
 - [x] **Mejora 13**: Corrección de cálculo de scroll e Eliminación Definitiva del disparador automático de marcado de lectura al abrir unidad.
 - [x] **Mejora 14**: Mini-Reto de Comprensión Lectora (Trivia de 2 preguntas, +50 Pts Racha 🔥 y Desbloqueo de Video).
 - [x] **Mejora 15**: Rediseño estético y UX avanzado de la vista del alumno, tarjetas de unidades enriquecidas y pantalla de espera de sincronización.
+- [x] **Mejora 16**: Sincronización en tiempo real de edición de perfil de alumno en el servidor del profesor (`ACTION_SYNC`).
 - [ ] **Plan Registrado**: Evaluación OCR Offline de Resúmenes en Cuaderno con Cámara + Rúbrica de 20 Pts (Contenido 10 Pts, Redacción 5 Pts, Ortografía 5 Pts) y Promedio Dinámico para $N$ Unidades (Detalles en [`PLAN_EVALUACION_OCR.md`](file:///media/edgar/f/Aulalocal/AulaLocal_Backup-desarrollo/PLAN_EVALUACION_OCR.md)).
+
+---
+
+## 🧭 6. Directriz Obligatoria de Arquitectura y Contexto (End-to-End)
+- **Regla de Oro**: Quedan prohibidos los parches aislados. Al planificar y desarrollar cualquier modificación que involucre comunicación red (cliente-servidor) o persistencia, **es obligatorio planificar y verificar todo el flujo de punta a punta (End-to-End)**: emisor (UI/ViewModel), transporte (Protocolo/JSON/Red) y receptor (Servidor/DAO/Base de Datos), garantizando que ambos extremos procesen y reflejen la información de manera síncrona y robusta.
 - [ ] *(Espacio para ir anotando las siguientes observaciones a medida que se pruebe la app)*
 
 ---

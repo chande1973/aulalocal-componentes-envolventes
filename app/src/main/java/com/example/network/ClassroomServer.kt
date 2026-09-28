@@ -158,6 +158,11 @@ object ClassroomServer {
                         }
 
                         val updated = existing.copy(
+                            firstName = request.optString("firstName", existing.firstName),
+                            lastName = request.optString("lastName", existing.lastName),
+                            email = request.optString("email", existing.email),
+                            avatar = request.optString("avatar", existing.avatar),
+                            sectionName = request.optString("sectionName", existing.sectionName),
                             lastSeen = System.currentTimeMillis(),
                             checkpointCount = cpCount,
                             lastCheckpointSeen = lastCP,
@@ -178,6 +183,7 @@ object ClassroomServer {
                             historyArray.put(JSONObject().apply {
                                 put("date", record.date)
                                 put("status", record.status)
+                                put("classNumber", record.classNumber)
                             })
                         }
                         response.put("attendanceHistory", historyArray)

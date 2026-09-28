@@ -355,6 +355,22 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
                 dao.insertProfile(profile.copy(lastSessionStartTime = 0L))
                 dao.resetAllStudentsLastSeen()
                 
+                // Actualizar configuración del servidor local en tiempo real con el nuevo total de clases
+                LocalNetworkManager.updateServerConfig(
+                    teacher = "${profile.firstName} ${profile.lastName}",
+                    section = sectionName,
+                    unit = _liveActiveUnitIndex.value,
+                    reading = _liveIsReadingActive.value,
+                    exam = _liveIsExamActive.value,
+                    reads = _enabledReadUnits.value,
+                    exams = _enabledExamUnits.value,
+                    msg = _teacherMessage.value,
+                    total = updatedSection.totalClasses
+                )
+
+                // Dar tiempo suficiente (6s) para que los alumnos alcancen a sincronizar su última asistencia antes de apagar el servidor
+                delay(6000)
+                
                 stopClassServer()
                 _uiEvents.emit(getApplication<Application>().getString(R.string.msg_class_finished_attendance_saved))
             }

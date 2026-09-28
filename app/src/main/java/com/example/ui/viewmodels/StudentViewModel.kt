@@ -349,6 +349,15 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
             var consecutiveFailures = 0
             while (true) {
                 try {
+                    // Consultar perfil actualizado de la base de datos local en tiempo real
+                    val currentProfile = dao.getUserProfile()
+                    val activeCardId = currentProfile?.cardId ?: cardId
+                    val activeFirstName = currentProfile?.firstName ?: firstName
+                    val activeLastName = currentProfile?.lastName ?: lastName
+                    val activeEmail = currentProfile?.email ?: email
+                    val activeAvatar = currentProfile?.avatar ?: avatar
+                    val activeSection = currentProfile?.activeSection?.ifEmpty { section } ?: section
+
                     val progressList = dao.getAllProgress()
                     val readProgress = progressList.filter { it.isRead }.map { it.unitIndex }
                     val challengeProgress = progressList.filter { it.isChallengeDone }.map { it.unitIndex }
@@ -358,12 +367,12 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                     LocalNetworkManager.syncWithTeacher(
                         ip = ip,
                         port = port,
-                        cardId = cardId,
-                        first = firstName,
-                        last = lastName,
-                        email = email,
-                        avatar = avatar,
-                        section = section,
+                        cardId = activeCardId,
+                        first = activeFirstName,
+                        last = activeLastName,
+                        email = activeEmail,
+                        avatar = activeAvatar,
+                        section = activeSection,
                         read = readProgress,
                         challenge = challengeProgress,
                         grades = examGrades,
@@ -469,11 +478,14 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                                     val cardId = dao.getUserProfile()?.cardId ?: return@launch
                                     for (i in 0 until historyArray.length()) {
                                         val item = historyArray.getJSONObject(i)
+                                        val date = item.getLong("date")
+                                        val classNumber = item.optInt("classNumber", 1)
                                         dao.insertAttendanceRecord(AttendanceRecord(
                                             studentCardId = cardId,
                                             studentName = "${lastName}, ${firstName}",
                                             sectionName = section,
-                                            date = item.getLong("date"),
+                                            classNumber = classNumber,
+                                            date = date,
                                             status = item.getString("status")
                                         ))
                                     }

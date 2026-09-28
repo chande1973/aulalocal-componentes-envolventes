@@ -25,6 +25,8 @@ import com.example.data.model.UnitData
 import com.example.ui.MainViewModel
 import com.example.ui.components.ConnectionStatusIcon
 import com.example.ui.components.ExamNotificationCard
+import com.example.ui.components.StudentReportDialog
+import com.example.domain.ReportManager
 import com.example.ui.screens.components.StudentDashboardBanners
 import com.example.ui.screens.components.StudentDashboardDialogs
 import com.example.ui.screens.models.StudentTab
@@ -68,6 +70,7 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
     var showLogViewer by remember { mutableStateOf(false) }
     var showConnectionDialog by remember { mutableStateOf(false) }
     var showSettingsDialog by remember { mutableStateOf(false) }
+    var showStudentReportDialog by remember { mutableStateOf(false) }
 
     val isProfileEditUnlocked by studentViewModel.isProfileEditUnlocked.collectAsStateWithLifecycle()
 
@@ -273,7 +276,8 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
                                 attendanceHistory = attendanceHistory,
                                 onAbandonClass = { studentViewModel.unlockAndDisconnectStudent() },
                                 onViewConsole = { showLogViewer = true },
-                                onReportBug = { AppLogger.shareLogFile(context) }
+                                onReportBug = { AppLogger.shareLogFile(context) },
+                                onDownloadReport = { showStudentReportDialog = true }
                             )
                         }
                         StudentTab.Profile -> StudentProfileTab(
@@ -380,5 +384,24 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
                 }
             )
         }
+    }
+
+    if (showStudentReportDialog && studentProfile != null) {
+        val attendanceHistoryForDialog by studentViewModel.getStudentAttendanceHistory(studentProfile!!.cardId).collectAsStateWithLifecycle(emptyList())
+        StudentReportDialog(
+            profile = studentProfile!!,
+            studyProgress = studyProgress,
+            totalClasses = totalClasses,
+            onDownloadReport = {
+                val file = ReportManager.generateStudentPersonalReport(context, studentProfile!!, studyProgress, attendanceHistoryForDialog, totalClasses)
+                if (file != null) {
+                    Toast.makeText(context, "✅ Boleta guardada en: ${file.absolutePath}", Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(context, "❌ Error al generar boleta", Toast.LENGTH_SHORT).show()
+                }
+                showStudentReportDialog = false
+            },
+            onDismiss = { showStudentReportDialog = false }
+        )
     }
 }

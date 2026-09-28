@@ -13,11 +13,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.RoundedCornerShape
 import com.example.ui.viewmodels.StudentViewModel
-import com.example.ui.theme.AccentCyan
-import com.example.ui.theme.AccentTeal
+import com.example.ui.theme.*
+import java.util.Locale
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
+import com.example.data.UnitProgress
+import com.example.data.UserProfile
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -153,6 +157,68 @@ fun IncomingFileDialog(
                 TextButton(onClick = onDismiss) {
                     Text("AHORA NO")
                 }
+            }
+        }
+    )
+}
+
+@Composable
+fun StudentReportDialog(
+    profile: UserProfile,
+    studyProgress: List<UnitProgress>,
+    totalClasses: Int,
+    onDownloadReport: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val examGrades = studyProgress.filter { it.examCompleted && it.examGrade != null }
+    val avgGrade = if (examGrades.isNotEmpty()) examGrades.sumOf { it.examGrade!!.toDouble() }.toFloat() / examGrades.size else 0f
+    val attCount = profile.attendanceCount
+    val attPct = if (totalClasses > 0) (attCount.toFloat() / totalClasses * 100).toInt() else 100
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("📄 Boleta Académica Personal", fontWeight = FontWeight.Bold, fontSize = 16.sp) },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text("${profile.lastName}, ${profile.firstName} (CI: ${profile.cardId})", fontSize = 12.sp, color = Color.Gray)
+                Spacer(Modifier.height(12.dp))
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = CosmicDarkSurface),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, AccentCyan.copy(alpha = 0.3f))
+                ) {
+                    Column(Modifier.padding(16.dp)) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Promedio de Notas:", color = TextSecondary, fontSize = 13.sp)
+                            Text(if (examGrades.isNotEmpty()) "%.2f".format(Locale.US, avgGrade) else "Sin evaluar", color = TextPrimary, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Asistencia Global:", color = TextSecondary, fontSize = 13.sp)
+                            Text("$attCount de $totalClasses ($attPct%)", color = AccentCyan, fontWeight = FontWeight.Black)
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Unidades Completadas:", color = TextSecondary, fontSize = 13.sp)
+                            Text("${studyProgress.count { it.isRead || it.examCompleted }}", color = TextPrimary, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+                Text("Genera tu archivo de boleta personal para compartirlo o guardarlo en tu dispositivo.", fontSize = 11.sp, color = Color.Gray)
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDownloadReport,
+                colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)
+            ) {
+                Text("📥 DESCARGAR BOLETA TXT", fontWeight = FontWeight.Bold, color = Color.Black)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("CERRAR")
             }
         }
     )

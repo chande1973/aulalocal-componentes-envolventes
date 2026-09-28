@@ -80,6 +80,7 @@ object TestDataInjector {
                         studentCardId = student.cardId,
                         studentName = "${student.lastName}, ${student.firstName}",
                         sectionName = sectionName,
+                        classNumber = w,
                         date = System.currentTimeMillis() - (weeks - w) * 7 * 24 * 60 * 60 * 1000L,
                         status = if (isPresent) "Presente" else "Ausente"
                     )

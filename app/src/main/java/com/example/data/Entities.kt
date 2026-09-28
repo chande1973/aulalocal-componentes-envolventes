@@ -71,13 +71,31 @@ data class SyncedStudent(
 
 @Entity(tableName = "attendance_history")
 data class AttendanceRecord(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @PrimaryKey val id: String,
     val studentCardId: String,
     val studentName: String,
     val sectionName: String,
+    val classNumber: Int = 1,
     val date: Long = System.currentTimeMillis(),
     val status: String // "Presente", "Ausente", "Retraso"
-)
+) {
+    constructor(
+        studentCardId: String,
+        studentName: String,
+        sectionName: String,
+        classNumber: Int = 1,
+        date: Long = System.currentTimeMillis(),
+        status: String
+    ) : this(
+        id = "${studentCardId}_${sectionName}_class_$classNumber",
+        studentCardId = studentCardId,
+        studentName = studentName,
+        sectionName = sectionName,
+        classNumber = classNumber,
+        date = date,
+        status = status
+    )
+}
 
 @Entity(tableName = "unit_progress")
 data class UnitProgress(

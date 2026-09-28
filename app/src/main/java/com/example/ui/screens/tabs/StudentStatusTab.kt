@@ -50,7 +50,8 @@ fun StudentStatusTab(
     attendanceHistory: List<AttendanceRecord> = emptyList(),
     onAbandonClass: () -> Unit,
     onViewConsole: () -> Unit,
-    onReportBug: () -> Unit
+    onReportBug: () -> Unit,
+    onDownloadReport: () -> Unit
 ) {
     val dateFormat = SimpleDateFormat("EEEE dd/MM/yyyy - HH:mm", Locale("es", "ES"))
 
@@ -64,7 +65,7 @@ fun StudentStatusTab(
         val hasEvaluations = examGrades.isNotEmpty()
         val averageGrade = if (hasEvaluations) examGrades.sumOf { it.examGrade!!.toDouble() }.toFloat() / examGrades.size else 0f
         val attendanceCount = profile?.attendanceCount ?: 0
-        val attendancePct = if (totalClasses > 0) attendanceCount.toFloat() / totalClasses else 0f
+        val attendancePct = if (totalClasses > 0) (attendanceCount.toFloat() / totalClasses).coerceIn(0f, 1f) else 0f
         val completedUnits = studyProgress.count { it.isRead || it.examCompleted }
         val missedClasses = (totalClasses - attendanceCount).coerceAtLeast(0)
         val failedExamsCount = examGrades.count { (it.examGrade ?: 0f) < 11.5f }
@@ -319,6 +320,15 @@ fun StudentStatusTab(
             label = "Reportar Fallo por Correo/Soporte",
             color = Color.LightGray,
             onClick = onReportBug
+        )
+
+        Spacer(Modifier.height(8.dp))
+
+        SystemActionRow(
+            icon = Icons.Default.Assessment,
+            label = "📄 Descargar Boleta y Métricas Personales",
+            color = AccentCyan,
+            onClick = onDownloadReport
         )
     }
 }

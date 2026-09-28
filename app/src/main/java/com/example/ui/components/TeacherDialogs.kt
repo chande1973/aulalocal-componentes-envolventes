@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material3.*
@@ -185,6 +186,68 @@ fun StudentDetailAndRecuperativoDialog(
         },
         confirmButton = {
             Button(onClick = onDismiss) {
+                Text("CERRAR")
+            }
+        }
+    )
+}
+
+@Composable
+fun TeacherReportDialog(
+    sectionName: String,
+    totalClasses: Int,
+    students: List<SyncedStudent>,
+    totalUnits: Int,
+    onGenerateCsv: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val totalStudents = students.size
+    val totalAsistenciasSum = students.sumOf { it.attendanceCount }
+    val avgAttendance = if (totalStudents > 0 && totalClasses > 0) (totalAsistenciasSum.toFloat() / (totalStudents * totalClasses) * 100).toInt() else 0
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("📊 Reporte Consolidado - $sectionName", fontWeight = FontWeight.Bold, fontSize = 16.sp) },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text("Resumen Estadístico del Aula", fontSize = 12.sp, color = Color.Gray)
+                Spacer(Modifier.height(12.dp))
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = CosmicDarkSurface),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, AccentTeal.copy(alpha = 0.3f))
+                ) {
+                    Column(Modifier.padding(16.dp)) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Alumnos Registrados:", color = TextSecondary, fontSize = 13.sp)
+                            Text("$totalStudents", color = TextPrimary, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Clases Impartidas:", color = TextSecondary, fontSize = 13.sp)
+                            Text("$totalClasses", color = TextPrimary, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Asistencia Promedio:", color = TextSecondary, fontSize = 13.sp)
+                            Text("$avgAttendance%", color = AccentTeal, fontWeight = FontWeight.Black)
+                        }
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+                Text("Puedes generar y descargar el acta de calificaciones y asistencia en formato CSV.", fontSize = 11.sp, color = Color.Gray)
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onGenerateCsv,
+                colors = ButtonDefaults.buttonColors(containerColor = AccentTeal)
+            ) {
+                Text("📥 DESCARGAR / COMPARTIR CSV", fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
                 Text("CERRAR")
             }
         }

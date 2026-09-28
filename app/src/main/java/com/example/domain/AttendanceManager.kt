@@ -33,10 +33,12 @@ object AttendanceManager {
             ))
 
             // 3. Guardar registro histórico
+            val nextClassNumber = section.totalClasses + 1
             dao.insertAttendanceRecord(AttendanceRecord(
                 studentCardId = student.cardId,
                 studentName = "${student.lastName}, ${student.firstName}",
                 sectionName = section.name,
+                classNumber = nextClassNumber,
                 status = finalStatus
             ))
         }
