@@ -179,6 +179,10 @@ COURSE_INFO|Título del Curso|Versión|Descripción del Curso
     - **Tarjeta de Progreso General del Curso**: Muestra porcentaje global de avance, conteo de unidades leídas vs. totales y barra de progreso lineal.
     - **Pantalla de Espera de Sincronización Avanzada**: Reemplazó el círculo giratorio simple por una pantalla inmersiva que incluye contenedor con icono de red, badge de **`📡 SESIÓN EN VIVO ACTIVA`**, barra de progreso lineal y consejos de conexión para el alumno.
 
+25. **Barra de Progreso de Lectura Fija (Sticky) en Vista de Estudio del Alumno** (`StudentStudyContent.kt`):
+    - Se separó la tarjeta de avance de lectura y controles de tipografía (`A-` / `A+`) del contenido principal desplazable.
+    - Permanece fija en la parte superior de la pantalla durante todo el desplazamiento, permitiendo al alumno supervisar su porcentaje exacto de lectura en tiempo real en todo momento.
+
 ---
 
 ## 📌 5. Bitácora de Siguientes Pasos y Mejoras Solicitadas por el Usuario
@@ -199,6 +203,7 @@ COURSE_INFO|Título del Curso|Versión|Descripción del Curso
 - [x] **Mejora 14**: Mini-Reto de Comprensión Lectora (Trivia de 2 preguntas, +50 Pts Racha 🔥 y Desbloqueo de Video).
 - [x] **Mejora 15**: Rediseño estético y UX avanzado de la vista del alumno, tarjetas de unidades enriquecidas y pantalla de espera de sincronización.
 - [x] **Mejora 16**: Sincronización en tiempo real de edición de perfil de alumno en el servidor del profesor (`ACTION_SYNC`).
+- [x] **Mejora 17**: Barra de progreso de lectura fija (*sticky*) en la vista de estudio del alumno (`StudentStudyContent.kt`).
 - [ ] **Plan Registrado**: Evaluación OCR Offline de Resúmenes en Cuaderno con Cámara + Rúbrica de 20 Pts (Contenido 10 Pts, Redacción 5 Pts, Ortografía 5 Pts) y Promedio Dinámico para $N$ Unidades (Detalles en [`PLAN_EVALUACION_OCR.md`](file:///media/edgar/f/Aulalocal/AulaLocal_Backup-desarrollo/PLAN_EVALUACION_OCR.md)).
 
 ---
