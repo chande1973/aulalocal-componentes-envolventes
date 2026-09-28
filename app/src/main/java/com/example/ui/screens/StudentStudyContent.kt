@@ -112,13 +112,12 @@ fun StudentStudyContent(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 8.dp)
-            .verticalScroll(scrollState)
     ) {
-        // BARRA SUPERIOR DE PROGRESO Y CONTROLES DE LECTURA
+        // BARRA SUPERIOR DE PROGRESO Y CONTROLES DE LECTURA (FIJA / STICKY)
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp),
+                .padding(vertical = 4.dp),
             colors = CardDefaults.cardColors(containerColor = CosmicDarkSurface),
             shape = RoundedCornerShape(16.dp),
             border = BorderStroke(1.dp, AccentCyan.copy(alpha = 0.2f))
@@ -190,6 +189,15 @@ fun StudentStudyContent(
                 )
             }
         }
+
+        Spacer(Modifier.height(8.dp))
+
+        // CONTENIDO DESPLAZABLE (E-BOOK, VÍDEO, EXAMEN)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+        ) {
 
         // TARJETA E-BOOK DE LECTURA TEÓRICA
         Card(
@@ -444,6 +452,7 @@ fun StudentStudyContent(
             Spacer(Modifier.height(24.dp))
         }
     }
+}
 }
 
 @Composable
