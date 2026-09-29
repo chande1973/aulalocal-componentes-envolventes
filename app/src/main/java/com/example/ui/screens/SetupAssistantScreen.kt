@@ -251,9 +251,26 @@ fun SetupAssistantScreen(
                                 enabled = isFormValid, 
                                 modifier = Modifier.fillMaxWidth().height(64.dp),
                                 shape = RoundedCornerShape(16.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = if (selectedRole == "teacher") AccentTeal else AccentCyan)
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (selectedRole == "teacher") AccentTeal else AccentCyan,
+                                    disabledContainerColor = Color.DarkGray.copy(alpha = 0.5f),
+                                    disabledContentColor = Color.LightGray
+                                )
                             ) { 
-                                Text(if (selectedRole == "teacher") "SIGUIENTE: MATERIALES" else "SIGUIENTE: CONEXIÓN Y MATERIALES", fontWeight = FontWeight.ExtraBold, color = if (selectedRole == "student") Color.Black else Color.White) 
+                                if (isFormValid) {
+                                    Text(
+                                        if (selectedRole == "teacher") "SIGUIENTE: MATERIALES" else "SIGUIENTE: CONEXIÓN Y MATERIALES", 
+                                        fontWeight = FontWeight.ExtraBold, 
+                                        color = if (selectedRole == "student") Color.Black else Color.White
+                                    ) 
+                                } else {
+                                    Text(
+                                        "Completa tus datos para continuar", 
+                                        fontWeight = FontWeight.Bold, 
+                                        fontSize = 13.sp,
+                                        color = Color.LightGray
+                                    )
+                                }
                             }
                         }
                     }

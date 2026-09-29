@@ -226,8 +226,8 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
                         )
                     }
                 }
-                // Caso 2: Sin clase activa - FAB para buscar nueva clase
-                else if (activeTab == StudentTab.Class && !isLocked && studyingUnit == null) {
+                // Caso 2: Sin clase activa pero con unidades cargadas - FAB para buscar nueva clase
+                else if (activeTab == StudentTab.Class && !isLocked && studyingUnit == null && units.isNotEmpty()) {
                     ExtendedFloatingActionButton(
                         onClick = { showConnectionDialog = true },
                         containerColor = AccentCyan,

@@ -1,5 +1,6 @@
 package com.example.ui.screens.tabs
 
+import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -10,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Wifi
@@ -28,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.model.UnitData
 import com.example.data.UnitProgress
+import com.example.ui.components.FileExplorerDialog
 import com.example.ui.components.UnitCard
 import com.example.ui.theme.AccentAmber
 import com.example.ui.theme.AccentCyan
@@ -154,7 +157,15 @@ fun StudentClassTab(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Icon(Icons.Default.School, null, modifier = Modifier.size(80.dp), tint = Color.DarkGray.copy(alpha = 0.5f))
+                Box(
+                    modifier = Modifier
+                        .size(96.dp)
+                        .clip(CircleShape)
+                        .background(AccentCyan.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.School, null, modifier = Modifier.size(56.dp), tint = AccentCyan)
+                }
                 Spacer(Modifier.height(24.dp))
                 Text("¡Bienvenido al Aula!", style = MaterialTheme.typography.headlineMedium, color = Color.White, fontWeight = FontWeight.Black)
                 Text("Para comenzar a estudiar, conéctate a una clase en vivo o vincula tus materiales.", color = Color.Gray, textAlign = TextAlign.Center, fontSize = 14.sp)
@@ -167,9 +178,9 @@ fun StudentClassTab(
                     colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Icon(Icons.Default.Wifi, null)
+                    Icon(Icons.Default.Wifi, null, tint = Color.Black)
                     Spacer(Modifier.width(12.dp))
-                    Text("BUSCAR CLASE EN VIVO", fontWeight = FontWeight.Black)
+                    Text("BUSCAR CLASE EN VIVO", fontWeight = FontWeight.Black, color = Color.Black)
                 }
                 
                 Spacer(Modifier.height(16.dp))
@@ -178,11 +189,11 @@ fun StudentClassTab(
                     onClick = onLinkFolderClick,
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.5f))
+                    border = BorderStroke(1.5.dp, AccentTeal)
                 ) {
-                    Icon(Icons.Default.FolderOpen, null, tint = Color.Gray)
+                    Icon(Icons.Default.FolderOpen, null, tint = AccentTeal)
                     Spacer(Modifier.width(12.dp))
-                    Text("VINCULAR CARPETA LOCAL", color = Color.Gray, fontWeight = FontWeight.Bold)
+                    Text("VINCULAR CARPETA LOCAL", color = AccentTeal, fontWeight = FontWeight.ExtraBold)
                 }
             }
         }
@@ -234,11 +245,28 @@ fun StudentClassTab(
                         fontWeight = FontWeight.Black
                     )
                     Spacer(Modifier.width(8.dp))
+                    var showExplorerDialog by remember { mutableStateOf(false) }
+
+                    IconButton(
+                        onClick = { showExplorerDialog = true },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(Icons.Default.Folder, contentDescription = "Explorar Archivos", tint = AccentCyan, modifier = Modifier.size(20.dp))
+                    }
+
                     IconButton(
                         onClick = onLinkFolderClick,
                         modifier = Modifier.size(32.dp)
                     ) {
                         Icon(Icons.Default.FolderOpen, contentDescription = "Cambiar Carpeta", tint = AccentCyan, modifier = Modifier.size(20.dp))
+                    }
+
+                    if (showExplorerDialog) {
+                        val folderUri = profile?.materialsFolderUri?.takeIf { it.isNotEmpty() }?.let { Uri.parse(it) }
+                        FileExplorerDialog(
+                            folderUri = folderUri,
+                            onDismiss = { showExplorerDialog = false }
+                        )
                     }
                 }
                 
