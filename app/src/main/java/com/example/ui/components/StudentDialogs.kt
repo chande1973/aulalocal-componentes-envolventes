@@ -20,6 +20,7 @@ import com.example.ui.theme.*
 import java.util.Locale
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.text.TextStyle
 import com.example.data.UnitProgress
 import com.example.data.UserProfile
 
@@ -214,6 +215,72 @@ fun StudentReportDialog(
                 colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)
             ) {
                 Text("📥 DESCARGAR BOLETA TXT", fontWeight = FontWeight.Bold, color = Color.Black)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("CERRAR")
+            }
+        }
+    )
+}
+
+@Composable
+fun StudentMessageDialog(
+    title: String,
+    message: String,
+    onReply: (replyText: String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var replyText by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Wifi, null, tint = AccentCyan)
+                Spacer(Modifier.width(8.dp))
+                Text(title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            }
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = CosmicDarkSurface),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, AccentCyan.copy(alpha = 0.4f)),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+                ) {
+                    Text(
+                        text = message,
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+
+                OutlinedTextField(
+                    value = replyText,
+                    onValueChange = { replyText = it },
+                    label = { Text("Escribe tu respuesta al profesor...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    textStyle = TextStyle(fontSize = 13.sp)
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (replyText.trim().isNotEmpty()) {
+                        onReply(replyText.trim())
+                        onDismiss()
+                    }
+                },
+                enabled = replyText.trim().isNotEmpty(),
+                colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)
+            ) {
+                Text("✉️ RESPONDER", fontWeight = FontWeight.Bold, color = Color.Black)
             }
         },
         dismissButton = {

@@ -57,6 +57,7 @@ data class SyncedStudent(
     val lastCheckpointSeen: Int = -1,
     val hasDoubt: Boolean = false,
     val doubtMessage: String = "",
+    val isProfileUnlockRequested: Boolean = false,
     val privateMessage: String = "",
     val privateFileUri: String = "",
     val privateFileName: String = "",
@@ -105,7 +106,12 @@ data class UnitProgress(
     val lastScrollPosition: Int = 0,
     val isChallengeDone: Boolean = false,
     val examGrade: Float? = null,
-    val examCompleted: Boolean = false
+    val examCompleted: Boolean = false,
+    val isRecuperativoUsed: Boolean = false,
+    val recuperativoRequested: Boolean = false,
+    val notebookGrade: Float? = null,
+    val notebookEvaluated: Boolean = false,
+    val notebookFeedback: String = ""
 )
 
 @Entity(tableName = "inbox_messages")

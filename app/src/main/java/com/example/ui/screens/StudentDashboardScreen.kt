@@ -27,6 +27,7 @@ import com.example.ui.components.ConnectionStatusIcon
 import com.example.ui.components.ExamNotificationCard
 import com.example.ui.components.StudentReportDialog
 import com.example.domain.ReportManager
+import com.example.ui.components.StudentMessageDialog
 import com.example.ui.screens.components.StudentDashboardBanners
 import com.example.ui.screens.components.StudentDashboardDialogs
 import com.example.ui.screens.models.StudentTab
@@ -71,6 +72,13 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
     var showConnectionDialog by remember { mutableStateOf(false) }
     var showSettingsDialog by remember { mutableStateOf(false) }
     var showStudentReportDialog by remember { mutableStateOf(false) }
+    var showMessageDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(incomingMsg) {
+        if (!incomingMsg.isNullOrEmpty()) {
+            showMessageDialog = true
+        }
+    }
 
     val isProfileEditUnlocked by studentViewModel.isProfileEditUnlocked.collectAsStateWithLifecycle()
 
@@ -295,6 +303,15 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
                                 mainViewModel.updateUserProfile(updated)
                                 studentViewModel.lockProfileEdit()
                                 Toast.makeText(context, "✅ Perfil actualizado correctamente", Toast.LENGTH_SHORT).show()
+                            },
+                            onExportBackup = {
+                                mainViewModel.exportStudentBackup(context) { file ->
+                                    if (file != null) {
+                                        Toast.makeText(context, "✅ Respaldo guardado en: ${file.absolutePath}", Toast.LENGTH_LONG).show()
+                                    } else {
+                                        Toast.makeText(context, "❌ Error al generar respaldo", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
                             }
                         )
                     }
@@ -312,7 +329,11 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
                             onTakeExam = { isTakingExam = true },
                             onMarkRead = { studentViewModel.markUnitAsRead(it) },
                             onMarkChallengeDone = { studentViewModel.markChallengeAsDone(it) },
-                            onUpdateReadingProgress = { idx, pct, scroll -> studentViewModel.updateReadingProgress(idx, pct, scroll) }
+                            onUpdateReadingProgress = { idx, pct, scroll -> studentViewModel.updateReadingProgress(idx, pct, scroll) },
+                            onRequestRecuperativo = {
+                                studentViewModel.sendDoubtToTeacher("Solicitud de recuperativo para Unidad ${currentUnit.index}")
+                                Toast.makeText(context, "Solicitud de recuperativo enviada al profesor por Wi-Fi", Toast.LENGTH_SHORT).show()
+                            }
                         )
                     }
                 }
@@ -402,6 +423,20 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
                 showStudentReportDialog = false
             },
             onDismiss = { showStudentReportDialog = false }
+        )
+    }
+
+    if (showMessageDialog && (!incomingMsg.isNullOrEmpty() || teacherMsg.isNotEmpty())) {
+        val displayMsg = incomingMsg ?: teacherMsg
+        StudentMessageDialog(
+            title = if (!incomingMsg.isNullOrEmpty()) "💬 Mensaje del Profesor" else "📢 Aviso de la Clase",
+            message = displayMsg,
+            onReply = { reply ->
+                studentViewModel.sendDoubtToTeacher(reply)
+                Toast.makeText(context, "✉️ Respuesta enviada al profesor", Toast.LENGTH_SHORT).show()
+                showMessageDialog = false
+            },
+            onDismiss = { showMessageDialog = false }
         )
     }
 }

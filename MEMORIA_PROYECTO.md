@@ -24,7 +24,38 @@ Funciona mediante una red Wi-Fi local o punto de acceso (Hotspot) creado por el 
 
 ---
 
-## 📄 3. Especificación del Formato de Curso (`clase.csv`)
+## 🛠️ 3. Estándares de Arquitectura y Desarrollo Profesional
+
+### A. Estructura Limpia de Paquetes
+- `com.example.ui`: Capa visual (Screens, ViewModels, Theme).
+- `com.example.domain`: Lógica de negocio y Managers (`AttendanceManager`, `CourseManager`, `ReportManager`).
+- `com.example.network`: Infraestructura de red local (Sockets TCP/UDP, Server, Client).
+- `com.example.data`: Persistencia Room, Entities, DAOs y Repositorios.
+- `com.example.util`: Utilidades (Logs, Zips).
+
+### B. Reglas de Oro de Código
+- **Cero Hardcode**: Textos almacenados en `strings.xml`.
+- **ViewModel Delgado**: Delegar lógica pesada a Managers en `domain`.
+- **Redes Atómicas**: Cada sesión de red aislada con `sessionId` único (UUID).
+- **Flujo End-to-End**: Todo cambio que afecte UI/Modelo/Red debe diseñarse y verificarse de punta a punta (Emisor ➔ Red ➔ Receptor).
+
+---
+
+## 📷 4. Especificación Módulo OCR Cuaderno (Diseño Pre-Arquitectado)
+
+1. **Procesamiento 100% Offline (Sin Internet)**:
+   - Uso de Google ML Kit Text Recognition para extracción manuscrita local.
+   - Comparación semántica local contra la lección teórica (`unit.topicText`).
+2. **Rúbrica sobre 20 Puntos**:
+   - Contenido y Comprensión (10 Pts).
+   - Redacción y Coherencia (5 Pts).
+   - Ortografía y Gramática (5 Pts).
+3. **Cálculo Dinámico de Nota Final (0 a 20 Pts)**:
+   - Adaptado dinámicamente a $N$ unidades del curso.
+
+---
+
+## 📄 5. Especificación del Formato de Curso (`clase.csv`)
 
 La aplicación lee materiales educativos desde una carpeta externa seleccionada por el usuario (SAF). El archivo maestro de datos es **`clase.csv`**.
 

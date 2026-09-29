@@ -11,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -397,7 +398,7 @@ fun AcademicStatusCard(
                     shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.dp, StatusError)
                 ) {
-                    Text("ABANDONAR CLASE", fontWeight = FontWeight.Bold)
+                    Text("SALIR DE LA SESIÓN", fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -424,27 +425,63 @@ fun ConnectionStatusIcon(isLocked: Boolean, isSyncing: Boolean, isListenerMode: 
 @Composable
 fun ExamNotificationCard(unitIndex: Int, unitTitle: String, onAccept: () -> Unit, onDismiss: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(Dimensions.PaddingMedium).padding(top = 80.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .padding(top = 40.dp),
         colors = CardDefaults.cardColors(containerColor = CosmicDarkSurface),
-        border = BorderStroke(1.dp, AccentAmber),
-        shape = RoundedCornerShape(Dimensions.CornerMedium),
-        elevation = CardDefaults.cardElevation(defaultElevation = Dimensions.ElevationLarge)
+        border = BorderStroke(2.dp, AccentAmber),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
-        Column(Modifier.padding(Dimensions.PaddingMedium)) {
-            Text("¡EXAMEN DISPONIBLE!", fontWeight = FontWeight.Bold, color = AccentAmber)
-            Text("Unidad $unitIndex: $unitTitle", color = TextPrimary, fontSize = 12.sp)
-            Spacer(Modifier.height(Dimensions.PaddingMedium))
-            Row(horizontalArrangement = Arrangement.spacedBy(Dimensions.PaddingSmall)) {
-                Button(
-                    onClick = onAccept,
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentAmber),
-                    shape = RoundedCornerShape(Dimensions.CornerSmall)
-                ) {
-                    Text("HACER AHORA", color = Color.Black)
-                }
-                TextButton(onClick = onDismiss) {
-                    Text("LUEGO", color = Color.Gray)
-                }
+        Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(CircleShape)
+                    .background(AccentAmber.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("📝", fontSize = 30.sp)
+            }
+            Spacer(Modifier.height(12.dp))
+            Text(
+                text = "¡EXAMEN DISPONIBLE!",
+                fontWeight = FontWeight.Black,
+                color = AccentAmber,
+                fontSize = 18.sp,
+                letterSpacing = 1.sp
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "Unidad $unitIndex: $unitTitle",
+                color = TextPrimary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp,
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = "El profesor ha habilitado el examen para esta unidad. ¿Deseas presentarlo ahora?",
+                color = TextSecondary,
+                fontSize = 12.sp,
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(20.dp))
+            Button(
+                onClick = onAccept,
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = AccentAmber),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("📝 PRESENTAR EXAMEN AHORA", color = Color.Black, fontWeight = FontWeight.ExtraBold)
+            }
+            Spacer(Modifier.height(8.dp))
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("LUEGO / CONTINUAR LEYENDO", color = Color.Gray, fontSize = 12.sp)
             }
         }
     }

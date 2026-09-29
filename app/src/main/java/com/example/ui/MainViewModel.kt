@@ -19,7 +19,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.data.*
 import com.example.data.model.LoadResult
 import com.example.data.model.UnitData
+import com.example.domain.BackupManager
 import com.example.domain.CourseManager
+import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -271,6 +273,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application), T
     fun updateUserProfile(profile: UserProfile) {
         viewModelScope.launch(Dispatchers.IO) {
             dao.insertProfile(profile)
+        }
+    }
+
+    fun exportStudentBackup(context: Context, onResult: (File?) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val file = BackupManager.exportBackup(context, db.classroomDao())
+            withContext(Dispatchers.Main) {
+                onResult(file)
+            }
         }
     }
 

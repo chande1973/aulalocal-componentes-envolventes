@@ -176,7 +176,14 @@ object LocalNetworkManager {
                     scope.launch(Dispatchers.IO) {
                         val dao = database.classroomDao()
                         dao.getStudentByCardId(cardId)?.let {
-                            dao.insertSyncedStudent(it.copy(hasDoubt = true, doubtMessage = message))
+                            val isUnlock = message.contains("desbloqueo de perfil", ignoreCase = true)
+                            dao.insertSyncedStudent(
+                                it.copy(
+                                    hasDoubt = true,
+                                    doubtMessage = message,
+                                    isProfileUnlockRequested = isUnlock || it.isProfileUnlockRequested
+                                )
+                            )
                         }
                     }
                 },

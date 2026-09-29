@@ -31,7 +31,8 @@ fun StudentProfileTab(
     isUnlocked: Boolean = false,
     onRequestUnlock: () -> Unit = {},
     onPinUnlockSuccess: () -> Unit = {},
-    onSaveProfile: (UserProfile) -> Unit = {}
+    onSaveProfile: (UserProfile) -> Unit = {},
+    onExportBackup: () -> Unit = {}
 ) {
     var firstName by remember(profile) { mutableStateOf(profile?.firstName ?: "") }
     var lastName by remember(profile) { mutableStateOf(profile?.lastName ?: "") }
@@ -172,6 +173,31 @@ fun StudentProfileTab(
                         Spacer(Modifier.width(8.dp))
                         Text("EDITAR DATOS (REQUIERE AUTORIZACIÓN)", fontWeight = FontWeight.Bold, color = Color.Black, fontSize = 12.sp)
                     }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        // SECCIÓN DE RESPALDO DE DATOS
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = CosmicDarkSurface),
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, AccentTeal.copy(alpha = 0.3f))
+        ) {
+            Column(Modifier.padding(16.dp)) {
+                Text("Respaldo de Datos y Progreso", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 14.sp)
+                Text("Exporta tu perfil, notas e historial a un archivo JSON para prevenir pérdidas o cambiar de dispositivo.", color = Color.Gray, fontSize = 11.sp)
+                Spacer(Modifier.height(12.dp))
+                OutlinedButton(
+                    onClick = onExportBackup,
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, AccentTeal)
+                ) {
+                    Icon(Icons.Default.Download, null, tint = AccentTeal)
+                    Spacer(Modifier.width(8.dp))
+                    Text("📤 EXPORTAR RESPALDO LOCAL", color = AccentTeal, fontWeight = FontWeight.Bold, fontSize = 11.sp)
                 }
             }
         }

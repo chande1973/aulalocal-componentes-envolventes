@@ -21,6 +21,7 @@ import java.io.File
 import java.io.FileOutputStream
 import com.example.util.ZipUtils
 import com.example.R
+import com.example.domain.CourseInstallerManager
 import com.example.network.NetworkConstants
 
 class StudentViewModel(application: Application) : AndroidViewModel(application) {
@@ -917,7 +918,6 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
     private fun processCourseUpdate(zipFile: File) {
         viewModelScope.launch(Dispatchers.IO) {
             val context = getApplication<Application>()
-            val internalCourseDir = File(context.filesDir, "course_data")
             
             _updateState.value = UpdateState.Processing(
                 message = "Descomprimiendo actualización del curso...",
@@ -927,7 +927,7 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                 currentFile = zipFile.name
             )
             
-            val result = ZipUtils.unzip(zipFile, internalCourseDir) { currentFile, count ->
+            val result = CourseInstallerManager.installCourseZip(context, dao, zipFile) { currentFile, count ->
                 _updateState.value = UpdateState.Processing(
                     message = "Instalando contenido del curso...",
                     step = "Extrayendo recursos ($count)",
@@ -938,22 +938,12 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
             }
             
             if (result is ZipUtils.UnzipResult.Success) {
-                // Update profile to point to this internal folder
-                val profile = dao.getUserProfile()
-                if (profile != null) {
-                    val uri = Uri.fromFile(internalCourseDir)
-                    dao.insertProfile(profile.copy(materialsFolderUri = uri.toString()))
-                    _updateState.value = UpdateState.Success("¡Curso actualizado con éxito!")
-                    // Auto-limpiar estado de éxito después de 3s
-                    delay(3000)
-                    _updateState.value = UpdateState.Idle
-                }
+                _updateState.value = UpdateState.Success("¡Curso actualizado con éxito!")
+                delay(3000)
+                _updateState.value = UpdateState.Idle
             } else if (result is ZipUtils.UnzipResult.Error) {
                 _updateState.value = UpdateState.Error("Error de actualización: ${result.message}", canRetry = true)
             }
-            
-            // Delete the zip file after processing
-            if (zipFile.exists()) zipFile.delete()
         }
     }
 

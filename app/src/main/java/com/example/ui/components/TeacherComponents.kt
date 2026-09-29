@@ -168,8 +168,10 @@ fun StudentRowTeacher(
                     }
                 }
                 Text(if (isOyente) "Sección: ${student.sectionName}" else student.cardId, fontSize = 10.sp, color = if (isOyente) StatusError.copy(alpha = 0.7f) else Color.Gray)
-                if (student.hasDoubt) {
-                    Text("TIENE UNA DUDA", color = AccentAmber, fontWeight = FontWeight.Bold, fontSize = 9.sp)
+                if (student.isProfileUnlockRequested) {
+                    Text("🔓 SOLICITA DESBLOQUEAR PERFIL", color = StatusWarning, fontWeight = FontWeight.ExtraBold, fontSize = 9.sp)
+                } else if (student.hasDoubt) {
+                    Text("💬 MENSAJE: ${student.doubtMessage.take(25)}", color = AccentAmber, fontWeight = FontWeight.Bold, fontSize = 9.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
 

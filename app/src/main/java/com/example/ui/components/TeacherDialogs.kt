@@ -54,15 +54,36 @@ fun StudentDetailAndRecuperativoDialog(
         },
         text = {
             LazyColumn(Modifier.heightIn(max = 400.dp)) {
+                if (student.hasDoubt || student.doubtMessage.isNotEmpty()) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                            colors = CardDefaults.cardColors(containerColor = AccentAmber.copy(alpha = 0.15f)),
+                            border = BorderStroke(1.dp, AccentAmber)
+                        ) {
+                            Column(Modifier.padding(12.dp)) {
+                                Text(
+                                    text = if (student.isProfileUnlockRequested) "🔓 SOLICITUD DE DESBLOQUEO DE PERFIL" else "💬 Mensaje / Duda del Alumno:",
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = AccentAmber,
+                                    fontSize = 11.sp
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(student.doubtMessage, color = Color.White, fontSize = 13.sp)
+                            }
+                        }
+                    }
+                }
+
                 item {
                     OutlinedButton(
                         onClick = { onAuthorizeProfileEdit(student.cardId) },
                         modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                        border = BorderStroke(1.dp, AccentAmber)
+                        border = BorderStroke(1.dp, if (student.isProfileUnlockRequested) StatusWarning else AccentAmber)
                     ) {
-                        Icon(Icons.Default.LockOpen, null, tint = AccentAmber, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.LockOpen, null, tint = if (student.isProfileUnlockRequested) StatusWarning else AccentAmber, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("AUTORIZAR EDICIÓN DE PERFIL", fontSize = 11.sp, color = AccentAmber, fontWeight = FontWeight.Bold)
+                        Text(if (student.isProfileUnlockRequested) "🔓 AUTORIZAR DESBLOQUEO SOLICITADO" else "AUTORIZAR EDICIÓN DE PERFIL", fontSize = 11.sp, color = if (student.isProfileUnlockRequested) StatusWarning else AccentAmber, fontWeight = FontWeight.Bold)
                     }
 
                     Text("Exámenes y Recuperativos", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = AccentTeal, modifier = Modifier.padding(bottom = 8.dp))

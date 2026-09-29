@@ -23,9 +23,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.model.Question
 import com.example.data.model.UnitData
 import com.example.ui.theme.*
 import com.example.ui.viewmodels.StudentViewModel
+import java.util.Locale
 
 @Composable
 fun ExamScreen(
@@ -41,6 +43,7 @@ fun ExamScreen(
     var selectedOptionIndex by remember { mutableIntStateOf(-1) }
     var score by remember { mutableIntStateOf(0) }
     var isExamFinished by remember { mutableStateOf(false) }
+    val userAnswers = remember { mutableStateMapOf<Int, Int>() }
 
     // Surface a pantalla completa para evitar solapamiento con el Scaffold padre
     Surface(
@@ -48,11 +51,13 @@ fun ExamScreen(
         color = CosmicDarkBg
     ) {
         if (isExamFinished) {
-            val finalGrade = (score.toFloat() / questions.size) * 20f
+            val finalGrade = if (questions.isNotEmpty()) (score.toFloat() / questions.size) * 20f else 0f
             ExamResultView(
                 grade = finalGrade,
                 correctAnswers = score,
                 totalQuestions = questions.size,
+                questions = questions,
+                userAnswers = userAnswers,
                 onClose = {
                     studentViewModel.saveExamGrade(unit.index, finalGrade)
                     onDismiss()
@@ -166,6 +171,7 @@ fun ExamScreen(
                 
                 Button(
                     onClick = {
+                        userAnswers[currentQuestionIndex] = selectedOptionIndex
                         if (selectedOptionIndex == currentQuestion.correctIndex) {
                             score++
                         }
@@ -199,6 +205,8 @@ fun ExamResultView(
     grade: Float,
     correctAnswers: Int,
     totalQuestions: Int,
+    questions: List<Question> = emptyList(),
+    userAnswers: Map<Int, Int> = emptyMap(),
     onClose: () -> Unit
 ) {
     val isPassed = grade >= 12f
@@ -212,18 +220,17 @@ fun ExamResultView(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(32.dp)
+                .padding(24.dp)
                 .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
                 imageVector = if (isPassed) Icons.Default.CheckCircle else Icons.Default.Warning,
                 contentDescription = null,
                 tint = color,
-                modifier = Modifier.size(100.dp)
+                modifier = Modifier.size(80.dp)
             )
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(16.dp))
             Text(
                 text = if (isPassed) "¡FELICIDADES!" else "CONTINÚA ESTUDIANDO",
                 style = MaterialTheme.typography.headlineMedium,
@@ -237,7 +244,7 @@ fun ExamResultView(
                 textAlign = TextAlign.Center
             )
             
-            Spacer(Modifier.height(40.dp))
+            Spacer(Modifier.height(24.dp))
             
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -251,14 +258,14 @@ fun ExamResultView(
                 ) {
                     Text("CALIFICACIÓN FINAL", fontSize = 12.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
                     Text(
-                        text = "%.2f".format(grade),
-                        fontSize = 56.sp,
+                        text = "%.2f".format(Locale.US, grade),
+                        fontSize = 48.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = color
                     )
-                    Text("/ 20.00", fontSize = 16.sp, color = Color.Gray)
+                    Text("/ 20.00", fontSize = 14.sp, color = Color.Gray)
                     
-                    Spacer(Modifier.height(24.dp)) // ESPACIO AUMENTADO
+                    Spacer(Modifier.height(16.dp))
                     
                     Surface(
                         color = Color.White.copy(alpha = 0.05f),
@@ -273,8 +280,101 @@ fun ExamResultView(
                     }
                 }
             }
+
+            // Desglose de Retroalimentación de Preguntas y Errores
+            if (questions.isNotEmpty()) {
+                Spacer(Modifier.height(24.dp))
+                Text(
+                    text = "🔍 Revisión Detallada de Preguntas",
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    fontSize = 15.sp,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(12.dp))
+
+                questions.forEachIndexed { qIdx, q ->
+                    val selectedOpt = userAnswers[qIdx] ?: -1
+                    val isCorrect = selectedOpt == q.correctIndex
+                    
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isCorrect) StatusSuccess.copy(alpha = 0.1f) else StatusError.copy(alpha = 0.1f)
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(1.dp, if (isCorrect) StatusSuccess.copy(alpha = 0.4f) else StatusError.copy(alpha = 0.4f))
+                    ) {
+                        Column(Modifier.padding(16.dp)) {
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Pregunta ${qIdx + 1}",
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isCorrect) StatusSuccess else StatusError,
+                                    fontSize = 12.sp
+                                )
+                                Text(
+                                    text = if (isCorrect) "✅ Correcta" else "❌ Incorrecta",
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = if (isCorrect) StatusSuccess else StatusError,
+                                    fontSize = 12.sp
+                                )
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                text = q.questionText,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                fontSize = 13.sp
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            q.options.forEachIndexed { optIdx, optText ->
+                                val isStudentChoice = selectedOpt == optIdx
+                                val isCorrectOption = q.correctIndex == optIdx
+                                val optColor = when {
+                                    isCorrectOption -> StatusSuccess
+                                    isStudentChoice -> StatusError
+                                    else -> Color.Gray
+                                }
+                                if (isStudentChoice || isCorrectOption) {
+                                    Row(
+                                        modifier = Modifier.padding(vertical = 2.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = if (isCorrectOption) "✓ " else "✗ ",
+                                            color = optColor,
+                                            fontWeight = FontWeight.Black,
+                                            fontSize = 12.sp
+                                        )
+                                        Text(
+                                            text = optText,
+                                            color = optColor,
+                                            fontSize = 12.sp,
+                                            fontWeight = if (isCorrectOption) FontWeight.Bold else FontWeight.Normal
+                                        )
+                                    }
+                                }
+                            }
+                            if (q.explanation.isNotBlank()) {
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    text = "💡 Explicación: ${q.explanation}",
+                                    color = Color.LightGray,
+                                    fontSize = 11.sp,
+                                    lineHeight = 15.sp
+                                )
+                            }
+                        }
+                    }
+                }
+            }
             
-            Spacer(Modifier.height(48.dp))
+            Spacer(Modifier.height(32.dp))
             
             Button(
                 onClick = onClose,
@@ -282,7 +382,7 @@ fun ExamResultView(
                 colors = ButtonDefaults.buttonColors(containerColor = color),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Text("REGRESAR A LA UNIDAD", fontWeight = FontWeight.ExtraBold)
+                Text("REGRESAR A LA UNIDAD", fontWeight = FontWeight.ExtraBold, color = Color.Black)
             }
             Spacer(Modifier.height(24.dp))
         }
