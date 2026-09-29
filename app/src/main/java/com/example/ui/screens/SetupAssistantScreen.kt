@@ -220,15 +220,15 @@ fun SetupAssistantScreen(
                                          cardId.trim().length >= 5 &&
                                          (selectedRole == "teacher" || studentSection.trim().isNotEmpty())
 
-                        if (selectedRole == "teacher") {
+                        if (selectedRole != null) {
                             Button(
                                 onClick = { setupStep = 2 }, 
                                 enabled = isFormValid, 
                                 modifier = Modifier.fillMaxWidth().height(64.dp),
                                 shape = RoundedCornerShape(16.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = AccentTeal)
+                                colors = ButtonDefaults.buttonColors(containerColor = if (selectedRole == "teacher") AccentTeal else AccentCyan)
                             ) { 
-                                Text("SIGUIENTE: MATERIALES", fontWeight = FontWeight.ExtraBold) 
+                                Text(if (selectedRole == "teacher") "SIGUIENTE: MATERIALES" else "SIGUIENTE: CONEXIÓN Y MATERIALES", fontWeight = FontWeight.ExtraBold, color = if (selectedRole == "student") Color.Black else Color.White) 
                             }
                         }
                     }
