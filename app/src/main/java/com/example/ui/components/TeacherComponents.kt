@@ -168,10 +168,41 @@ fun StudentRowTeacher(
                     }
                 }
                 Text(if (isOyente) "Sección: ${student.sectionName}" else student.cardId, fontSize = 10.sp, color = if (isOyente) StatusError.copy(alpha = 0.7f) else Color.Gray)
+                
+                val isSynced = System.currentTimeMillis() - student.lastSeen < 15000L
+                Spacer(Modifier.height(4.dp))
+                Surface(
+                    color = (if (isSynced) StatusSuccess else AccentAmber).copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(4.dp),
+                    border = BorderStroke(1.dp, if (isSynced) StatusSuccess else AccentAmber)
+                ) {
+                    Text(
+                        text = if (isSynced) "🟢 Sincronizado" else "⏳ Pendiente",
+                        color = if (isSynced) StatusSuccess else AccentAmber,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                    )
+                }
+
                 if (student.isProfileUnlockRequested) {
-                    Text("🔓 SOLICITA DESBLOQUEAR PERFIL", color = StatusWarning, fontWeight = FontWeight.ExtraBold, fontSize = 9.sp)
+                    Spacer(Modifier.height(4.dp))
+                    Surface(
+                        color = StatusWarning.copy(alpha = 0.2f),
+                        shape = RoundedCornerShape(6.dp),
+                        border = BorderStroke(1.dp, StatusWarning)
+                    ) {
+                        Text(
+                            text = "🔓 SOLICITUD DE DESBLOQUEO DE PERFIL",
+                            color = StatusWarning,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                        )
+                    }
                 } else if (student.hasDoubt) {
-                    Text("💬 MENSAJE: ${student.doubtMessage.take(25)}", color = AccentAmber, fontWeight = FontWeight.Bold, fontSize = 9.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Spacer(Modifier.height(4.dp))
+                    Text("💬 MENSAJE: ${student.doubtMessage.take(30)}", color = AccentAmber, fontWeight = FontWeight.Bold, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
 

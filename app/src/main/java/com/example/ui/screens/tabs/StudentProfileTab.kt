@@ -31,6 +31,7 @@ fun StudentProfileTab(
     isUnlocked: Boolean = false,
     onRequestUnlock: () -> Unit = {},
     onPinUnlockSuccess: () -> Unit = {},
+    onValidatePin: (String) -> Boolean = { false },
     onSaveProfile: (UserProfile) -> Unit = {},
     onExportBackup: () -> Unit = {}
 ) {
@@ -241,7 +242,7 @@ fun StudentProfileTab(
 
                     HorizontalDivider(Modifier.padding(vertical = 8.dp), color = Color.Gray.copy(alpha = 0.3f))
 
-                    Text("O ingresa PIN Maestro del Docente:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White, modifier = Modifier.padding(vertical = 8.dp))
+                    Text("O ingresa el PIN enviado por tu profesor:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White, modifier = Modifier.padding(vertical = 8.dp))
 
                     OutlinedTextField(
                         value = teacherPinInput,
@@ -249,9 +250,9 @@ fun StudentProfileTab(
                             teacherPinInput = it
                             isPinError = false
                         },
-                        label = { Text("PIN (Default: 1234)") },
+                        label = { Text("PIN Maestro / OTP (ej. 1234)") },
                         isError = isPinError,
-                        supportingText = { if (isPinError) Text("PIN incorrecto. Intenta con '1234'", color = StatusError) },
+                        supportingText = { if (isPinError) Text("PIN incorrecto. Puedes usar '1234' para pruebas locales o el PIN enviado por el profesor.", color = StatusError) },
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -260,7 +261,7 @@ fun StudentProfileTab(
             confirmButton = {
                 Button(
                     onClick = {
-                        if (teacherPinInput.trim() == "1234") {
+                        if (onValidatePin(teacherPinInput)) {
                             onPinUnlockSuccess()
                             showPinDialog = false
                             teacherPinInput = ""

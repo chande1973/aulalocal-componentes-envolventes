@@ -61,6 +61,13 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
     private val _teacherMessage = MutableStateFlow("")
     val teacherMessageState = _teacherMessage.asStateFlow()
 
+    private val _generatedOtpDisplay = MutableStateFlow<String?>(null)
+    val generatedOtpDisplay = _generatedOtpDisplay.asStateFlow()
+
+    fun dismissOtpDisplay() {
+        _generatedOtpDisplay.value = null
+    }
+
     val isServerRunningState = LocalNetworkManager.isServerRunning
 
     private val _uiEvents = MutableSharedFlow<String>()
@@ -675,11 +682,15 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
     fun authorizeStudentProfileEdit(cardId: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val student = dao.getStudentByCardId(cardId) ?: return@launch
+            val otpPin = (1000..9999).random().toString()
             val updated = student.copy(
-                privateMessage = "AUTORIZACION_PERFIL_DESBLOQUEADO: Puedes editar tus datos de perfil ahora."
+                isProfileUnlockRequested = false,
+                hasDoubt = false,
+                privateMessage = "PIN_DESBLOQUEO:$otpPin|Tu profesor autorizó la edición. Tu PIN temporal de un solo uso es: $otpPin"
             )
             dao.insertSyncedStudent(updated)
-            _uiEvents.emit("✅ Edición de perfil autorizada para ${student.firstName}")
+            _generatedOtpDisplay.value = "$otpPin|${student.firstName} ${student.lastName}"
+            _uiEvents.emit("✅ PIN OTP de un solo uso ($otpPin) enviado a ${student.firstName}")
         }
     }
 

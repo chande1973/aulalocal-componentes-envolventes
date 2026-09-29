@@ -299,6 +299,9 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
                                 studentViewModel.unlockProfileEdit()
                                 Toast.makeText(context, "Perfil desbloqueado correctamente", Toast.LENGTH_SHORT).show()
                             },
+                            onValidatePin = { pin ->
+                                studentViewModel.validateAndConsumeOneTimePin(pin)
+                            },
                             onSaveProfile = { updated ->
                                 mainViewModel.updateUserProfile(updated)
                                 studentViewModel.lockProfileEdit()

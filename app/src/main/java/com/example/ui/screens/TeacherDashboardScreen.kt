@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,6 +46,7 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
     val liveActiveUnit by teacherViewModel.liveActiveUnitIndex.collectAsState()
     val enabledReads by teacherViewModel.enabledReadUnits.collectAsState()
     val enabledExams by teacherViewModel.enabledExamUnits.collectAsState()
+    val generatedOtp by teacherViewModel.generatedOtpDisplay.collectAsState()
     
     // Colecciones pesadas diferidas con valores por defecto
     var syncedStudents by remember { mutableStateOf<List<SyncedStudent>>(emptyList()) }
@@ -142,6 +144,47 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
         )
     }
 
+    if (generatedOtp != null) {
+        val parts = generatedOtp!!.split("|")
+        val pin = parts.getOrNull(0) ?: ""
+        val studentName = parts.getOrNull(1) ?: "Alumno"
+        AlertDialog(
+            onDismissRequest = { teacherViewModel.dismissOtpDisplay() },
+            title = { Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.LockOpen, null, tint = AccentAmber)
+                Spacer(Modifier.width(8.dp))
+                Text("🔑 PIN OTP Generado y Enviado")
+            }},
+            text = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                    Text("Se ha generado un PIN temporal de un solo uso para $studentName:", fontSize = 12.sp, color = Color.LightGray, textAlign = TextAlign.Center)
+                    Spacer(Modifier.height(16.dp))
+                    Surface(
+                        color = AccentAmber.copy(alpha = 0.2f),
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(2.dp, AccentAmber)
+                    ) {
+                        Text(
+                            text = pin,
+                            modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp),
+                            fontWeight = FontWeight.Black,
+                            fontSize = 40.sp,
+                            color = AccentAmber,
+                            letterSpacing = 4.sp
+                        )
+                    }
+                    Spacer(Modifier.height(16.dp))
+                    Text("El alumno ya recibió la notificación con esta clave en su dispositivo. Este PIN expirará tras su primer uso.", fontSize = 11.sp, color = Color.Gray, textAlign = TextAlign.Center)
+                }
+            },
+            confirmButton = {
+                Button(onClick = { teacherViewModel.dismissOtpDisplay() }, colors = ButtonDefaults.buttonColors(containerColor = AccentAmber)) {
+                    Text("ENTENDIDO", color = Color.Black, fontWeight = FontWeight.Bold)
+                }
+            }
+        )
+    }
+
     // Diálogos
     if (showLogViewer) LogViewerDialog(onDismiss = { showLogViewer = false })
     
@@ -153,6 +196,7 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
             historyFlow = teacherViewModel.getStudentAttendanceHistory(student.cardId),
             onEnableRecuperativo = { cardId, uIdx -> teacherViewModel.enableRecuperativoForStudent(cardId, uIdx) },
             onAuthorizeProfileEdit = { cardId -> teacherViewModel.authorizeStudentProfileEdit(cardId) },
+            onClearDoubt = { cardId -> teacherViewModel.clearStudentDoubt(cardId) },
             onDismiss = { selectedStudentHistory = null }
         )
     }

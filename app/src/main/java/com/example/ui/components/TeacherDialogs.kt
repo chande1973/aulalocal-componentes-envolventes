@@ -32,8 +32,15 @@ fun StudentDetailAndRecuperativoDialog(
     historyFlow: Flow<List<AttendanceRecord>>,
     onEnableRecuperativo: (studentCardId: String, unitIndex: Int) -> Unit,
     onAuthorizeProfileEdit: (studentCardId: String) -> Unit = {},
+    onClearDoubt: (studentCardId: String) -> Unit = {},
     onDismiss: () -> Unit
 ) {
+    LaunchedEffect(student.cardId) {
+        if (student.hasDoubt || student.isProfileUnlockRequested) {
+            onClearDoubt(student.cardId)
+        }
+    }
+
     val history by historyFlow.collectAsState(initial = emptyList())
     val dateFormat = remember { SimpleDateFormat("dd/MM HH:mm", Locale.getDefault()) }
     val gradesObj = remember(student.examGradesString) {
@@ -77,7 +84,10 @@ fun StudentDetailAndRecuperativoDialog(
 
                 item {
                     OutlinedButton(
-                        onClick = { onAuthorizeProfileEdit(student.cardId) },
+                        onClick = { 
+                            onAuthorizeProfileEdit(student.cardId)
+                            onDismiss()
+                        },
                         modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
                         border = BorderStroke(1.dp, if (student.isProfileUnlockRequested) StatusWarning else AccentAmber)
                     ) {

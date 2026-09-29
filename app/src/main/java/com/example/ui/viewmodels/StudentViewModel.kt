@@ -74,6 +74,20 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
     private val _isProfileEditUnlocked = MutableStateFlow(false)
     val isProfileEditUnlocked = _isProfileEditUnlocked.asStateFlow()
 
+    private val _oneTimeUnlockPin = MutableStateFlow<String?>(null)
+    val oneTimeUnlockPin = _oneTimeUnlockPin.asStateFlow()
+
+    fun validateAndConsumeOneTimePin(enteredPin: String): Boolean {
+        val trimmed = enteredPin.trim()
+        val currentPin = _oneTimeUnlockPin.value
+        if (currentPin != null && trimmed == currentPin) {
+            _oneTimeUnlockPin.value = null
+            _isProfileEditUnlocked.value = true
+            return true
+        }
+        return false
+    }
+
     private val _classEndedNotice = MutableStateFlow<String?>(null)
     val classEndedNotice = _classEndedNotice.asStateFlow()
 
@@ -499,7 +513,10 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
 
                             if (privateMsg != null && _incomingPrivateMessage.value != privateMsg) {
                                 _incomingPrivateMessage.value = privateMsg
-                                if (privateMsg.contains("AUTORIZACION_PERFIL_DESBLOQUEADO", ignoreCase = true)) {
+                                if (privateMsg.contains("PIN_DESBLOQUEO:", ignoreCase = true)) {
+                                    val otp = privateMsg.substringAfter("PIN_DESBLOQUEO:", "").substringBefore("|").trim()
+                                    _oneTimeUnlockPin.value = otp
+                                } else if (privateMsg.contains("AUTORIZACION_PERFIL_DESBLOQUEADO", ignoreCase = true)) {
                                     _isProfileEditUnlocked.value = true
                                 }
                                 viewModelScope.launch(Dispatchers.IO) {
