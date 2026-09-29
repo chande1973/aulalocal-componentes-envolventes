@@ -22,12 +22,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.model.UnitData
 import com.example.data.UnitProgress
 import com.example.ui.components.UnitCard
+import com.example.ui.theme.AccentAmber
 import com.example.ui.theme.AccentCyan
 import com.example.ui.theme.AccentTeal
 import com.example.ui.theme.CosmicDarkSurface
@@ -240,22 +242,46 @@ fun StudentClassTab(
                     }
                 }
                 
-                if (isStudyModeActive) {
-                    Surface(
-                        onClick = onConnectClick,
-                        color = AccentCyan.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, AccentCyan.copy(alpha = 0.5f))
-                    ) {
-                        Row(Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Wifi, null, modifier = Modifier.size(14.dp), tint = AccentCyan)
-                            Spacer(Modifier.width(6.dp))
-                            Text("CONECTAR", fontSize = 10.sp, fontWeight = FontWeight.Black, color = AccentCyan)
+                // Se elimina el botón redundante de la cabecera para evitar duplicidad y saturación visual
+            }
+            
+            // Banner de Clase en Vivo Activa (cuando el alumno está conectado)
+            if (isLocked) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    colors = CardDefaults.cardColors(containerColor = AccentAmber.copy(alpha = 0.15f)),
+                    border = BorderStroke(2.dp, AccentAmber),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier.size(40.dp).background(AccentAmber.copy(alpha = 0.2f), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.Wifi, null, tint = AccentAmber, modifier = Modifier.size(20.dp))
+                            }
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    text = "📡 CLASE EN VIVO EN CURSO",
+                                    color = AccentAmber,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 11.sp,
+                                    letterSpacing = 1.sp
+                                )
+                                Text(
+                                    text = "Conectado al servidor del profesor",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                            }
                         }
                     }
                 }
             }
-            
+
             // NUEVO: Tarjeta CTA cuando no hay clase activa pero sí materiales
             if (!isLocked) {
                 Card(
@@ -295,10 +321,12 @@ fun StudentClassTab(
                             shape = RoundedCornerShape(10.dp)
                         ) {
                             Text(
-                                text = "🔍 BUSCAR CLASE EN VIVO Y ENTRAR",
+                                text = "🔍 BUSCAR CLASE EN VIVO",
                                 fontWeight = FontWeight.Black,
                                 color = Color.Black,
-                                fontSize = 14.sp
+                                fontSize = 13.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }

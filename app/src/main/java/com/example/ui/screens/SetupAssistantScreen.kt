@@ -2,6 +2,7 @@ package com.example.ui.screens
 
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -95,6 +96,30 @@ fun SetupAssistantScreen(
 
     if (showLogViewer) {
         LogViewerDialog(onDismiss = { showLogViewer = false })
+    }
+
+    LaunchedEffect(wizardResult, selectedRole) {
+        if (selectedRole == "student") {
+            val res = wizardResult
+            if (res is LoadResult.Success || res is LoadResult.PartialSuccess) {
+                selectedFolderUri?.let { uri ->
+                    mainViewModel.confirmSetupAndSaveProfile(
+                        uri,
+                        UserProfile(
+                            role = "student",
+                            firstName = firstName.trim(),
+                            lastName = lastName.trim(),
+                            cardId = cardId.trim(),
+                            avatar = selectedAvatar.emoji,
+                            activeSection = studentSection.trim(),
+                            email = "",
+                            isLocked = false
+                        )
+                    )
+                    Toast.makeText(context, "✅ ¡Configuración completada con éxito!", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     Scaffold(topBar = { 
