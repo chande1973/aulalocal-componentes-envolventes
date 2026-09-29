@@ -175,13 +175,28 @@ object LocalNetworkManager {
                 onDoubtReceived = { cardId, message ->
                     scope.launch(Dispatchers.IO) {
                         val dao = database.classroomDao()
-                        dao.getStudentByCardId(cardId)?.let {
-                            val isUnlock = message.contains("desbloqueo de perfil", ignoreCase = true)
+                        val student = dao.getStudentByCardId(cardId)
+                        val isUnlock = message.contains("desbloqueo de perfil", ignoreCase = true)
+                        if (student != null) {
                             dao.insertSyncedStudent(
-                                it.copy(
+                                student.copy(
                                     hasDoubt = true,
                                     doubtMessage = message,
-                                    isProfileUnlockRequested = isUnlock || it.isProfileUnlockRequested
+                                    isProfileUnlockRequested = isUnlock || student.isProfileUnlockRequested
+                                )
+                            )
+                        } else {
+                            dao.insertSyncedStudent(
+                                SyncedStudent(
+                                    cardId = cardId,
+                                    firstName = "Estudiante",
+                                    lastName = cardId,
+                                    email = "",
+                                    avatar = "👤",
+                                    sectionName = currentSectionName,
+                                    hasDoubt = true,
+                                    doubtMessage = message,
+                                    isProfileUnlockRequested = isUnlock
                                 )
                             )
                         }
@@ -300,6 +315,6 @@ object LocalNetworkManager {
     }
 
     suspend fun sendDoubt(ip: String, port: Int, cardId: String, message: String) {
-        ClassroomClient.sync(ip, port, JSONObject().apply { put("action", com.example.network.NetworkConstants.ACTION_SEND_DOUBT); put("cardId", cardId); put("message", message) })
+        ClassroomClient.sendDoubt(ip, port, cardId, message)
     }
 }

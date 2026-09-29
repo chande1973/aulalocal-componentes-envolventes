@@ -4,6 +4,7 @@ import com.example.network.NetworkConstants.ACTION_CHECK_IN
 import com.example.network.NetworkConstants.ACTION_CHECK_OUT
 import com.example.network.NetworkConstants.ACTION_GET_CLASS_INFO
 import com.example.network.NetworkConstants.ACTION_GET_FILE_CHUNK
+import com.example.network.NetworkConstants.ACTION_SEND_DOUBT
 import com.example.network.NetworkConstants.ACTION_SYNC
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -52,6 +53,12 @@ object ClassroomClient {
     suspend fun checkOut(ip: String, port: Int, cardId: String) = sendRequest(ip, port, JSONObject().apply {
         put("action", ACTION_CHECK_OUT)
         put("cardId", cardId)
+    })
+
+    suspend fun sendDoubt(ip: String, port: Int, cardId: String, message: String) = sendRequest(ip, port, JSONObject().apply {
+        put("action", ACTION_SEND_DOUBT)
+        put("cardId", cardId)
+        put("message", message)
     })
 
     suspend fun fetchChunk(ip: String, port: Int, fileId: String, offset: Long, length: Int, cardId: String) = sendRequest(ip, port, JSONObject().apply {

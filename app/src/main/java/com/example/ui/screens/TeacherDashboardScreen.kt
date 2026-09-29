@@ -4,6 +4,8 @@ import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -268,6 +270,45 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
         }
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize().padding(16.dp)) {
+            val pendingDoubts = syncedStudents.filter { it.hasDoubt }
+            if (pendingDoubts.isNotEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable {
+                        selectedStudentDoubt = pendingDoubts.first()
+                    },
+                    colors = CardDefaults.cardColors(containerColor = AccentAmber.copy(alpha = 0.2f)),
+                    border = BorderStroke(2.dp, AccentAmber),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("💬", fontSize = 22.sp)
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                text = "¡NUEVA DUDA DE ESTUDIANTE (${pendingDoubts.size})!",
+                                color = AccentAmber,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 12.sp
+                            )
+                            Text(
+                                text = "${pendingDoubts.first().lastName}, ${pendingDoubts.first().firstName}: \"${pendingDoubts.first().doubtMessage.take(30)}...\"",
+                                color = Color.White,
+                                fontSize = 11.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                        Button(
+                            onClick = { selectedStudentDoubt = pendingDoubts.first() },
+                            colors = ButtonDefaults.buttonColors(containerColor = AccentAmber),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                        ) {
+                            Text("VER", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                        }
+                    }
+                }
+            }
+
             when (activeTab) {
                 0 -> TeacherUnitsTab(
                     units = units, liveSection = liveSection, liveActiveUnit = liveActiveUnit,
