@@ -18,8 +18,8 @@ android {
     applicationId = "com.aulalocal.app"
     minSdk = 24
     targetSdk = 36
-    versionCode = 1
-    versionName = "1.0"
+    versionCode = 2
+    versionName = "1.2.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -55,7 +55,7 @@ android {
 }
 
 base {
-  archivesName.set("aulalocal")
+  archivesName.set("aulalocal-v1.2.0")
 }
 
 // Configure the Secrets Gradle Plugin to use .env and .env.example files

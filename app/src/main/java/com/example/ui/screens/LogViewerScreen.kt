@@ -16,10 +16,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.BuildConfig
 import com.example.data.AppLogger
 import kotlinx.coroutines.flow.collectLatest
 
@@ -56,7 +58,7 @@ fun LogViewerDialog(onDismiss: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("CONSOLA DE DIAGNÓSTICO", color = Color.Cyan, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, fontSize = 14.sp)
+                    Text("CONSOLA DE DIAGNÓSTICO • v${BuildConfig.VERSION_NAME}", color = Color.Cyan, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     Row {
                         val context = androidx.compose.ui.platform.LocalContext.current
                         IconButton(onClick = { AppLogger.shareLogFile(context) }) {
