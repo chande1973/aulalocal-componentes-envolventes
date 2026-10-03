@@ -43,6 +43,7 @@ import com.example.ui.theme.CosmicDarkSurface
 import com.example.ui.theme.StatusError
 import com.example.ui.theme.StatusSuccess
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 @Composable
 fun StudentStudyContent(
@@ -55,11 +56,27 @@ fun StudentStudyContent(
     onMarkRead: (Int) -> Unit = {},
     onMarkChallengeDone: (Int) -> Unit = {},
     onUpdateReadingProgress: (unitIndex: Int, percentage: Int, scrollPos: Int) -> Unit = { _, _, _ -> },
-    onRequestRecuperativo: () -> Unit = {}
+    onRequestRecuperativo: () -> Unit = {},
+    onEvaluateNotebook: suspend (android.graphics.Bitmap) -> com.example.domain.OcrEvaluationResult = { com.example.domain.OcrEvaluationResult("", 0f, 0f, 0f, 0f, "", "", emptyList()) },
+    onSaveNotebookGrade: (Int, com.example.domain.OcrEvaluationResult) -> Unit = { _, _ -> }
 ) {
     val scrollState = rememberScrollState()
     val maxScroll = scrollState.maxValue
     val currentScroll = scrollState.value
+    val scope = rememberCoroutineScope()
+
+    var isScanningNotebook by remember { mutableStateOf(false) }
+    var ocrResultDialog by remember { mutableStateOf<com.example.domain.OcrEvaluationResult?>(null) }
+    val cameraLauncher = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.TakePicturePreview()) { bitmap ->
+        if (bitmap != null) {
+            isScanningNotebook = true
+            scope.launch {
+                val result = onEvaluateNotebook(bitmap)
+                isScanningNotebook = false
+                ocrResultDialog = result
+            }
+        }
+    }
 
     val examActive = isLocked && enabledExams.split(",").filter { it.isNotEmpty() }.contains(unit.index.toString())
     val unitProgress = studyProgress.find { it.unitIndex == unit.index }
@@ -479,6 +496,103 @@ fun StudentStudyContent(
                 )
             }
             Spacer(Modifier.height(24.dp))
+        }
+
+        // 📷 ESCANEAR RESUMEN EN CUADERNO (OCR OFFLINE)
+        if (isReadLocal) {
+            Spacer(Modifier.height(16.dp))
+            val hasNotebookGrade = unitProgress?.notebookEvaluated == true
+            Button(
+                onClick = { cameraLauncher.launch(null) },
+                modifier = Modifier.fillMaxWidth().height(54.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = if (hasNotebookGrade) StatusSuccess else AccentCyan),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Icon(Icons.Default.MenuBook, null, tint = Color.Black)
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = if (hasNotebookGrade) "📓 CUADERNO EVALUADO: ${"%.2f".format(Locale.US, unitProgress?.notebookGrade ?: 0f)}/20" else "📷 ESCANEAR RESUMEN EN MI CUADERNO",
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp
+                )
+            }
+            if (hasNotebookGrade && !unitProgress?.notebookFeedback.isNullOrEmpty()) {
+                Text(
+                    text = unitProgress?.notebookFeedback ?: "",
+                    color = Color.LightGray,
+                    fontSize = 11.sp,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
+                )
+            }
+            Spacer(Modifier.height(16.dp))
+        }
+
+        if (isScanningNotebook) {
+            AlertDialog(
+                onDismissRequest = {},
+                containerColor = CosmicDarkSurface,
+                title = { Text("Procesando OCR Offline...", color = Color.White) },
+                text = {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().padding(20.dp)) {
+                        CircularProgressIndicator(color = AccentCyan)
+                        Spacer(Modifier.height(16.dp))
+                        Text("Analizando texto manuscrito y rúbrica sobre 20 pts...", color = Color.LightGray, fontSize = 12.sp)
+                    }
+                },
+                confirmButton = {}
+            )
+        }
+
+        ocrResultDialog?.let { result ->
+            AlertDialog(
+                onDismissRequest = { ocrResultDialog = null },
+                containerColor = CosmicDarkSurface,
+                title = { Text("Evaluación OCR del Cuaderno", color = AccentCyan, fontWeight = FontWeight.Bold) },
+                text = {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        Text(
+                            text = "Calificación Final: ${"%.2f".format(Locale.US, result.totalScore)} / 20.00",
+                            fontWeight = FontWeight.ExtraBold,
+                            color = StatusSuccess,
+                            fontSize = 16.sp
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        Text("• Contenido y Comprensión: ${"%.1f".format(result.contentScore)}/10", color = Color.White, fontSize = 13.sp)
+                        Text(result.contentFeedback, color = Color.Gray, fontSize = 11.sp)
+                        Spacer(Modifier.height(8.dp))
+                        Text("• Redacción y Coherencia: ${"%.1f".format(result.coherenceScore)}/5", color = Color.White, fontSize = 13.sp)
+                        Text(result.coherenceFeedback, color = Color.Gray, fontSize = 11.sp)
+                        Spacer(Modifier.height(8.dp))
+                        Text("• Ortografía y Gramática: ${"%.1f".format(result.spellingScore)}/5", color = Color.White, fontSize = 13.sp)
+                        if (result.spellingCorrections.isNotEmpty()) {
+                            Text("Correcciones: ${result.spellingCorrections.joinToString(", ")}", color = AccentAmber, fontSize = 11.sp)
+                        } else {
+                            Text("¡Excelente ortografía detectada!", color = StatusSuccess, fontSize = 11.sp)
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            onSaveNotebookGrade(unit.index, result)
+                            ocrResultDialog = null
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)
+                    ) {
+                        Text("Aceptar y Enviar", color = Color.Black, fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { ocrResultDialog = null }) {
+                        Text("Reintentar Foto", color = Color.Gray)
+                    }
+                }
+            )
         }
     }
 }

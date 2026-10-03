@@ -67,7 +67,9 @@ data class SyncedStudent(
     val manualAttendanceStatus: String? = null, // "Presente", "Ausente", "Retraso" (Sobrepasa el cálculo automático)
     val readProgressString: String = "[]",
     val challengeProgressString: String = "[]",
-    val examGradesString: String = "{}"
+    val examGradesString: String = "{}",
+    val notebookGradesString: String = "{}",
+    val notebookFeedbacksString: String = "{}"
 )
 
 @Entity(tableName = "attendance_history")

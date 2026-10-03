@@ -168,7 +168,9 @@ object ClassroomServer {
                             lastCheckpointSeen = lastCP,
                             readProgressString = request.optJSONArray("readProgress")?.toString() ?: "[]",
                             challengeProgressString = request.optJSONArray("challengeProgress")?.toString() ?: "[]",
-                            examGradesString = request.optJSONObject("examGrades")?.toString() ?: "{}"
+                            examGradesString = request.optJSONObject("examGrades")?.toString() ?: "{}",
+                            notebookGradesString = request.optJSONObject("notebookGrades")?.toString() ?: "{}",
+                            notebookFeedbacksString = request.optJSONObject("notebookFeedbacks")?.toString() ?: "{}"
                         )
                         dao.insertSyncedStudent(updated)
                         

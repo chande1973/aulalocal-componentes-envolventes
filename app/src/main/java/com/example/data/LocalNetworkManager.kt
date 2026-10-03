@@ -289,12 +289,14 @@ object LocalNetworkManager {
         } else onFailure(res?.optString("message") ?: "Error en registro")
     }
 
-    suspend fun syncWithTeacher(ip: String, port: Int, cardId: String, first: String, last: String, email: String, avatar: String, section: String, read: List<Int>, challenge: List<Int>, grades: Map<Int, Float>, onSuccess: (JSONObject) -> Unit, onExpelled: () -> Unit, onFailure: () -> Unit) {
+    suspend fun syncWithTeacher(ip: String, port: Int, cardId: String, first: String, last: String, email: String, avatar: String, section: String, read: List<Int>, challenge: List<Int>, grades: Map<Int, Float>, notebookGrades: Map<Int, Float>, notebookFeedbacks: Map<Int, String>, onSuccess: (JSONObject) -> Unit, onExpelled: () -> Unit, onFailure: () -> Unit) {
         val data = JSONObject().apply {
             put("cardId", cardId); put("firstName", first); put("lastName", last)
             put("email", email); put("avatar", avatar); put("sectionName", section)
             put("readProgress", org.json.JSONArray(read)); put("challengeProgress", org.json.JSONArray(challenge))
             put("examGrades", JSONObject().apply { grades.forEach { (k, v) -> put(k.toString(), v.toDouble()) } })
+            put("notebookGrades", JSONObject().apply { notebookGrades.forEach { (k, v) -> put(k.toString(), v.toDouble()) } })
+            put("notebookFeedbacks", JSONObject().apply { notebookFeedbacks.forEach { (k, v) -> put(k.toString(), v) } })
         }
         val res = ClassroomClient.sync(ip, port, data)
         if (res == null) { onFailure(); return }

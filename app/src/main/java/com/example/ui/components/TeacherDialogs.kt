@@ -50,6 +50,12 @@ fun StudentDetailAndRecuperativoDialog(
             JSONObject()
         }
     }
+    val notebookGradesObj = remember(student.notebookGradesString) {
+        try { JSONObject(student.notebookGradesString) } catch (e: Exception) { JSONObject() }
+    }
+    val notebookFeedbacksObj = remember(student.notebookFeedbacksString) {
+        try { JSONObject(student.notebookFeedbacksString) } catch (e: Exception) { JSONObject() }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -105,6 +111,10 @@ fun StudentDetailAndRecuperativoDialog(
                     items(units) { unit ->
                         val gradeStr = gradesObj.optString(unit.index.toString(), "")
                         val hasGrade = gradeStr.isNotEmpty()
+
+                        val notebookGradeStr = notebookGradesObj.optString(unit.index.toString(), "")
+                        val hasNotebookGrade = notebookGradeStr.isNotEmpty()
+                        val notebookFeedback = notebookFeedbacksObj.optString(unit.index.toString(), "")
 
                         val readsList = remember(student.readProgressString) {
                             try {
@@ -164,11 +174,27 @@ fun StudentDetailAndRecuperativoDialog(
                                         )
                                         Spacer(Modifier.width(8.dp))
                                         Text(
-                                            text = if (hasGrade) "|  Nota: $gradeStr / 20" else "|  Examen: Sin presentar",
+                                            text = if (hasGrade) "|  Examen: $gradeStr / 20" else "|  Examen: Sin presentar",
                                             fontSize = 10.sp,
                                             color = if (hasGrade) AccentCyan else Color.Gray,
                                             fontWeight = if (hasGrade) FontWeight.Bold else FontWeight.Normal
                                         )
+                                    }
+                                    if (hasNotebookGrade) {
+                                        Spacer(Modifier.height(2.dp))
+                                        Text(
+                                            text = "📓 Cuaderno (OCR): $notebookGradeStr / 20",
+                                            fontSize = 10.sp,
+                                            color = AccentCyan,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        if (notebookFeedback.isNotEmpty()) {
+                                            Text(
+                                                text = notebookFeedback,
+                                                fontSize = 9.sp,
+                                                color = Color.LightGray
+                                            )
+                                        }
                                     }
                                 }
 

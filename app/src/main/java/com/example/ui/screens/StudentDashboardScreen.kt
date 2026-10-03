@@ -336,7 +336,9 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
                             onRequestRecuperativo = {
                                 studentViewModel.sendDoubtToTeacher("Solicitud de recuperativo para Unidad ${currentUnit.index}")
                                 Toast.makeText(context, "Solicitud de recuperativo enviada al profesor por Wi-Fi", Toast.LENGTH_SHORT).show()
-                            }
+                            },
+                            onEvaluateNotebook = { bitmap -> studentViewModel.evaluateNotebookBitmap(bitmap, currentUnit.topicText) },
+                            onSaveNotebookGrade = { idx, result -> studentViewModel.saveNotebookEvaluation(idx, result) }
                         )
                     }
                 }

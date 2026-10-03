@@ -377,7 +377,15 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                     val readProgress = progressList.filter { it.isRead }.map { it.unitIndex }
                     val challengeProgress = progressList.filter { it.isChallengeDone }.map { it.unitIndex }
                     val examGrades = mutableMapOf<Int, Float>()
-                    progressList.forEach { if (it.examCompleted && it.examGrade != null) examGrades[it.unitIndex] = it.examGrade }
+                    val notebookGrades = mutableMapOf<Int, Float>()
+                    val notebookFeedbacks = mutableMapOf<Int, String>()
+                    progressList.forEach { 
+                        if (it.examCompleted && it.examGrade != null) examGrades[it.unitIndex] = it.examGrade
+                        if (it.notebookEvaluated && it.notebookGrade != null) {
+                            notebookGrades[it.unitIndex] = it.notebookGrade
+                            notebookFeedbacks[it.unitIndex] = it.notebookFeedback
+                        }
+                    }
 
                     LocalNetworkManager.syncWithTeacher(
                         ip = ip,
@@ -391,6 +399,8 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                         read = readProgress,
                         challenge = challengeProgress,
                         grades = examGrades,
+                        notebookGrades = notebookGrades,
+                        notebookFeedbacks = notebookFeedbacks,
                         onSuccess = { res ->
                             val activeUnit = res.getInt("activeUnitIndex")
                             val readingActive = res.optBoolean("isReadingActive", true)
@@ -966,6 +976,32 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
 
     fun clearBuzon() {
         viewModelScope.launch(Dispatchers.IO) { dao.clearInbox() }
+    }
+
+    suspend fun evaluateNotebookBitmap(bitmap: android.graphics.Bitmap, topicText: String): com.example.domain.OcrEvaluationResult = withContext(Dispatchers.Default) {
+        val extractedText = com.example.domain.OcrEvaluationManager.recognizeTextFromBitmap(bitmap)
+        com.example.domain.OcrEvaluationManager.evaluateSummary(extractedText, topicText)
+    }
+
+    fun saveNotebookEvaluation(unitIndex: Int, result: com.example.domain.OcrEvaluationResult) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val existing = dao.getProgressForUnit(unitIndex)
+            val feedback = "Contenido: ${"%.1f".format(result.contentScore)}/10 - ${result.contentFeedback} | Coherencia: ${"%.1f".format(result.coherenceScore)}/5 - ${result.coherenceFeedback} | Ortografía: ${"%.1f".format(result.spellingScore)}/5"
+            if (existing == null) {
+                dao.insertUnitProgress(UnitProgress(
+                    unitIndex = unitIndex,
+                    notebookGrade = result.totalScore,
+                    notebookEvaluated = true,
+                    notebookFeedback = feedback
+                ))
+            } else {
+                dao.insertUnitProgress(existing.copy(
+                    notebookGrade = result.totalScore,
+                    notebookEvaluated = true,
+                    notebookFeedback = feedback
+                ))
+            }
+        }
     }
 
     fun setOfflineMode(enabled: Boolean) {
