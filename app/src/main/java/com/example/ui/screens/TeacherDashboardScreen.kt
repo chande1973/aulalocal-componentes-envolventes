@@ -46,6 +46,7 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
     val liveActiveUnit by teacherViewModel.liveActiveUnitIndex.collectAsState()
     val enabledReads by teacherViewModel.enabledReadUnits.collectAsState()
     val enabledExams by teacherViewModel.enabledExamUnits.collectAsState()
+    val enabledNotebooks by teacherViewModel.enabledNotebookUnits.collectAsState()
     val generatedOtp by teacherViewModel.generatedOtpDisplay.collectAsState()
     
     // Colecciones pesadas diferidas con valores por defecto
@@ -195,6 +196,7 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
             units = units,
             historyFlow = teacherViewModel.getStudentAttendanceHistory(student.cardId),
             onEnableRecuperativo = { cardId, uIdx -> teacherViewModel.enableRecuperativoForStudent(cardId, uIdx) },
+            onEnableNotebookRecuperativo = { cardId, uIdx -> teacherViewModel.enableNotebookRecuperativo(cardId, uIdx) },
             onAuthorizeProfileEdit = { cardId -> teacherViewModel.authorizeStudentProfileEdit(cardId) },
             onClearDoubt = { cardId -> teacherViewModel.clearStudentDoubt(cardId) },
             onDismiss = { selectedStudentHistory = null }
@@ -356,11 +358,12 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
             when (activeTab) {
                 0 -> TeacherUnitsTab(
                     units = units, liveSection = liveSection, liveActiveUnit = liveActiveUnit,
-                    enabledReads = enabledReads, enabledExams = enabledExams, isServerRunning = isServerRunning,
+                    enabledReads = enabledReads, enabledExams = enabledExams, enabledNotebooks = enabledNotebooks, isServerRunning = isServerRunning,
                     onRefreshCourse = { mainViewModel.refreshCurrentCourse() },
                     onActivateUnit = { teacherViewModel.updateActiveUnit(it) },
                     onToggleRead = { idx, state -> teacherViewModel.updateTeacherUnitToggle(idx, state, false) },
                     onToggleExam = { idx, state -> teacherViewModel.updateTeacherUnitToggle(idx, state, true) },
+                    onToggleNotebook = { idx, state -> teacherViewModel.updateTeacherNotebookToggle(idx, state) },
                     onGoToAula = { activeTab = 1 }
                 )
                 1 -> TeacherAulaTab(

@@ -54,6 +54,7 @@ class ClassroomServerService : Service() {
             val teacherNameFull = if (p != null) "${p.firstName} ${p.lastName}" else "Profesor"
             val enabledReads = section?.enabledReadUnits ?: "1"
             val enabledExams = section?.enabledExamUnits ?: ""
+            val enabledNotebooks = section?.enabledNotebookUnits ?: ""
             val message = section?.teacherMessage ?: ""
 
             // Resetear contadores de la sesión anterior para esta sección
@@ -68,6 +69,7 @@ class ClassroomServerService : Service() {
                 exam = isExam,
                 reads = enabledReads,
                 exams = enabledExams,
+                notebooks = enabledNotebooks,
                 msg = message,
                 total = section?.totalClasses ?: 0,
                 database = db,

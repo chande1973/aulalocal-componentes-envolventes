@@ -51,12 +51,14 @@ fun StudentStudyContent(
     videoUri: Uri?,
     isLocked: Boolean,
     enabledExams: String,
+    enabledNotebookUnits: String = "",
     studyProgress: List<UnitProgress> = emptyList(),
     onTakeExam: () -> Unit,
     onMarkRead: (Int) -> Unit = {},
     onMarkChallengeDone: (Int) -> Unit = {},
     onUpdateReadingProgress: (unitIndex: Int, percentage: Int, scrollPos: Int) -> Unit = { _, _, _ -> },
     onRequestRecuperativo: () -> Unit = {},
+    onRequestNotebookRecuperativo: () -> Unit = {},
     onEvaluateNotebook: suspend (android.graphics.Bitmap) -> com.example.domain.OcrEvaluationResult = { com.example.domain.OcrEvaluationResult("", 0f, 0f, 0f, 0f, "", "", emptyList()) },
     onSaveNotebookGrade: (Int, com.example.domain.OcrEvaluationResult) -> Unit = { _, _ -> }
 ) {
@@ -502,30 +504,85 @@ fun StudentStudyContent(
         if (isReadLocal) {
             Spacer(Modifier.height(16.dp))
             val hasNotebookGrade = unitProgress?.notebookEvaluated == true
-            Button(
-                onClick = { cameraLauncher.launch(null) },
-                modifier = Modifier.fillMaxWidth().height(54.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = if (hasNotebookGrade) StatusSuccess else AccentCyan),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Icon(Icons.Default.MenuBook, null, tint = Color.Black)
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = if (hasNotebookGrade) "📓 CUADERNO EVALUADO: ${"%.2f".format(Locale.US, unitProgress?.notebookGrade ?: 0f)}/20" else "📷 ESCANEAR RESUMEN EN MI CUADERNO",
-                    color = Color.Black,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
-                )
+            val notebookActive = !isLocked || enabledNotebookUnits.split(",").filter { it.isNotEmpty() }.contains(unit.index.toString())
+
+            if (hasNotebookGrade) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+                    colors = CardDefaults.cardColors(containerColor = StatusSuccess.copy(alpha = 0.1f)),
+                    border = BorderStroke(1.dp, StatusSuccess.copy(alpha = 0.5f)),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.CheckCircle, null, tint = StatusSuccess, modifier = Modifier.size(28.dp))
+                            Spacer(Modifier.width(12.dp))
+                            Column {
+                                Text("Cuaderno Escaneado y Evaluado", fontWeight = FontWeight.Bold, color = StatusSuccess, fontSize = 14.sp)
+                                val notebookGrade = unitProgress?.notebookGrade ?: 0f
+                                Text("Calificación OCR: ${"%.2f".format(Locale.US, notebookGrade)} / 20", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp)
+                                if (!unitProgress?.notebookFeedback.isNullOrEmpty()) {
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(unitProgress?.notebookFeedback ?: "", color = Color.LightGray, fontSize = 10.sp)
+                                }
+                            }
+                        }
+
+                        Spacer(Modifier.height(12.dp))
+                        if (unitProgress?.isRecuperativoUsed == true) {
+                            Text("🔒 Máximo alcanzado: 1 recuperativo por unidad.", color = Color.Gray, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        } else {
+                            var requested by remember { mutableStateOf(unitProgress?.recuperativoRequested == true) }
+                            OutlinedButton(
+                                onClick = {
+                                    requested = true
+                                    onRequestNotebookRecuperativo()
+                                },
+                                enabled = !requested,
+                                modifier = Modifier.fillMaxWidth(),
+                                border = BorderStroke(1.dp, AccentCyan)
+                            ) {
+                                Icon(Icons.Default.Psychology, null, tint = AccentCyan, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text(if (requested) "SOLICITUD DE RECUPERATIVO ENVIADA" else "🔄 SOLICITAR RECUPERATIVO DE CUADERNO", color = AccentCyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+            } else if (notebookActive) {
+                Button(
+                    onClick = { cameraLauncher.launch(null) },
+                    modifier = Modifier.fillMaxWidth().height(54.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Icon(Icons.Default.MenuBook, null, tint = Color.Black)
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "📷 ESCANEAR RESUMEN EN MI CUADERNO",
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    )
+                }
+                Spacer(Modifier.height(16.dp))
+            } else {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+                    colors = CardDefaults.cardColors(containerColor = CosmicDarkSurface),
+                    border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.3f)),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Lock, null, tint = Color.Gray, modifier = Modifier.size(24.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Column {
+                            Text("Escaneo de Cuaderno Bloqueado", fontWeight = FontWeight.Bold, color = Color.Gray, fontSize = 13.sp)
+                            Text("El profesor habilitará el escaneo OCR de esta unidad en breve.", color = Color.Gray, fontSize = 11.sp)
+                        }
+                    }
+                }
             }
-            if (hasNotebookGrade && !unitProgress?.notebookFeedback.isNullOrEmpty()) {
-                Text(
-                    text = unitProgress?.notebookFeedback ?: "",
-                    color = Color.LightGray,
-                    fontSize = 11.sp,
-                    modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
-                )
-            }
-            Spacer(Modifier.height(16.dp))
         }
 
         if (isScanningNotebook) {

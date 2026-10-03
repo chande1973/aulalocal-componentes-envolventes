@@ -30,8 +30,10 @@ fun TeacherUnitCard(
     unit: UnitData,
     isActive: Boolean,
     isExam: Boolean,
+    isNotebook: Boolean,
     onActivate: () -> Unit,
-    onToggleExam: (Boolean) -> Unit
+    onToggleExam: (Boolean) -> Unit,
+    onToggleNotebook: (Boolean) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -77,49 +79,90 @@ fun TeacherUnitCard(
 
             Spacer(Modifier.height(12.dp))
 
+            // Botón principal de impartir clase
+            Button(
+                onClick = onActivate,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isActive) StatusSuccess else AccentTeal
+                ),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.fillMaxWidth().height(40.dp)
+            ) {
+                Icon(
+                    imageVector = if (isActive) Icons.Default.Sensors else Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    tint = if (isActive) Color.White else Color.Black,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = if (isActive) "📡 IMPARTIENDO CLASE EN VIVO" else "🟢 IMPARTIR ESTA CLASE",
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 12.sp,
+                    color = if (isActive) Color.White else Color.Black
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            // Fila de Permisos de Evaluación (Cuaderno OCR y Examen)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Button(
-                    onClick = onActivate,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isActive) StatusSuccess else AccentTeal
+                FilterChip(
+                    selected = isNotebook,
+                    onClick = { onToggleNotebook(!isNotebook) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.CameraAlt,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = if (isNotebook) Color.Black else AccentCyan
+                        )
+                    },
+                    label = {
+                        Text(
+                            text = if (isNotebook) "Cuaderno Habilitado" else "Cuaderno OCR",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = AccentCyan,
+                        selectedLabelColor = Color.Black,
+                        containerColor = CosmicDarkSurface,
+                        labelColor = Color.LightGray
                     ),
-                    shape = RoundedCornerShape(8.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp),
-                    modifier = Modifier.height(36.dp)
-                ) {
-                    Icon(
-                        imageVector = if (isActive) Icons.Default.Sensors else Icons.Default.PlayArrow,
-                        contentDescription = null,
-                        tint = if (isActive) Color.White else Color.Black,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        text = if (isActive) "IMPARTIENDO EN VIVO" else "IMPARTIR CLASE",
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 11.sp,
-                        color = if (isActive) Color.White else Color.Black
-                    )
-                }
+                    modifier = Modifier.weight(1f)
+                )
 
                 FilterChip(
                     selected = isExam,
                     onClick = { onToggleExam(!isExam) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Quiz,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = if (isExam) Color.Black else AccentAmber
+                        )
+                    },
                     label = {
                         Text(
-                            text = if (isExam) "📝 EXAMEN ACTIVO" else "📝 EXAMEN",
+                            text = if (isExam) "Examen Habilitado" else "Examen",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold
                         )
                     },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = AccentAmber,
-                        selectedLabelColor = Color.Black
-                    )
+                        selectedLabelColor = Color.Black,
+                        containerColor = CosmicDarkSurface,
+                        labelColor = Color.LightGray
+                    ),
+                    modifier = Modifier.weight(1f)
                 )
             }
         }

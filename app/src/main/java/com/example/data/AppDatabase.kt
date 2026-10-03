@@ -14,7 +14,7 @@ import androidx.room.RoomDatabase
         AttendanceRecord::class,
         InboxMessage::class
     ],
-    version = 10,
+    version = 11,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

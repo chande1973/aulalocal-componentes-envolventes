@@ -38,6 +38,7 @@ object LocalNetworkManager {
     private var isExamActive = false
     private var enabledReadUnits = "1"
     private var enabledExamUnits = ""
+    private var enabledNotebookUnits = ""
     private var teacherMessage = ""
     private var sectionTotalClasses = 0
     private var currentSessionId = ""
@@ -84,7 +85,7 @@ object LocalNetworkManager {
         multicastLock = null
     }
 
-    fun updateServerConfig(teacher: String, section: String, unit: Int, reading: Boolean, exam: Boolean, reads: String, exams: String, msg: String, total: Int = 0) {
+    fun updateServerConfig(teacher: String, section: String, unit: Int, reading: Boolean, exam: Boolean, reads: String, exams: String, notebooks: String, msg: String, total: Int = 0) {
         currentTeacherName = teacher
         currentSectionName = section
         activeUnitIndex = unit
@@ -92,11 +93,12 @@ object LocalNetworkManager {
         isExamActive = exam
         enabledReadUnits = reads
         enabledExamUnits = exams
+        enabledNotebookUnits = notebooks
         teacherMessage = msg
         sectionTotalClasses = total
     }
 
-    fun startTeacherServer(scope: CoroutineScope, teacher: String, section: String, unit: Int, reading: Boolean, exam: Boolean, reads: String, exams: String, msg: String, total: Int, database: AppDatabase, context: android.content.Context, tcpPort: Int = DEFAULT_TCP_PORT) {
+    fun startTeacherServer(scope: CoroutineScope, teacher: String, section: String, unit: Int, reading: Boolean, exam: Boolean, reads: String, exams: String, notebooks: String, msg: String, total: Int, database: AppDatabase, context: android.content.Context, tcpPort: Int = DEFAULT_TCP_PORT) {
         if (_isServerRunning.value) return
         databaseRef = database
         appContext = context.applicationContext
@@ -112,7 +114,7 @@ object LocalNetworkManager {
         sharedFileIsSystem = false
         _pendingCommand = null
         
-        updateServerConfig(teacher, section, unit, reading, exam, reads, exams, msg, total)
+        updateServerConfig(teacher, section, unit, reading, exam, reads, exams, notebooks, msg, total)
         _isServerRunning.value = true
 
         // Ticker de checkpoints
@@ -157,6 +159,7 @@ object LocalNetworkManager {
                         put("isExamActive", isExamActive)
                         put("enabledReadUnits", enabledReadUnits)
                         put("enabledExamUnits", enabledExamUnits)
+                        put("enabledNotebookUnits", enabledNotebookUnits)
                         put("teacherMessage", teacherMessage)
                         put("totalClasses", sectionTotalClasses)
                     }
@@ -266,26 +269,26 @@ object LocalNetworkManager {
         DiscoveryService.discoverTeacher(onSuccess, onFailure)
     }
 
-    suspend fun fetchClassInfo(ip: String, port: Int, onSuccess: (String, String, Int, Boolean, Boolean, String, String, String, Int, String) -> Unit, onFailure: (String) -> Unit) {
+    suspend fun fetchClassInfo(ip: String, port: Int, onSuccess: (String, String, Int, Boolean, Boolean, String, String, String, String, Int, String) -> Unit, onFailure: (String) -> Unit) {
         val res = ClassroomClient.fetchClassInfo(ip, port)
         if (res != null && res.optString("status") == "ok") {
             onSuccess(
                 res.getString("teacherName"), res.getString("sectionName"), res.getInt("activeUnitIndex"),
                 res.optBoolean("isReadingActive", true), res.getBoolean("isExamActive"),
-                res.optString("enabledReadUnits", "1"), res.optString("enabledExamUnits", ""),
+                res.optString("enabledReadUnits", "1"), res.optString("enabledExamUnits", ""), res.optString("enabledNotebookUnits", ""),
                 res.optString("teacherMessage", ""), res.optInt("totalClasses", 0), res.optString("sessionId", "")
             )
         } else onFailure("No se pudo obtener info de clase")
     }
 
-    suspend fun sendCheckIn(ip: String, port: Int, cardId: String, first: String, last: String, email: String, avatar: String, section: String, onSuccess: (Int, Boolean, Boolean, String, String, String, Int, String) -> Unit, onFailure: (String) -> Unit) {
+    suspend fun sendCheckIn(ip: String, port: Int, cardId: String, first: String, last: String, email: String, avatar: String, section: String, onSuccess: (Int, Boolean, Boolean, String, String, String, String, Int, String) -> Unit, onFailure: (String) -> Unit) {
         val data = JSONObject().apply {
             put("cardId", cardId); put("firstName", first); put("lastName", last)
             put("email", email); put("avatar", avatar); put("sectionName", section)
         }
         val res = ClassroomClient.checkIn(ip, port, data)
         if (res != null && res.optString("status") == "ok") {
-            onSuccess(res.getInt("activeUnitIndex"), res.optBoolean("isReadingActive", true), res.getBoolean("isExamActive"), res.optString("enabledReadUnits", "1"), res.optString("enabledExamUnits", ""), res.optString("teacherMessage", ""), res.optInt("totalClasses", 0), res.optString("sessionId", ""))
+            onSuccess(res.getInt("activeUnitIndex"), res.optBoolean("isReadingActive", true), res.getBoolean("isExamActive"), res.optString("enabledReadUnits", "1"), res.optString("enabledExamUnits", ""), res.optString("enabledNotebookUnits", ""), res.optString("teacherMessage", ""), res.optInt("totalClasses", 0), res.optString("sessionId", ""))
         } else onFailure(res?.optString("message") ?: "Error en registro")
     }
 

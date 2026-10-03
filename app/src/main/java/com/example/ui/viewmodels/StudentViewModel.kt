@@ -56,6 +56,9 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
     private val _enabledExamUnits = MutableStateFlow("")
     val enabledExamUnits = _enabledExamUnits.asStateFlow()
 
+    private val _enabledNotebookUnits = MutableStateFlow("")
+    val enabledNotebookUnits = _enabledNotebookUnits.asStateFlow()
+
     private val _teacherMessage = MutableStateFlow("")
     val teacherMessageState = _teacherMessage.asStateFlow()
 
@@ -241,7 +244,7 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
             LocalNetworkManager.fetchClassInfo(
                 ip = ip,
                 port = port,
-                onSuccess = { _, section, activeUnit, readingActive, examActive, enabledReads, enabledExams, message, totalClasses, sessionId ->
+                onSuccess = { _, section, activeUnit, readingActive, examActive, enabledReads, enabledExams, enabledNotebooks, message, totalClasses, sessionId ->
                     _detectedTeacherIp.value = ip
                     _manualServerIp.value = ip
                     _manualServerPort.value = port.toString()
@@ -250,6 +253,7 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                     _isExamActiveStudent.value = examActive
                     _enabledReadUnits.value = enabledReads
                     _enabledExamUnits.value = enabledExams
+                    _enabledNotebookUnits.value = enabledNotebooks
                     _teacherMessage.value = message
                     _totalClassesFromTeacher.value = totalClasses
                     _isDiscovering.value = false
@@ -326,11 +330,12 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                 email = profile.email,
                 avatar = profile.avatar,
                 section = officialSection, 
-                onSuccess = { activeUnit, readingActive, examActive, enabledReads, enabledExams, message, totalClasses, sessionId ->
+                onSuccess = { activeUnit, readingActive, examActive, enabledReads, enabledExams, enabledNotebooks, message, totalClasses, sessionId ->
                     _activeUnitIndexStudent.value = activeUnit
                     _isExamActiveStudent.value = examActive
                     _enabledReadUnits.value = enabledReads
                     _enabledExamUnits.value = enabledExams
+                    _enabledNotebookUnits.value = enabledNotebooks
                     _teacherMessage.value = message
                     _totalClassesFromTeacher.value = totalClasses
                     lastSessionId = sessionId
@@ -407,6 +412,7 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                             val examActive = res.getBoolean("isExamActive")
                             val enabledReads = res.optString("enabledReadUnits", "1")
                             val enabledExams = res.optString("enabledExamUnits", "")
+                            val enabledNotebooks = res.optString("enabledNotebookUnits", "")
                             val message = res.optString("teacherMessage", "")
                             val totalClasses = res.optInt("totalClasses", 0)
                             val personalAttendance = res.optInt("personalAttendance", 0)
@@ -422,9 +428,11 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                             
                             val oldReads = _enabledReadUnits.value
                             val oldExams = _enabledExamUnits.value
+                            val oldNotebooks = _enabledNotebookUnits.value
 
                             _enabledReadUnits.value = enabledReads
                             _enabledExamUnits.value = enabledExams
+                            _enabledNotebookUnits.value = enabledNotebooks
                             _totalClassesFromTeacher.value = totalClasses
                             _isListenerMode.value = isListener
 
@@ -440,6 +448,12 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                                     val newlyAddedExams = enabledExams.split(",").filter { it.isNotEmpty() && !oldExams.split(",").contains(it) }
                                     if (newlyAddedExams.isNotEmpty()) {
                                         _uiEvents.emit(getApplication<Application>().getString(R.string.msg_exam_enabled))
+                                    }
+                                }
+                                if (oldNotebooks != enabledNotebooks && enabledNotebooks.isNotEmpty()) {
+                                    val newlyAddedNotebooks = enabledNotebooks.split(",").filter { it.isNotEmpty() && !oldNotebooks.split(",").contains(it) }
+                                    if (newlyAddedNotebooks.isNotEmpty()) {
+                                        _uiEvents.emit("📓 ¡Escaneo de cuaderno habilitado por el profesor!")
                                     }
                                 }
                             }
@@ -531,7 +545,12 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                                 }
                                 viewModelScope.launch(Dispatchers.IO) {
                                     dao.insertInboxMessage(InboxMessage(sender = "Profesor", content = privateMsg))
-                                    if (privateMsg.contains("Recuperativo Habilitado", ignoreCase = true)) {
+                                    if (privateMsg.contains("Recuperativo Cuaderno Habilitado", ignoreCase = true)) {
+                                        val unitNum = privateMsg.substringAfter("Unidad ", "").takeWhile { it.isDigit() }.toIntOrNull()
+                                        if (unitNum != null) {
+                                            dao.resetNotebookProgress(unitNum)
+                                        }
+                                    } else if (privateMsg.contains("Recuperativo Habilitado", ignoreCase = true)) {
                                         val unitNum = privateMsg.substringAfter("Unidad ", "").takeWhile { it.isDigit() }.toIntOrNull()
                                         if (unitNum != null) {
                                             dao.resetExamProgress(unitNum)

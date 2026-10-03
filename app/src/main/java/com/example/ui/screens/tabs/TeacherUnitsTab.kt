@@ -29,11 +29,13 @@ fun TeacherUnitsTab(
     liveActiveUnit: Int,
     enabledReads: String,
     enabledExams: String,
+    enabledNotebooks: String,
     isServerRunning: Boolean,
     onRefreshCourse: () -> Unit,
     onActivateUnit: (Int) -> Unit,
     onToggleRead: (Int, Boolean) -> Unit,
     onToggleExam: (Int, Boolean) -> Unit,
+    onToggleNotebook: (Int, Boolean) -> Unit,
     onGoToAula: () -> Unit
 ) {
     if (liveSection.isEmpty()) {
@@ -69,8 +71,10 @@ fun TeacherUnitsTab(
                         unit = unit,
                         isActive = liveActiveUnit == unit.index,
                         isExam = enabledExams.split(",").contains(unit.index.toString()),
+                        isNotebook = enabledNotebooks.split(",").contains(unit.index.toString()),
                         onActivate = { onActivateUnit(unit.index) },
-                        onToggleExam = { onToggleExam(unit.index, it) }
+                        onToggleExam = { onToggleExam(unit.index, it) },
+                        onToggleNotebook = { onToggleNotebook(unit.index, it) }
                     )
                 }
             }

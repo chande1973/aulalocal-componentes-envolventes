@@ -40,6 +40,7 @@ data class LocalSection(
     val currentWeekOffset: Int = 0,
     val enabledReadUnits: String = "1",
     val enabledExamUnits: String = "",
+    val enabledNotebookUnits: String = "",
     val teacherMessage: String = ""
 )
 
@@ -251,6 +252,9 @@ interface ClassroomDao {
 
     @Query("UPDATE unit_progress SET examGrade = NULL, examCompleted = 0 WHERE unitIndex = :unitIndex")
     suspend fun resetExamProgress(unitIndex: Int)
+
+    @Query("UPDATE unit_progress SET notebookGrade = NULL, notebookEvaluated = 0, notebookFeedback = '' WHERE unitIndex = :unitIndex")
+    suspend fun resetNotebookProgress(unitIndex: Int)
 
     @Query("DELETE FROM unit_progress")
     suspend fun clearProgress()

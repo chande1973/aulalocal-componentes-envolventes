@@ -58,6 +58,9 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
     private val _enabledExamUnits = MutableStateFlow("")
     val enabledExamUnits = _enabledExamUnits.asStateFlow()
 
+    private val _enabledNotebookUnits = MutableStateFlow("")
+    val enabledNotebookUnits = _enabledNotebookUnits.asStateFlow()
+
     private val _teacherMessage = MutableStateFlow("")
     val teacherMessageState = _teacherMessage.asStateFlow()
 
@@ -116,6 +119,7 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
             if (section != null) {
                 _enabledReadUnits.value = section.enabledReadUnits
                 _enabledExamUnits.value = section.enabledExamUnits
+                _enabledNotebookUnits.value = section.enabledNotebookUnits
                 _teacherMessage.value = section.teacherMessage
                 
                 // Persistir la selección en el perfil para que la app la recuerde
@@ -171,11 +175,13 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
                         exam = _liveIsExamActive.value,
                         reads = section.enabledReadUnits,
                         exams = section.enabledExamUnits,
+                        notebooks = section.enabledNotebookUnits,
                         msg = section.teacherMessage,
                         total = section.totalClasses
                     )
                     _enabledReadUnits.value = section.enabledReadUnits
                     _enabledExamUnits.value = section.enabledExamUnits
+                    _enabledNotebookUnits.value = section.enabledNotebookUnits
                     _teacherMessage.value = section.teacherMessage
                     
                     _uiEvents.emit(getApplication<Application>().getString(R.string.msg_server_started, customPort))
@@ -223,6 +229,7 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
                 exam = isExamNow,
                 reads = newReads,
                 exams = section.enabledExamUnits,
+                notebooks = section.enabledNotebookUnits,
                 msg = _teacherMessage.value,
                 total = section.totalClasses
             )
@@ -267,9 +274,58 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
                 exam = _liveIsExamActive.value,
                 reads = newReads,
                 exams = newExams,
+                notebooks = section.enabledNotebookUnits,
                 msg = section.teacherMessage,
                 total = section.totalClasses
             )
+        }
+    }
+
+    fun updateTeacherNotebookToggle(unitIndex: Int, isEnabled: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val sectionName = liveSelectedSection.value
+            val section = dao.getSectionByName(sectionName) ?: return@launch
+            val profile = dao.getUserProfile() ?: return@launch
+
+            var notebooks = section.enabledNotebookUnits.split(",").filter { it.isNotEmpty() }.toMutableSet()
+            if (isEnabled) notebooks.add(unitIndex.toString()) else notebooks.remove(unitIndex.toString())
+            val newNotebooks = notebooks.joinToString(",")
+
+            dao.insertSection(section.copy(enabledNotebookUnits = newNotebooks))
+            _enabledNotebookUnits.value = newNotebooks
+
+            LocalNetworkManager.updateServerConfig(
+                teacher = "${profile.firstName} ${profile.lastName}",
+                section = sectionName,
+                unit = _liveActiveUnitIndex.value,
+                reading = _liveIsReadingActive.value,
+                exam = _liveIsExamActive.value,
+                reads = section.enabledReadUnits,
+                exams = section.enabledExamUnits,
+                notebooks = newNotebooks,
+                msg = section.teacherMessage,
+                total = section.totalClasses
+            )
+        }
+    }
+
+    fun enableNotebookRecuperativo(cardId: String, unitIndex: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val student = dao.getStudentByCardId(cardId) ?: return@launch
+            val gradesObj = try { org.json.JSONObject(student.notebookGradesString) } catch (e: Exception) { org.json.JSONObject() }
+            val feedbacksObj = try { org.json.JSONObject(student.notebookFeedbacksString) } catch (e: Exception) { org.json.JSONObject() }
+
+            gradesObj.remove(unitIndex.toString())
+            feedbacksObj.remove(unitIndex.toString())
+
+            dao.insertSyncedStudent(student.copy(
+                notebookGradesString = gradesObj.toString(),
+                notebookFeedbacksString = feedbacksObj.toString(),
+                privateMessage = "Recuperativo Cuaderno Habilitado para Unidad $unitIndex"
+            ))
+            withContext(Dispatchers.Main) {
+                _uiEvents.emit("🔄 Recuperativo de cuaderno habilitado para ${student.firstName}")
+            }
         }
     }
 
@@ -289,6 +345,7 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
                 exam = _liveIsExamActive.value,
                 reads = section.enabledReadUnits,
                 exams = section.enabledExamUnits,
+                notebooks = section.enabledNotebookUnits,
                 msg = message,
                 total = section.totalClasses
             )
@@ -308,6 +365,7 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
                 exam = _liveIsExamActive.value,
                 reads = section.enabledReadUnits,
                 exams = section.enabledExamUnits,
+                notebooks = section.enabledNotebookUnits,
                 msg = section.teacherMessage,
                 total = section.totalClasses
             )
@@ -327,6 +385,7 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
                 exam = isActive,
                 reads = section.enabledReadUnits,
                 exams = section.enabledExamUnits,
+                notebooks = section.enabledNotebookUnits,
                 msg = section.teacherMessage,
                 total = section.totalClasses
             )
@@ -371,6 +430,7 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
                     exam = _liveIsExamActive.value,
                     reads = _enabledReadUnits.value,
                     exams = _enabledExamUnits.value,
+                    notebooks = _enabledNotebookUnits.value,
                     msg = _teacherMessage.value,
                     total = updatedSection.totalClasses
                 )

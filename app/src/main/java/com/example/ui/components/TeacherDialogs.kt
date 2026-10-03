@@ -31,6 +31,7 @@ fun StudentDetailAndRecuperativoDialog(
     units: List<UnitData>,
     historyFlow: Flow<List<AttendanceRecord>>,
     onEnableRecuperativo: (studentCardId: String, unitIndex: Int) -> Unit,
+    onEnableNotebookRecuperativo: (studentCardId: String, unitIndex: Int) -> Unit = { _, _ -> },
     onAuthorizeProfileEdit: (studentCardId: String) -> Unit = {},
     onClearDoubt: (studentCardId: String) -> Unit = {},
     onDismiss: () -> Unit
@@ -198,13 +199,25 @@ fun StudentDetailAndRecuperativoDialog(
                                     }
                                 }
 
-                                if (hasGrade) {
-                                    Button(
-                                        onClick = { onEnableRecuperativo(student.cardId, unit.index) },
-                                        colors = ButtonDefaults.buttonColors(containerColor = AccentAmber),
-                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                                    ) {
-                                        Text("🔄 Recuperativo", color = Color.Black, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                Column(horizontalAlignment = Alignment.End) {
+                                    if (hasGrade) {
+                                        Button(
+                                            onClick = { onEnableRecuperativo(student.cardId, unit.index) },
+                                            colors = ButtonDefaults.buttonColors(containerColor = AccentAmber),
+                                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                                        ) {
+                                            Text("🔄 Recuperativo", color = Color.Black, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                        Spacer(Modifier.height(4.dp))
+                                    }
+                                    if (hasNotebookGrade) {
+                                        Button(
+                                            onClick = { onEnableNotebookRecuperativo(student.cardId, unit.index) },
+                                            colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
+                                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                                        ) {
+                                            Text("🔄 Rec. Cuaderno", color = Color.Black, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                        }
                                     }
                                 }
                             }

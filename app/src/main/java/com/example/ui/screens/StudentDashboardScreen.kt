@@ -49,6 +49,7 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
     val units by mainViewModel.unitsFlow.collectAsStateWithLifecycle()
     val enabledReads by studentViewModel.enabledReadUnits.collectAsStateWithLifecycle()
     val enabledExams by studentViewModel.enabledExamUnits.collectAsStateWithLifecycle()
+    val enabledNotebooks by studentViewModel.enabledNotebookUnits.collectAsStateWithLifecycle()
     val teacherMsg by studentViewModel.teacherMessageState.collectAsStateWithLifecycle()
     val totalClasses by studentViewModel.totalClassesFromTeacher.collectAsStateWithLifecycle()
     val pendingUnit by studentViewModel.pendingUnitUpdate.collectAsStateWithLifecycle()
@@ -328,6 +329,7 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
                             videoUri = videoUri,
                             isLocked = isLocked,
                             enabledExams = enabledExams,
+                            enabledNotebookUnits = enabledNotebooks,
                             studyProgress = studyProgress,
                             onTakeExam = { isTakingExam = true },
                             onMarkRead = { studentViewModel.markUnitAsRead(it) },
@@ -336,6 +338,10 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
                             onRequestRecuperativo = {
                                 studentViewModel.sendDoubtToTeacher("Solicitud de recuperativo para Unidad ${currentUnit.index}")
                                 Toast.makeText(context, "Solicitud de recuperativo enviada al profesor por Wi-Fi", Toast.LENGTH_SHORT).show()
+                            },
+                            onRequestNotebookRecuperativo = {
+                                studentViewModel.sendDoubtToTeacher("Solicitud de recuperativo de cuaderno para Unidad ${currentUnit.index}")
+                                Toast.makeText(context, "Solicitud de recuperativo de cuaderno enviada al profesor por Wi-Fi", Toast.LENGTH_SHORT).show()
                             },
                             onEvaluateNotebook = { bitmap -> studentViewModel.evaluateNotebookBitmap(bitmap, currentUnit.topicText) },
                             onSaveNotebookGrade = { idx, result -> studentViewModel.saveNotebookEvaluation(idx, result) }
