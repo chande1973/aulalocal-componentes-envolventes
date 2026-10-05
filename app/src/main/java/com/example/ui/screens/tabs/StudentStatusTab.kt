@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.EventBusy
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Warning
@@ -51,7 +52,8 @@ fun StudentStatusTab(
     onAbandonClass: () -> Unit,
     onViewConsole: () -> Unit,
     onReportBug: () -> Unit,
-    onDownloadReport: () -> Unit
+    onDownloadReport: () -> Unit,
+    onOpenReportViewer: () -> Unit = {}
 ) {
     val dateFormat = SimpleDateFormat("EEEE dd/MM/yyyy - HH:mm", Locale("es", "ES"))
 
@@ -329,6 +331,15 @@ fun StudentStatusTab(
             label = "📄 Descargar Boleta y Métricas Personales",
             color = AccentCyan,
             onClick = onDownloadReport
+        )
+
+        Spacer(Modifier.height(8.dp))
+
+        SystemActionRow(
+            icon = Icons.Default.FolderOpen,
+            label = "📂 Ver Mis Boletas y Reportes Guardados",
+            color = AccentTeal,
+            onClick = onOpenReportViewer
         )
     }
 }

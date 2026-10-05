@@ -47,10 +47,17 @@ object TestDataInjector {
             
             // Simular notas: algunas unidades completadas, otras no
             val grades = JSONObject()
+            val nbGrades = JSONObject()
+            val nbFeedbacks = JSONObject()
             for (u in 1..totalUnits) {
                 if (random.nextFloat() > 0.1f) { 
                     val grade = random.nextInt(8, 21).toFloat() 
                     grades.put(u.toString(), grade.toString())
+                }
+                if (random.nextFloat() > 0.2f) {
+                    val nbGrade = random.nextInt(10, 21).toFloat()
+                    nbGrades.put(u.toString(), nbGrade.toString())
+                    nbFeedbacks.put(u.toString(), "Contenido: 8/10 - Coherencia: 4/5 - Ortografía: 4/5")
                 }
             }
 
@@ -63,7 +70,9 @@ object TestDataInjector {
                     avatar = "Geek",
                     sectionName = sectionName,
                     attendanceCount = attendanceCount,
-                    examGradesString = grades.toString()
+                    examGradesString = grades.toString(),
+                    notebookGradesString = nbGrades.toString(),
+                    notebookFeedbacksString = nbFeedbacks.toString()
                 )
             )
         }

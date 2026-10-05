@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.SyncedStudent
 import com.example.ui.MainViewModel
+import com.example.ui.components.ReportViewerDialog
 import com.example.ui.components.StudentDetailAndRecuperativoDialog
 import com.example.ui.screens.tabs.*
 import com.example.ui.theme.*
@@ -65,6 +66,7 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
     var showFinishClassDialog by remember { mutableStateOf(false) }
     var showResetAppDialog by remember { mutableStateOf(false) }
     var showLogViewer by remember { mutableStateOf(false) }
+    var showReportViewer by remember { mutableStateOf(false) }
     var selectedStudentDoubt by remember { mutableStateOf<SyncedStudent?>(null) }
     var selectedStudentHistory by remember { mutableStateOf<SyncedStudent?>(null) }
     var studentToMessage by remember { mutableStateOf<SyncedStudent?>(null) }
@@ -188,6 +190,7 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
 
     // Diálogos
     if (showLogViewer) LogViewerDialog(onDismiss = { showLogViewer = false })
+    if (showReportViewer) ReportViewerDialog(onDismiss = { showReportViewer = false })
     
     if (selectedStudentHistory != null) {
         val student = selectedStudentHistory!!
@@ -398,6 +401,8 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
                 4 -> TeacherCloseTab(
                     onGenerateAcademicReport = { teacherViewModel.generateAcademicReport(context, units.size) },
                     onGenerateAttendanceReport = { teacherViewModel.generateAttendanceReport(context) },
+                    onGenerateDetailedMasterReport = { teacherViewModel.generateDetailedMasterReport(context, units.size) },
+                    onOpenReportViewer = { showReportViewer = true },
                     onViewLogs = { showLogViewer = true },
                     onShareLogs = { com.example.data.AppLogger.shareLogFile(context) },
                     onResetApp = { showResetAppDialog = true },

@@ -494,6 +494,30 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun generateDetailedMasterReport(context: Context, totalUnits: Int = 11) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val sectionName = liveSelectedSection.value
+            val section = dao.getSectionByName(sectionName)
+            val students = syncedStudents.value
+            val profile = dao.getUserProfile()
+            
+            if (students.isEmpty() || section == null) {
+                _uiEvents.emit(getApplication<Application>().getString(R.string.msg_no_data_for_report))
+                return@launch
+            }
+
+            val attendanceRecords = dao.getAttendanceBySection(sectionName).first()
+            val teacherName = "${profile?.firstName} ${profile?.lastName}"
+            val file = ReportManager.generateDetailedMasterReport(context, teacherName, section, students, attendanceRecords, totalUnits)
+            
+            if (file != null) {
+                _uiEvents.emit("✅ Reporte Maestro guardado en: Descargas/AulaLocal_Reportes/${file.name}")
+            } else {
+                _uiEvents.emit(getApplication<Application>().getString(R.string.error_report_processing))
+            }
+        }
+    }
+
     fun generateAllAcademicReports(context: Context, totalUnits: Int = 11) {
         viewModelScope.launch(Dispatchers.IO) {
             val allSections = dao.getAllSections()

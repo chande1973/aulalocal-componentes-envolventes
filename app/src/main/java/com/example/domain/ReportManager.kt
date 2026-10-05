@@ -174,4 +174,105 @@ object ReportManager {
             null
         }
     }
+
+    /**
+     * Genera un reporte maestro detallado con asistencia (fecha y hora), exámenes y cuadernos OCR con fecha y hora.
+     */
+    fun generateDetailedMasterReport(
+        context: Context,
+        teacherName: String,
+        section: LocalSection,
+        students: List<SyncedStudent>,
+        allAttendanceRecords: List<AttendanceRecord>,
+        totalUnits: Int
+    ): File? {
+        val sb = StringBuilder()
+        sb.append("==================================================\n")
+        sb.append(" REPORTE MAESTRO DETALLADO DE EVALUACIÓN Y ASISTENCIA\n")
+        sb.append("==================================================\n")
+        sb.append("PROFESOR: $teacherName\n")
+        sb.append("AULA / SECCIÓN: ${section.name}\n")
+        sb.append("TOTAL DE CLASES DADAS: ${section.totalClasses}\n")
+        sb.append("FECHA DE EMISIÓN: ${SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())}\n\n")
+
+        students.forEach { student ->
+            sb.append("--------------------------------------------------\n")
+            sb.append("ESTUDIANTE: ${student.lastName}, ${student.firstName} (Cédula: ${student.cardId})\n")
+            sb.append("--------------------------------------------------\n")
+
+            // 1. Asistencia detallada con fecha y hora
+            sb.append("• HISTORIAL DE ASISTENCIA:\n")
+            val studentAttendance = allAttendanceRecords.filter { it.studentCardId == student.cardId }
+            if (studentAttendance.isEmpty()) {
+                sb.append("  (Sin registros de asistencia)\n")
+            } else {
+                studentAttendance.forEach { rec ->
+                    val dateStr = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date(rec.date))
+                    sb.append("  - Clase ${rec.classNumber} | Fecha y Hora: $dateStr | Estatus: ${rec.status}\n")
+                }
+            }
+            val attendancePct = if (section.totalClasses > 0) (student.attendanceCount.toFloat() / section.totalClasses * 100).toInt() else 0
+            sb.append("  -> Asistencias: ${student.attendanceCount} / ${section.totalClasses} ($attendancePct%)\n\n")
+
+            // 2. Exámenes por Unidad
+            sb.append("• CALIFICACIONES DE EXÁMENES:\n")
+            val gradesObj = try { JSONObject(student.examGradesString) } catch (e: Exception) { JSONObject() }
+            var examSum = 0f
+            var examCount = 0
+            for (i in 1..totalUnits) {
+                val gradeStr = gradesObj.optString(i.toString(), "")
+                if (gradeStr.isNotEmpty()) {
+                    val g = gradeStr.toFloatOrNull() ?: 0f
+                    examSum += g
+                    examCount++
+                    val status = if (g >= 11.5f) "APROBADO" else "REPROBADO"
+                    sb.append("  - Unidad $i: ${"%.2f".format(Locale.US, g)} / 20 [$status]\n")
+                } else {
+                    sb.append("  - Unidad $i: Sin presentar\n")
+                }
+            }
+            val examAvg = if (examCount > 0) examSum / examCount else 0f
+            sb.append("  -> Promedio de Exámenes: ${"%.2f".format(Locale.US, examAvg)}\n\n")
+
+            // 3. Cuadernos OCR por Unidad
+            sb.append("• EVALUACIONES OCR DE CUADERNO:\n")
+            val nbGradesObj = try { JSONObject(student.notebookGradesString) } catch (e: Exception) { JSONObject() }
+            val nbFeedbacksObj = try { JSONObject(student.notebookFeedbacksString) } catch (e: Exception) { JSONObject() }
+            var nbSum = 0f
+            var nbCount = 0
+            for (i in 1..totalUnits) {
+                val nbGradeStr = nbGradesObj.optString(i.toString(), "")
+                if (nbGradeStr.isNotEmpty()) {
+                    val g = nbGradeStr.toFloatOrNull() ?: 0f
+                    nbSum += g
+                    nbCount++
+                    val status = if (g >= 11.5f) "APROBADO" else "REPROBADO"
+                    val feedback = nbFeedbacksObj.optString(i.toString(), "")
+                    sb.append("  - Unidad $i: ${"%.2f".format(Locale.US, g)} / 20 [$status] | Feedback: $feedback\n")
+                } else {
+                    sb.append("  - Unidad $i: Sin escanear\n")
+                }
+            }
+            val nbAvg = if (nbCount > 0) nbSum / nbCount else 0f
+            sb.append("  -> Promedio de Cuadernos OCR: ${"%.2f".format(Locale.US, nbAvg)}\n\n")
+        }
+
+        return try {
+            val fileName = "Reporte_Master_${section.name.replace(" ", "_")}_${System.currentTimeMillis()}.txt"
+            val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            val reportsDir = File(downloadsDir, "AulaLocal_Reportes")
+            val file = try {
+                if (!reportsDir.exists()) reportsDir.mkdirs()
+                File(reportsDir, fileName)
+            } catch (e: Exception) {
+                File(context.getExternalFilesDir(null), fileName)
+            }
+            file.writeText(sb.toString())
+            AppLogger.d("ReportManager", "Reporte maestro detallado generado en: ${file.absolutePath}")
+            file
+        } catch (e: Exception) {
+            AppLogger.e("ReportManager", "Error generating detailed master report", e)
+            null
+        }
+    }
 }

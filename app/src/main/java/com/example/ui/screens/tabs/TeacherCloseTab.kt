@@ -28,6 +28,8 @@ import com.example.ui.theme.CosmicDarkSurface
 fun TeacherCloseTab(
     onGenerateAcademicReport: () -> Unit,
     onGenerateAttendanceReport: () -> Unit,
+    onGenerateDetailedMasterReport: () -> Unit,
+    onOpenReportViewer: () -> Unit,
     onViewLogs: () -> Unit,
     onShareLogs: () -> Unit,
     onResetApp: () -> Unit,
@@ -67,11 +69,19 @@ fun TeacherCloseTab(
                 
                 Button(onClick = onGenerateAcademicReport, modifier = Modifier.fillMaxWidth()) { Text("Exportar Acta Final (Seleccionada)") }
                 Spacer(Modifier.height(8.dp))
+                Button(onClick = onGenerateDetailedMasterReport, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)) {
+                    Text("📈 Exportar Reporte Maestro (Asistencia, Examen y OCR)", color = Color.Black, fontWeight = FontWeight.Bold)
+                }
+                Spacer(Modifier.height(8.dp))
                 Button(onClick = onGenerateAllReports, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = AccentAmber)) {
                     Text("📦 Exportar TODAS las Aulas")
                 }
                 Spacer(Modifier.height(8.dp))
                 Button(onClick = onGenerateAttendanceReport, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = AccentTeal)) { Text("Exportar Asistencia (Seleccionada)") }
+                Spacer(Modifier.height(8.dp))
+                Button(onClick = onOpenReportViewer, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = AccentTeal)) {
+                    Text("📂 Ver Reportes y Actas Guardadas", color = Color.White, fontWeight = FontWeight.Bold)
+                }
                 
                 Spacer(Modifier.height(16.dp))
                 

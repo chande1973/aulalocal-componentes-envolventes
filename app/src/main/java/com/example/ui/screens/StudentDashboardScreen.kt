@@ -25,6 +25,7 @@ import com.example.data.model.UnitData
 import com.example.ui.MainViewModel
 import com.example.ui.components.ConnectionStatusIcon
 import com.example.ui.components.ExamNotificationCard
+import com.example.ui.components.ReportViewerDialog
 import com.example.ui.components.StudentReportDialog
 import com.example.domain.ReportManager
 import com.example.ui.components.StudentMessageDialog
@@ -73,6 +74,7 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
     var showConnectionDialog by remember { mutableStateOf(false) }
     var showSettingsDialog by remember { mutableStateOf(false) }
     var showStudentReportDialog by remember { mutableStateOf(false) }
+    var showReportViewer by remember { mutableStateOf(false) }
     var showMessageDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(incomingMsg) {
@@ -286,7 +288,8 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
                                 onAbandonClass = { studentViewModel.unlockAndDisconnectStudent() },
                                 onViewConsole = { showLogViewer = true },
                                 onReportBug = { AppLogger.shareLogFile(context) },
-                                onDownloadReport = { showStudentReportDialog = true }
+                                onDownloadReport = { showStudentReportDialog = true },
+                                onOpenReportViewer = { showReportViewer = true }
                             )
                         }
                         StudentTab.Profile -> StudentProfileTab(
@@ -435,6 +438,10 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
             },
             onDismiss = { showStudentReportDialog = false }
         )
+    }
+
+    if (showReportViewer) {
+        ReportViewerDialog(onDismiss = { showReportViewer = false })
     }
 
     if (showMessageDialog && (!incomingMsg.isNullOrEmpty() || teacherMsg.isNotEmpty())) {
