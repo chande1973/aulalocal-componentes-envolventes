@@ -48,8 +48,12 @@ object ReportManager {
                 val avgFinal = if (count > 0) sum / count else 0f
                 val attendancePct = if (section.totalClasses > 0) (student.attendanceCount.toFloat() / section.totalClasses * 100).toInt() else 0
                 
-                val isPassing = avgFinal >= 11.5f && attendancePct >= 75
-                val status = if (isPassing) "APROBADO" else "REPROBADO"
+                val status = when {
+                    attendancePct < 75 -> "REPROBADO"
+                    avgFinal >= 11.5f -> "APROBADO"
+                    avgFinal >= 6.0f -> "PER"
+                    else -> "REPROBADO"
+                }
                 
                 val safeName = "${student.lastName} ${student.firstName}".replace(",", "")
                 csvBuilder.append("${student.cardId},$safeName,$attendancePct%,${"%.2f".format(java.util.Locale.US, avgFinal)},$status\n")
@@ -225,7 +229,11 @@ object ReportManager {
                     val g = gradeStr.toFloatOrNull() ?: 0f
                     examSum += g
                     examCount++
-                    val status = if (g >= 11.5f) "APROBADO" else "REPROBADO"
+                    val status = when {
+                        g >= 11.5f -> "APROBADO"
+                        g >= 6.0f -> "PER"
+                        else -> "REPROBADO"
+                    }
                     sb.append("  - Unidad $i: ${"%.2f".format(Locale.US, g)} / 20 [$status]\n")
                 } else {
                     sb.append("  - Unidad $i: Sin presentar\n")
@@ -246,7 +254,11 @@ object ReportManager {
                     val g = nbGradeStr.toFloatOrNull() ?: 0f
                     nbSum += g
                     nbCount++
-                    val status = if (g >= 11.5f) "APROBADO" else "REPROBADO"
+                    val status = when {
+                        g >= 11.5f -> "APROBADO"
+                        g >= 6.0f -> "PER"
+                        else -> "REPROBADO"
+                    }
                     val feedback = nbFeedbacksObj.optString(i.toString(), "")
                     sb.append("  - Unidad $i: ${"%.2f".format(Locale.US, g)} / 20 [$status] | Feedback: $feedback\n")
                 } else {

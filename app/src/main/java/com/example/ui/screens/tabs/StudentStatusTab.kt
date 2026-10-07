@@ -135,11 +135,18 @@ fun StudentStatusTab(
                             color = Color.White,
                             fontSize = 11.sp
                         )
-                        if (averageGrade >= 12f) {
+                        if (averageGrade >= 11.5f) {
                             Text(
                                 text = "• Promedio académico aprobado: ${"%.2f".format(Locale.US, averageGrade)} / 20 Pts.",
                                 color = Color.White,
                                 fontSize = 11.sp
+                            )
+                        } else if (averageGrade >= 6.0f) {
+                            Text(
+                                text = "• Promedio en condición PER: ${"%.2f".format(Locale.US, averageGrade)} / 20 Pts (Derecho a recuperación).",
+                                color = AccentAmber,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }

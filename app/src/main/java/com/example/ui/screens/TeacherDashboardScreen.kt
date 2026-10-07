@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.SyncedStudent
 import com.example.ui.MainViewModel
+import com.example.ui.components.FileExplorerDialog
 import com.example.ui.components.ReportViewerDialog
 import com.example.ui.components.StudentDetailAndRecuperativoDialog
 import com.example.ui.screens.tabs.*
@@ -40,6 +41,7 @@ import kotlinx.coroutines.flow.collectLatest
 fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: TeacherViewModel) {
     val context = LocalContext.current
     // Diferir colecciones pesadas para evitar ANR en arranque
+    val teacherProfile by mainViewModel.userProfile.collectAsState()
     val sections by teacherViewModel.sections.collectAsState()
     val units by mainViewModel.unitsFlow.collectAsState()
     val isServerRunning by teacherViewModel.isServerRunningState.collectAsState()
@@ -67,6 +69,7 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
     var showResetAppDialog by remember { mutableStateOf(false) }
     var showLogViewer by remember { mutableStateOf(false) }
     var showReportViewer by remember { mutableStateOf(false) }
+    var showFileExplorer by remember { mutableStateOf(false) }
     var selectedStudentDoubt by remember { mutableStateOf<SyncedStudent?>(null) }
     var selectedStudentHistory by remember { mutableStateOf<SyncedStudent?>(null) }
     var studentToMessage by remember { mutableStateOf<SyncedStudent?>(null) }
@@ -191,6 +194,21 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
     // Diálogos
     if (showLogViewer) LogViewerDialog(onDismiss = { showLogViewer = false })
     if (showReportViewer) ReportViewerDialog(onDismiss = { showReportViewer = false })
+    if (showFileExplorer) {
+        FileExplorerDialog(
+            folderUri = teacherProfile?.materialsFolderUri?.takeIf { it.isNotEmpty() }?.let { android.net.Uri.parse(it) },
+            onFileSelected = { uri ->
+                try {
+                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                        setDataAndType(uri, context.contentResolver.getType(uri) ?: "*/*")
+                        addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    context.startActivity(android.content.Intent.createChooser(intent, "Abrir archivo con..."))
+                } catch (e: Exception) {}
+            },
+            onDismiss = { showFileExplorer = false }
+        )
+    }
     
     if (selectedStudentHistory != null) {
         val student = selectedStudentHistory!!
@@ -363,6 +381,7 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
                     units = units, liveSection = liveSection, liveActiveUnit = liveActiveUnit,
                     enabledReads = enabledReads, enabledExams = enabledExams, enabledNotebooks = enabledNotebooks, isServerRunning = isServerRunning,
                     onRefreshCourse = { mainViewModel.refreshCurrentCourse() },
+                    onOpenExplorer = { showFileExplorer = true },
                     onActivateUnit = { teacherViewModel.updateActiveUnit(it) },
                     onToggleRead = { idx, state -> teacherViewModel.updateTeacherUnitToggle(idx, state, false) },
                     onToggleExam = { idx, state -> teacherViewModel.updateTeacherUnitToggle(idx, state, true) },

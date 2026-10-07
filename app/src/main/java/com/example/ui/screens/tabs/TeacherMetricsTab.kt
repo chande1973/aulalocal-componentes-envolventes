@@ -154,7 +154,9 @@ fun TeacherMetricsTab(
 
                     val (statusColor, statusText) = when {
                         isNewStudent -> AccentCyan to "AL DÍA"
-                        count > 0 && isPassingGrade && isPassingAttendance -> StatusSuccess to "APROBADO"
+                        count > 0 && avg >= 11.5f && isPassingAttendance -> StatusSuccess to "APROBADO"
+                        count > 0 && avg >= 6.0f -> StatusWarning to "PER"
+                        count > 0 && avg < 6.0f -> StatusError to "REPROBADO"
                         count == 0 && isPassingAttendance -> StatusSuccess to "AL DÍA"
                         !isPassingAttendance && (count > 0 && !isPassingGrade) -> StatusError to "CRÍTICO"
                         else -> StatusWarning to "EN REVISIÓN"

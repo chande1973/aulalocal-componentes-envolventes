@@ -86,8 +86,8 @@ class AnnualClosureTest {
         // V-PASS: 80%, 16.00, APROBADO
         assertTrue("John Doe should be APROBADO", content.contains("V-PASS,Doe John,80%,16.00,APROBADO"))
         
-        // V-FAIL-GRADE: 90%, 10.00, REPROBADO
-        assertTrue("Bad Grades should be REPROBADO", content.contains("V-FAIL-GRADE,Grades Bad,90%,10.00,REPROBADO"))
+        // V-FAIL-GRADE: 90%, 10.00, PER
+        assertTrue("Bad Grades should have PER right", content.contains("V-FAIL-GRADE,Grades Bad,90%,10.00,PER"))
         
         // V-FAIL-ATTENDANCE: 50%, 20.00, REPROBADO
         assertTrue("Absent Student should be REPROBADO", content.contains("V-FAIL-ATTENDANCE,Student Absent,50%,20.00,REPROBADO"))

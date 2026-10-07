@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Class
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -32,6 +33,7 @@ fun TeacherUnitsTab(
     enabledNotebooks: String,
     isServerRunning: Boolean,
     onRefreshCourse: () -> Unit,
+    onOpenExplorer: () -> Unit,
     onActivateUnit: (Int) -> Unit,
     onToggleRead: (Int, Boolean) -> Unit,
     onToggleExam: (Int, Boolean) -> Unit,
@@ -58,9 +60,14 @@ fun TeacherUnitsTab(
                     Text("Aula: $liveSection", fontWeight = FontWeight.Bold, color = AccentTeal)
                     Text(stringResource(R.string.desc_units_tab_header), fontSize = 12.sp, color = Color.Gray)
                 }
-                if (!isServerRunning) {
-                    IconButton(onClick = onRefreshCourse) {
-                        Icon(Icons.Default.Refresh, "Sincronizar", tint = AccentCyan)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onOpenExplorer) {
+                        Icon(Icons.Default.FolderOpen, "Explorar Archivos", tint = AccentCyan)
+                    }
+                    if (!isServerRunning) {
+                        IconButton(onClick = onRefreshCourse) {
+                            Icon(Icons.Default.Refresh, "Sincronizar", tint = AccentCyan)
+                        }
                     }
                 }
             }
