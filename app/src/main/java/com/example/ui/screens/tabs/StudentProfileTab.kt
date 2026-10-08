@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.UserProfile
 import com.example.ui.avatarOptionsList
+import com.example.ui.components.PrimaryActionButton
 import com.example.ui.components.StudentProfileHeader
 import com.example.ui.theme.*
 
@@ -142,7 +143,8 @@ fun StudentProfileTab(
                         }
                     }
 
-                    Button(
+                    PrimaryActionButton(
+                        text = "GUARDAR CAMBIOS",
                         onClick = {
                             if (profile != null) {
                                 val updated = profile.copy(
@@ -155,25 +157,17 @@ fun StudentProfileTab(
                                 onSaveProfile(updated)
                             }
                         },
-                        modifier = Modifier.fillMaxWidth().height(52.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = StatusSuccess),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(Icons.Default.Save, null)
-                        Spacer(Modifier.width(8.dp))
-                        Text("GUARDAR CAMBIOS", fontWeight = FontWeight.ExtraBold)
-                    }
+                        containerColor = StatusSuccess,
+                        icon = Icons.Default.Save
+                    )
                 } else {
-                    Button(
+                    PrimaryActionButton(
+                        text = "EDITAR DATOS (REQUIERE AUTORIZACIÓN)",
                         onClick = { showPinDialog = true },
-                        modifier = Modifier.fillMaxWidth().height(52.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = AccentAmber),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(Icons.Default.Lock, null, tint = Color.Black)
-                        Spacer(Modifier.width(8.dp))
-                        Text("EDITAR DATOS (REQUIERE AUTORIZACIÓN)", fontWeight = FontWeight.Bold, color = Color.Black, fontSize = 12.sp)
-                    }
+                        containerColor = AccentAmber,
+                        contentColor = Color.Black,
+                        icon = Icons.Default.Lock
+                    )
                 }
             }
         }

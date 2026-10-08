@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.*
 
@@ -56,3 +57,45 @@ fun SystemActionRow(
         }
     }
 }
+
+@Composable
+fun PrimaryActionButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    containerColor: Color = AccentTeal,
+    contentColor: Color = Color.White,
+    icon: ImageVector? = null
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier
+            .fillMaxWidth()
+            .height(54.dp),
+        shape = RoundedCornerShape(14.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = containerColor,
+            contentColor = contentColor,
+            disabledContainerColor = Color.DarkGray.copy(alpha = 0.4f),
+            disabledContentColor = Color.Gray
+        )
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (icon != null) {
+                Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(8.dp))
+            }
+            Text(
+                text = text,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            )
+        }
+    }
+}
+

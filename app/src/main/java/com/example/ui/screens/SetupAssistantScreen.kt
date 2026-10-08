@@ -37,6 +37,7 @@ import com.example.data.UserProfile
 import com.example.data.model.LoadResult
 import com.example.ui.MainViewModel
 import com.example.ui.avatarOptionsList
+import com.example.ui.components.PrimaryActionButton
 import com.example.ui.theme.AccentAmber
 import com.example.ui.theme.AccentCyan
 import com.example.ui.theme.AccentTeal
@@ -163,22 +164,13 @@ fun SetupAssistantScreen(
                         
                         Spacer(Modifier.height(40.dp))
 
-                        Button(
-                            onClick = { setupStep = 1 }, 
-                            enabled = selectedRole != null, 
-                            modifier = Modifier.fillMaxWidth().height(64.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = AccentTeal,
-                                disabledContainerColor = Color.Gray.copy(alpha = 0.3f)
-                            )
-                        ) { 
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(stringResource(R.string.setup_btn_continue_step_2), fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
-                                Spacer(Modifier.width(8.dp))
-                                Icon(Icons.AutoMirrored.Filled.ArrowForward, null)
-                            }
-                        }
+                        PrimaryActionButton(
+                            text = stringResource(R.string.setup_btn_continue_step_2),
+                            onClick = { setupStep = 1 },
+                            enabled = selectedRole != null,
+                            containerColor = AccentTeal,
+                            icon = Icons.AutoMirrored.Filled.ArrowForward
+                        )
                     }
                 } else if (setupStep == 1) {
                     Column {
@@ -246,32 +238,17 @@ fun SetupAssistantScreen(
                                          (selectedRole == "teacher" || studentSection.trim().isNotEmpty())
 
                         if (selectedRole != null) {
-                            Button(
-                                onClick = { setupStep = 2 }, 
-                                enabled = isFormValid, 
-                                modifier = Modifier.fillMaxWidth().height(64.dp),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (selectedRole == "teacher") AccentTeal else AccentCyan,
-                                    disabledContainerColor = Color.DarkGray.copy(alpha = 0.5f),
-                                    disabledContentColor = Color.LightGray
-                                )
-                            ) { 
-                                if (isFormValid) {
-                                    Text(
-                                        if (selectedRole == "teacher") "SIGUIENTE: MATERIALES" else "SIGUIENTE: CONEXIÓN Y MATERIALES", 
-                                        fontWeight = FontWeight.ExtraBold, 
-                                        color = if (selectedRole == "student") Color.Black else Color.White
-                                    ) 
+                            PrimaryActionButton(
+                                text = if (isFormValid) {
+                                    if (selectedRole == "teacher") "SIGUIENTE: MATERIALES" else "SIGUIENTE: CONEXIÓN Y MATERIALES"
                                 } else {
-                                    Text(
-                                        "Completa tus datos para continuar", 
-                                        fontWeight = FontWeight.Bold, 
-                                        fontSize = 13.sp,
-                                        color = Color.LightGray
-                                    )
-                                }
-                            }
+                                    "Completa tus datos para continuar"
+                                },
+                                onClick = { setupStep = 2 },
+                                enabled = isFormValid,
+                                containerColor = if (selectedRole == "teacher") AccentTeal else AccentCyan,
+                                contentColor = if (selectedRole == "student" && isFormValid) Color.Black else Color.White
+                            )
                         }
                     }
                 } else {
@@ -443,7 +420,7 @@ fun SetupAssistantScreen(
             }
 
             item {
-                if ((setupStep == 1 && selectedRole == "student") || (setupStep == 2 && selectedRole == "teacher")) {
+                if (setupStep == 2) {
                     Spacer(Modifier.height(40.dp))
                     val isAnySuccess = wizardResult is LoadResult.Success || wizardResult is LoadResult.PartialSuccess
                     val isStep3Valid = if(selectedRole == "teacher") isAnySuccess else true
@@ -458,7 +435,8 @@ fun SetupAssistantScreen(
                             )
                         }
                         
-                        Button(
+                        PrimaryActionButton(
+                            text = stringResource(R.string.setup_btn_finish),
                             onClick = { 
                                 scope.launch { 
                                     mainViewModel.confirmSetupAndSaveProfile(
@@ -475,14 +453,10 @@ fun SetupAssistantScreen(
                                         )
                                     ) 
                                 } 
-                            }, 
+                            },
                             enabled = isStep3Valid,
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = AccentTeal,
-                                disabledContainerColor = Color.Gray.copy(alpha = 0.2f)
-                            )
-                        ) { Text(stringResource(R.string.setup_btn_finish), fontWeight = FontWeight.Bold) }
+                            containerColor = AccentTeal
+                        )
                     }
                 }
             }

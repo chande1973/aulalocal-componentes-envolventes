@@ -34,6 +34,7 @@ import com.example.R
 import com.example.data.UnitProgress
 import com.example.data.model.Question
 import com.example.data.model.UnitData
+import com.example.ui.components.PrimaryActionButton
 import com.example.ui.components.ReadingChallengeDialog
 import com.example.ui.components.VideoMissingAlert
 import com.example.ui.components.VideoPlayer
@@ -550,21 +551,13 @@ fun StudentStudyContent(
                     }
                 }
             } else if (notebookActive) {
-                Button(
+                PrimaryActionButton(
+                    text = "📷 ESCANEAR RESUMEN EN MI CUADERNO",
                     onClick = { cameraLauncher.launch(null) },
-                    modifier = Modifier.fillMaxWidth().height(54.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
-                    shape = RoundedCornerShape(14.dp)
-                ) {
-                    Icon(Icons.Default.MenuBook, null, tint = Color.Black)
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = "📷 ESCANEAR RESUMEN EN MI CUADERNO",
-                        color = Color.Black,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp
-                    )
-                }
+                    containerColor = AccentCyan,
+                    contentColor = Color.Black,
+                    icon = Icons.Default.MenuBook
+                )
                 Spacer(Modifier.height(16.dp))
             } else {
                 Card(
