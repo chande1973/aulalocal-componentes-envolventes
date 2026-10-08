@@ -327,12 +327,22 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
             }
         },
         bottomBar = {
-            NavigationBar {
-                NavigationBarItem(selected = activeTab == 0, onClick = { activeTab = 0 }, icon = { Icon(Icons.AutoMirrored.Filled.List, null) }, label = { Text("Unidades") })
-                NavigationBarItem(selected = activeTab == 1, onClick = { activeTab = 1 }, icon = { Icon(Icons.Default.Groups, null) }, label = { Text("Aula") })
-                NavigationBarItem(selected = activeTab == 2, onClick = { activeTab = 2 }, icon = { Icon(Icons.Default.HowToReg, null) }, label = { Text("Asist") })
-                NavigationBarItem(selected = activeTab == 3, onClick = { activeTab = 3 }, icon = { Icon(Icons.Default.Assessment, null) }, label = { Text("Métricas") })
-                NavigationBarItem(selected = activeTab == 4, onClick = { activeTab = 4 }, icon = { Icon(Icons.Default.Settings, null) }, label = { Text("Sist") })
+            NavigationBar(
+                containerColor = CosmicDarkSurface,
+                contentColor = Color.White
+            ) {
+                val navColors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = AccentCyan,
+                    selectedTextColor = AccentCyan,
+                    unselectedIconColor = Color.Gray,
+                    unselectedTextColor = Color.Gray,
+                    indicatorColor = AccentCyan.copy(alpha = 0.2f)
+                )
+                NavigationBarItem(selected = activeTab == 0, onClick = { activeTab = 0 }, icon = { Icon(Icons.AutoMirrored.Filled.List, null) }, label = { Text("Temas", fontSize = 10.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis) }, colors = navColors)
+                NavigationBarItem(selected = activeTab == 1, onClick = { activeTab = 1 }, icon = { Icon(Icons.Default.Groups, null) }, label = { Text("Aula", fontSize = 10.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis) }, colors = navColors)
+                NavigationBarItem(selected = activeTab == 2, onClick = { activeTab = 2 }, icon = { Icon(Icons.Default.HowToReg, null) }, label = { Text("Asistencia", fontSize = 10.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis) }, colors = navColors)
+                NavigationBarItem(selected = activeTab == 3, onClick = { activeTab = 3 }, icon = { Icon(Icons.Default.Assessment, null) }, label = { Text("Métricas", fontSize = 10.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis) }, colors = navColors)
+                NavigationBarItem(selected = activeTab == 4, onClick = { activeTab = 4 }, icon = { Icon(Icons.Default.Settings, null) }, label = { Text("Sistema", fontSize = 10.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis) }, colors = navColors)
             }
         }
     ) { padding ->
