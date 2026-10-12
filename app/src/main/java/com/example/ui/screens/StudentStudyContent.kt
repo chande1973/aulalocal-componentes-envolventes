@@ -34,6 +34,7 @@ import com.example.R
 import com.example.data.UnitProgress
 import com.example.data.model.Question
 import com.example.data.model.UnitData
+import com.example.ui.components.CosmicCard
 import com.example.ui.components.PrimaryActionButton
 import com.example.ui.components.ReadingChallengeDialog
 import com.example.ui.components.VideoMissingAlert
@@ -137,14 +138,7 @@ fun StudentStudyContent(
             .padding(horizontal = 8.dp)
     ) {
         // BARRA SUPERIOR DE PROGRESO Y CONTROLES DE LECTURA (FIJA / STICKY)
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
-            colors = CardDefaults.cardColors(containerColor = CosmicDarkSurface),
-            shape = RoundedCornerShape(16.dp),
-            border = BorderStroke(1.dp, AccentCyan.copy(alpha = 0.2f))
-        ) {
+        CosmicCard {
             Column(Modifier.padding(14.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),

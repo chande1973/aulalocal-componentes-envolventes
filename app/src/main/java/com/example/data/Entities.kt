@@ -71,7 +71,36 @@ data class SyncedStudent(
     val examGradesString: String = "{}",
     val notebookGradesString: String = "{}",
     val notebookFeedbacksString: String = "{}"
-)
+) {
+    fun calculateExamAverage(totalUnits: Int = 11): Float {
+        val gradesObj = try { org.json.JSONObject(examGradesString) } catch (e: Exception) { org.json.JSONObject() }
+        var sum = 0f
+        var count = 0
+        for (i in 1..totalUnits) {
+            val g = gradesObj.optString(i.toString(), "")
+            if (g.isNotEmpty()) {
+                sum += g.toFloatOrNull() ?: 0f
+                count++
+            }
+        }
+        return if (count > 0) sum / count else 0f
+    }
+
+    fun calculateAttendancePercentage(totalClasses: Int): Int {
+        return if (totalClasses > 0) (attendanceCount.toFloat() / totalClasses * 100).toInt().coerceIn(0, 100) else 0
+    }
+
+    fun getAcademicStatus(totalUnits: Int = 11, totalClasses: Int): String {
+        val attPct = calculateAttendancePercentage(totalClasses)
+        val avg = calculateExamAverage(totalUnits)
+        return when {
+            attPct < 75 -> "REPROBADO"
+            avg >= 11.5f -> "APROBADO"
+            avg >= 6.0f -> "PER"
+            else -> "REPROBADO"
+        }
+    }
+}
 
 @Entity(tableName = "attendance_history")
 data class AttendanceRecord(

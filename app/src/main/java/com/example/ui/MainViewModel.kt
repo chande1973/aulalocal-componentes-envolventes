@@ -35,7 +35,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
 
-class MainViewModel(application: Application) : AndroidViewModel(application), TextToSpeech.OnInitListener {
+class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db by lazy { AppDatabase.getDatabase(application) }
     private val dao by lazy { db.classroomDao() }
@@ -112,7 +112,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application), T
     init {
         // Initialize TTS in background to avoid blocking main thread
         viewModelScope.launch(Dispatchers.Default) {
-            textToSpeech = TextToSpeech(application, this@MainViewModel)
+            textToSpeech = TextToSpeech(application) { status ->
+                onInitTts(status)
+            }
         }
 
         // Resolve initial local IP address
@@ -139,7 +141,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application), T
         }
     }
 
-    override fun onInit(status: Int) {
+    private fun onInitTts(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
             val result = textToSpeech?.setLanguage(Locale("es", "ES"))
             if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {

@@ -7,8 +7,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -23,10 +21,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
+import com.example.data.AttendanceRecord
+import com.example.data.LocalSection
 import com.example.data.SyncedStudent
+import com.example.data.UserProfile
+import com.example.data.model.UnitData
 import com.example.ui.MainViewModel
 import com.example.ui.components.FileExplorerDialog
 import com.example.ui.components.ReportViewerDialog
@@ -34,13 +37,12 @@ import com.example.ui.components.StudentDetailAndRecuperativoDialog
 import com.example.ui.screens.tabs.*
 import com.example.ui.theme.*
 import com.example.ui.viewmodels.TeacherViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.emptyFlow
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: TeacherViewModel) {
-    val context = LocalContext.current
-    // Diferir colecciones pesadas para evitar ANR en arranque
     val teacherProfile by mainViewModel.userProfile.collectAsState()
     val sections by teacherViewModel.sections.collectAsState()
     val units by mainViewModel.unitsFlow.collectAsState()
@@ -51,18 +53,109 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
     val enabledExams by teacherViewModel.enabledExamUnits.collectAsState()
     val enabledNotebooks by teacherViewModel.enabledNotebookUnits.collectAsState()
     val generatedOtp by teacherViewModel.generatedOtpDisplay.collectAsState()
-    
-    // Colecciones pesadas diferidas con valores por defecto
+    val localIp by mainViewModel.localIpAddress.collectAsState()
+
     var syncedStudents by remember { mutableStateOf<List<SyncedStudent>>(emptyList()) }
     var allConnectedStudents by remember { mutableStateOf<List<SyncedStudent>>(emptyList()) }
-    
+
     LaunchedEffect(teacherViewModel) {
         teacherViewModel.syncedStudents.collect { syncedStudents = it }
     }
     LaunchedEffect(teacherViewModel) {
         teacherViewModel.allConnectedStudents.collect { allConnectedStudents = it }
     }
-    
+
+    TeacherDashboardContent(
+        teacherProfile = teacherProfile,
+        sections = sections,
+        units = units,
+        isServerRunning = isServerRunning,
+        liveSection = liveSection,
+        liveActiveUnit = liveActiveUnit,
+        enabledReads = enabledReads,
+        enabledExams = enabledExams,
+        enabledNotebooks = enabledNotebooks,
+        generatedOtp = generatedOtp,
+        localIp = localIp,
+        syncedStudents = syncedStudents,
+        allConnectedStudents = allConnectedStudents,
+        uiEventsFlow = teacherViewModel.uiEvents,
+        onStartClassServer = { teacherViewModel.startClassServer(it) },
+        onIncrementTotalClasses = { teacherViewModel.incrementTotalClasses() },
+        onDismissOtpDisplay = { teacherViewModel.dismissOtpDisplay() },
+        onShareFile = { teacherViewModel.shareFile(it) },
+        onSharePrivateFile = { cardId, uri -> teacherViewModel.sharePrivateFile(cardId, uri) },
+        onShareFullCoursePack = { uri -> teacherViewModel.shareFullCoursePack(uri) },
+        getStudentAttendanceHistory = { teacherViewModel.getStudentAttendanceHistory(it) },
+        onEnableRecuperativo = { cardId, uIdx -> teacherViewModel.enableRecuperativoForStudent(cardId, uIdx) },
+        onEnableNotebookRecuperativo = { cardId, uIdx -> teacherViewModel.enableNotebookRecuperativo(cardId, uIdx) },
+        onAuthorizeProfileEdit = { teacherViewModel.authorizeStudentProfileEdit(it) },
+        onClearStudentDoubt = { teacherViewModel.clearStudentDoubt(it) },
+        onSendPrivateMessage = { cardId, msg -> teacherViewModel.sendPrivateMessage(cardId, msg) },
+        onRefreshCourse = { mainViewModel.refreshCurrentCourse() },
+        onUpdateActiveUnit = { teacherViewModel.updateActiveUnit(it) },
+        onUpdateTeacherUnitToggle = { idx, state, isExam -> teacherViewModel.updateTeacherUnitToggle(idx, state, isExam) },
+        onUpdateTeacherNotebookToggle = { idx, state -> teacherViewModel.updateTeacherNotebookToggle(idx, state) },
+        onAddSection = { name, weeks -> teacherViewModel.addSection(name, weeks, {}, {}) },
+        onSelectSection = { teacherViewModel.selectSection(it) },
+        onDeleteSection = { teacherViewModel.deleteSection(it) },
+        onSendGlobalMessage = { teacherViewModel.sendGlobalMessage(it) },
+        onUpdateManualAttendance = { id, stat -> teacherViewModel.updateManualAttendance(id, stat) },
+        onGenerateAcademicReport = { ctx, size -> teacherViewModel.generateAcademicReport(ctx, size) },
+        onGenerateAttendanceReport = { ctx -> teacherViewModel.generateAttendanceReport(ctx) },
+        onGenerateDetailedMasterReport = { ctx, size -> teacherViewModel.generateDetailedMasterReport(ctx, size) },
+        onGenerateAllAcademicReports = { ctx, size -> teacherViewModel.generateAllAcademicReports(ctx, size) },
+        onResetApp = { mainViewModel.resetApp(it) },
+        onInjectTestData = { teacherViewModel.injectTestData(it) }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TeacherDashboardContent(
+    teacherProfile: UserProfile?,
+    sections: List<LocalSection>,
+    units: List<UnitData>,
+    isServerRunning: Boolean,
+    liveSection: String,
+    liveActiveUnit: Int,
+    enabledReads: String,
+    enabledExams: String,
+    enabledNotebooks: String,
+    generatedOtp: String?,
+    localIp: String,
+    syncedStudents: List<SyncedStudent>,
+    allConnectedStudents: List<SyncedStudent>,
+    uiEventsFlow: Flow<String>? = null,
+    onStartClassServer: (String) -> Unit = {},
+    onIncrementTotalClasses: () -> Unit = {},
+    onDismissOtpDisplay: () -> Unit = {},
+    onShareFile: (android.net.Uri) -> Unit = {},
+    onSharePrivateFile: (String, android.net.Uri) -> Unit = { _, _ -> },
+    onShareFullCoursePack: (android.net.Uri) -> Unit = {},
+    getStudentAttendanceHistory: (String) -> Flow<List<AttendanceRecord>> = { emptyFlow() },
+    onEnableRecuperativo: (String, Int) -> Unit = { _, _ -> },
+    onEnableNotebookRecuperativo: (String, Int) -> Unit = { _, _ -> },
+    onAuthorizeProfileEdit: (String) -> Unit = {},
+    onClearStudentDoubt: (String) -> Unit = {},
+    onSendPrivateMessage: (String, String) -> Unit = { _, _ -> },
+    onRefreshCourse: () -> Unit = {},
+    onUpdateActiveUnit: (Int) -> Unit = {},
+    onUpdateTeacherUnitToggle: (Int, Boolean, Boolean) -> Unit = { _, _, _ -> },
+    onUpdateTeacherNotebookToggle: (Int, Boolean) -> Unit = { _, _ -> },
+    onAddSection: (String, Int) -> Unit = { _, _ -> },
+    onSelectSection: (String) -> Unit = {},
+    onDeleteSection: (Int) -> Unit = {},
+    onSendGlobalMessage: (String) -> Unit = {},
+    onUpdateManualAttendance: (String, String?) -> Unit = { _, _ -> },
+    onGenerateAcademicReport: (android.content.Context, Int) -> Unit = { _, _ -> },
+    onGenerateAttendanceReport: (android.content.Context) -> Unit = {},
+    onGenerateDetailedMasterReport: (android.content.Context, Int) -> Unit = { _, _ -> },
+    onGenerateAllAcademicReports: (android.content.Context, Int) -> Unit = { _, _ -> },
+    onResetApp: (android.content.Context) -> Unit = {},
+    onInjectTestData: (Int) -> Unit = {}
+) {
+    val context = LocalContext.current
     var activeTab by remember { mutableIntStateOf(0) }
 
     var showFinishClassDialog by remember { mutableStateOf(false) }
@@ -78,16 +171,16 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
     var privateMsgText by remember { mutableStateOf("") }
 
     // Pickers
-    val filePicker = androidx.activity.compose.rememberLauncherForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.GetContent()
-    ) { uri -> uri?.let { teacherViewModel.shareFile(it) } }
+    val filePicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri -> uri?.let { onShareFile(it) } }
 
-    val privateFilePicker = androidx.activity.compose.rememberLauncherForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.GetContent()
+    val privateFilePicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let { uriVal ->
             studentToAttach?.let { student ->
-                teacherViewModel.sharePrivateFile(student.cardId, uriVal)
+                onSharePrivateFile(student.cardId, uriVal)
                 studentToAttach = null
             }
         }
@@ -98,15 +191,15 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
     ) { uri ->
         uri?.let {
             context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            teacherViewModel.shareFullCoursePack(it)
+            onShareFullCoursePack(it)
         }
     }
 
     var showReportSuccessDialog by remember { mutableStateOf<String?>(null) }
 
     // Observe UI Events
-    LaunchedEffect(teacherViewModel) {
-        teacherViewModel.uiEvents.collectLatest { event ->
+    LaunchedEffect(uiEventsFlow) {
+        uiEventsFlow?.collectLatest { event ->
             if (event.contains("✅")) {
                 showReportSuccessDialog = event
             } else {
@@ -151,11 +244,11 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
     }
 
     if (generatedOtp != null) {
-        val parts = generatedOtp!!.split("|")
+        val parts = generatedOtp.split("|")
         val pin = parts.getOrNull(0) ?: ""
         val studentName = parts.getOrNull(1) ?: "Alumno"
         AlertDialog(
-            onDismissRequest = { teacherViewModel.dismissOtpDisplay() },
+            onDismissRequest = { onDismissOtpDisplay() },
             title = { Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.LockOpen, null, tint = AccentAmber)
                 Spacer(Modifier.width(8.dp))
@@ -184,7 +277,7 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
                 }
             },
             confirmButton = {
-                Button(onClick = { teacherViewModel.dismissOtpDisplay() }, colors = ButtonDefaults.buttonColors(containerColor = AccentAmber)) {
+                Button(onClick = { onDismissOtpDisplay() }, colors = ButtonDefaults.buttonColors(containerColor = AccentAmber)) {
                     Text("ENTENDIDO", color = Color.Black, fontWeight = FontWeight.Bold)
                 }
             }
@@ -199,11 +292,11 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
             folderUri = teacherProfile?.materialsFolderUri?.takeIf { it.isNotEmpty() }?.let { android.net.Uri.parse(it) },
             onFileSelected = { uri ->
                 try {
-                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                    val intent = Intent(Intent.ACTION_VIEW).apply {
                         setDataAndType(uri, context.contentResolver.getType(uri) ?: "*/*")
-                        addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
-                    context.startActivity(android.content.Intent.createChooser(intent, "Abrir archivo con..."))
+                    context.startActivity(Intent.createChooser(intent, "Abrir archivo con..."))
                 } catch (e: Exception) {}
             },
             onDismiss = { showFileExplorer = false }
@@ -215,11 +308,11 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
         StudentDetailAndRecuperativoDialog(
             student = student,
             units = units,
-            historyFlow = teacherViewModel.getStudentAttendanceHistory(student.cardId),
-            onEnableRecuperativo = { cardId, uIdx -> teacherViewModel.enableRecuperativoForStudent(cardId, uIdx) },
-            onEnableNotebookRecuperativo = { cardId, uIdx -> teacherViewModel.enableNotebookRecuperativo(cardId, uIdx) },
-            onAuthorizeProfileEdit = { cardId -> teacherViewModel.authorizeStudentProfileEdit(cardId) },
-            onClearDoubt = { cardId -> teacherViewModel.clearStudentDoubt(cardId) },
+            historyFlow = getStudentAttendanceHistory(student.cardId),
+            onEnableRecuperativo = { cardId, uIdx -> onEnableRecuperativo(cardId, uIdx) },
+            onEnableNotebookRecuperativo = { cardId, uIdx -> onEnableNotebookRecuperativo(cardId, uIdx) },
+            onAuthorizeProfileEdit = { cardId -> onAuthorizeProfileEdit(cardId) },
+            onClearDoubt = { cardId -> onClearStudentDoubt(cardId) },
             onDismiss = { selectedStudentHistory = null }
         )
     }
@@ -230,7 +323,7 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
             title = { Text("Finalizar Clase") },
             text = { Text("¿Deseas cerrar la clase actual? Se guardará la asistencia de todos los alumnos.") },
             confirmButton = {
-                Button(onClick = { teacherViewModel.incrementTotalClasses(); showFinishClassDialog = false }, colors = ButtonDefaults.buttonColors(containerColor = StatusError)) {
+                Button(onClick = { onIncrementTotalClasses(); showFinishClassDialog = false }, colors = ButtonDefaults.buttonColors(containerColor = StatusError)) {
                     Text("FINALIZAR")
                 }
             },
@@ -244,7 +337,7 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
             title = { Text("Duda de ${selectedStudentDoubt?.firstName}") },
             text = { Text(selectedStudentDoubt?.doubtMessage ?: "Sin detalle") },
             confirmButton = {
-                Button(onClick = { teacherViewModel.clearStudentDoubt(selectedStudentDoubt!!.cardId); selectedStudentDoubt = null }) {
+                Button(onClick = { onClearStudentDoubt(selectedStudentDoubt!!.cardId); selectedStudentDoubt = null }) {
                     Text("RESUELTA")
                 }
             }
@@ -259,7 +352,7 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
             confirmButton = {
                 Button(onClick = {
                     if (privateMsgText.isNotBlank()) {
-                        teacherViewModel.sendPrivateMessage(studentToMessage!!.cardId, privateMsgText)
+                        onSendPrivateMessage(studentToMessage!!.cardId, privateMsgText)
                         privateMsgText = ""; studentToMessage = null
                     }
                 }) { Text("ENVIAR") }
@@ -285,7 +378,7 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
                                 Icon(Icons.Default.Stop, null); Spacer(Modifier.width(4.dp)); Text("FINALIZAR")
                             }
                         } else {
-                            Button(onClick = { teacherViewModel.startClassServer(liveSection) }, enabled = liveSection.isNotEmpty(), colors = ButtonDefaults.buttonColors(containerColor = StatusSuccess), shape = RoundedCornerShape(8.dp)) {
+                            Button(onClick = { onStartClassServer(liveSection) }, enabled = liveSection.isNotEmpty(), colors = ButtonDefaults.buttonColors(containerColor = StatusSuccess), shape = RoundedCornerShape(8.dp)) {
                                 Icon(Icons.Default.PlayArrow, null); Spacer(Modifier.width(4.dp)); Text("INICIAR CLASE")
                             }
                         }
@@ -293,13 +386,12 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = CosmicDarkSurface)
                 )
                 
-                val localIp by mainViewModel.localIpAddress.collectAsState()
                 if (isServerRunning) {
                     Surface(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
                         color = StatusSuccess.copy(alpha = 0.15f),
                         shape = RoundedCornerShape(8.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, StatusSuccess.copy(alpha = 0.3f))
+                        border = BorderStroke(1.dp, StatusSuccess.copy(alpha = 0.3f))
                     ) {
                         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Podcasts, null, tint = StatusSuccess, modifier = Modifier.size(20.dp))
@@ -315,7 +407,7 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
                         color = AccentCyan.copy(alpha = 0.15f),
                         shape = RoundedCornerShape(8.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, AccentCyan.copy(alpha = 0.3f))
+                        border = BorderStroke(1.dp, AccentCyan.copy(alpha = 0.3f))
                     ) {
                         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Info, null, tint = AccentCyan, modifier = Modifier.size(16.dp))
@@ -390,24 +482,24 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
                 0 -> TeacherUnitsTab(
                     units = units, liveSection = liveSection, liveActiveUnit = liveActiveUnit,
                     enabledReads = enabledReads, enabledExams = enabledExams, enabledNotebooks = enabledNotebooks, isServerRunning = isServerRunning,
-                    onRefreshCourse = { mainViewModel.refreshCurrentCourse() },
+                    onRefreshCourse = onRefreshCourse,
                     onOpenExplorer = { showFileExplorer = true },
-                    onActivateUnit = { teacherViewModel.updateActiveUnit(it) },
-                    onToggleRead = { idx, state -> teacherViewModel.updateTeacherUnitToggle(idx, state, false) },
-                    onToggleExam = { idx, state -> teacherViewModel.updateTeacherUnitToggle(idx, state, true) },
-                    onToggleNotebook = { idx, state -> teacherViewModel.updateTeacherNotebookToggle(idx, state) },
+                    onActivateUnit = onUpdateActiveUnit,
+                    onToggleRead = { idx, state -> onUpdateTeacherUnitToggle(idx, state, false) },
+                    onToggleExam = { idx, state -> onUpdateTeacherUnitToggle(idx, state, true) },
+                    onToggleNotebook = { idx, state -> onUpdateTeacherNotebookToggle(idx, state) },
                     onGoToAula = { activeTab = 1 }
                 )
                 1 -> TeacherAulaTab(
                     isServerRunning = isServerRunning, liveSection = liveSection, liveActiveUnit = liveActiveUnit,
                     sections = sections,
                     allConnectedStudents = allConnectedStudents,
-                    onAddSection = { name, weeks -> teacherViewModel.addSection(name, weeks, {}, {}) },
-                    onSelectSection = { teacherViewModel.selectSection(it) },
-                    onDeleteSection = { teacherViewModel.deleteSection(it) },
+                    onAddSection = onAddSection,
+                    onSelectSection = onSelectSection,
+                    onDeleteSection = onDeleteSection,
                     onShareFile = { filePicker.launch("*/*") },
                     onShareZip = { zipFolderPicker.launch(null) },
-                    onSendGlobalMsg = { teacherViewModel.sendGlobalMessage(it) },
+                    onSendGlobalMsg = onSendGlobalMessage,
                     onStudentMessage = { studentToMessage = it },
                     onStudentAttach = { 
                         studentToAttach = it
@@ -418,25 +510,25 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
                 )
                 2 -> TeacherAttendanceTab(
                     syncedStudents = syncedStudents,
-                    onUpdateAttendance = { id, stat -> teacherViewModel.updateManualAttendance(id, stat) }
+                    onUpdateAttendance = onUpdateManualAttendance
                 )
                 3 -> TeacherMetricsTab(
                     liveSection = liveSection, sections = sections, syncedStudents = syncedStudents,
                     units = units,
-                    onGenerateAcademicReport = { teacherViewModel.generateAcademicReport(context, units.size) },
-                    onGenerateAttendanceReport = { teacherViewModel.generateAttendanceReport(context) },
+                    onGenerateAcademicReport = { onGenerateAcademicReport(context, units.size) },
+                    onGenerateAttendanceReport = { onGenerateAttendanceReport(context) },
                     onStudentClick = { selectedStudentHistory = it }
                 )
                 4 -> TeacherCloseTab(
-                    onGenerateAcademicReport = { teacherViewModel.generateAcademicReport(context, units.size) },
-                    onGenerateAttendanceReport = { teacherViewModel.generateAttendanceReport(context) },
-                    onGenerateDetailedMasterReport = { teacherViewModel.generateDetailedMasterReport(context, units.size) },
+                    onGenerateAcademicReport = { onGenerateAcademicReport(context, units.size) },
+                    onGenerateAttendanceReport = { onGenerateAttendanceReport(context) },
+                    onGenerateDetailedMasterReport = { onGenerateDetailedMasterReport(context, units.size) },
                     onOpenReportViewer = { showReportViewer = true },
                     onViewLogs = { showLogViewer = true },
                     onShareLogs = { com.example.data.AppLogger.shareLogFile(context) },
                     onResetApp = { showResetAppDialog = true },
-                    onInjectData = { weeks -> teacherViewModel.injectTestData(weeks) },
-                    onGenerateAllReports = { teacherViewModel.generateAllAcademicReports(context, units.size) }
+                    onInjectData = onInjectTestData,
+                    onGenerateAllReports = { onGenerateAllAcademicReports(context, units.size) }
                 )
             }
         }
@@ -449,11 +541,35 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
             title = { Text("Borrado de Fábrica") },
             text = { Text("Se eliminarán todos los perfiles, secciones y registros. Esta acción no se puede deshacer.") },
             confirmButton = {
-                Button(onClick = { mainViewModel.resetApp(context); showResetAppDialog = false }, colors = ButtonDefaults.buttonColors(containerColor = StatusError)) {
+                Button(onClick = { onResetApp(context); showResetAppDialog = false }, colors = ButtonDefaults.buttonColors(containerColor = StatusError)) {
                     Text("BORRAR TODO")
                 }
             },
             dismissButton = { TextButton(onClick = { showResetAppDialog = false }) { Text("CANCELAR") } }
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TeacherDashboardScreenPreview() {
+    MyApplicationTheme {
+        TeacherDashboardContent(
+            teacherProfile = null,
+            sections = listOf(
+                LocalSection(id = 1, name = "Sección A - Informática")
+            ),
+            units = emptyList(),
+            isServerRunning = true,
+            liveSection = "Sección A - Informática",
+            liveActiveUnit = 1,
+            enabledReads = "1",
+            enabledExams = "",
+            enabledNotebooks = "",
+            generatedOtp = null,
+            localIp = "192.168.1.100",
+            syncedStudents = emptyList(),
+            allConnectedStudents = emptyList()
         )
     }
 }

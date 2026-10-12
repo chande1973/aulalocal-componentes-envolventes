@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.model.UnitData
+import com.example.ui.components.EmptyStateView
 import com.example.ui.components.TeacherUnitCard
 import com.example.ui.theme.AccentCyan
 import com.example.ui.theme.AccentTeal
@@ -41,18 +42,13 @@ fun TeacherUnitsTab(
     onGoToAula: () -> Unit
 ) {
     if (liveSection.isEmpty()) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(Icons.Default.Class, null, tint = Color.Gray, modifier = Modifier.size(64.dp))
-            Spacer(Modifier.height(16.dp))
-            Text(stringResource(R.string.label_no_section_selected), style = MaterialTheme.typography.titleLarge, color = Color.White)
-            Text(stringResource(R.string.desc_no_section_selected), color = Color.Gray, textAlign = TextAlign.Center)
-            Spacer(Modifier.height(24.dp))
-            Button(onClick = onGoToAula) { Text(stringResource(R.string.btn_go_to_aula)) }
-        }
+        EmptyStateView(
+            icon = Icons.Default.Class,
+            title = stringResource(R.string.label_no_section_selected),
+            description = stringResource(R.string.desc_no_section_selected),
+            buttonText = stringResource(R.string.btn_go_to_aula),
+            onButtonClick = onGoToAula
+        )
     } else {
         Column(Modifier.fillMaxSize()) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {

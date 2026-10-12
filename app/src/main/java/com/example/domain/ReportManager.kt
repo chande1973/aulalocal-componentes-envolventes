@@ -33,27 +33,9 @@ object ReportManager {
 
         return try {
             students.forEach { student ->
-                val gradesObj = try { JSONObject(student.examGradesString) } catch (e: Exception) { JSONObject() }
-                
-                var sum = 0f
-                var count = 0
-                for (i in 1..totalUnits) {
-                    val g = gradesObj.optString(i.toString(), "")
-                    if (g.isNotEmpty()) {
-                        sum += g.toFloatOrNull() ?: 0f
-                        count++
-                    }
-                }
-                
-                val avgFinal = if (count > 0) sum / count else 0f
-                val attendancePct = if (section.totalClasses > 0) (student.attendanceCount.toFloat() / section.totalClasses * 100).toInt() else 0
-                
-                val status = when {
-                    attendancePct < 75 -> "REPROBADO"
-                    avgFinal >= 11.5f -> "APROBADO"
-                    avgFinal >= 6.0f -> "PER"
-                    else -> "REPROBADO"
-                }
+                val avgFinal = student.calculateExamAverage(totalUnits)
+                val attendancePct = student.calculateAttendancePercentage(section.totalClasses)
+                val status = student.getAcademicStatus(totalUnits, section.totalClasses)
                 
                 val safeName = "${student.lastName} ${student.firstName}".replace(",", "")
                 csvBuilder.append("${student.cardId},$safeName,$attendancePct%,${"%.2f".format(java.util.Locale.US, avgFinal)},$status\n")

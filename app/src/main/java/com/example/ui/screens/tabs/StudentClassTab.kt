@@ -310,56 +310,7 @@ fun StudentClassTab(
                 }
             }
 
-            // NUEVO: Tarjeta CTA cuando no hay clase activa pero sí materiales
-            if (!isLocked) {
-                Card(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                    colors = CardDefaults.cardColors(containerColor = AccentCyan.copy(alpha = 0.1f)),
-                    border = BorderStroke(2.dp, AccentCyan),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Column(Modifier.padding(20.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier.size(48.dp).background(AccentCyan.copy(alpha = 0.2f), CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(Icons.Default.Wifi, null, tint = AccentCyan, modifier = Modifier.size(24.dp))
-                            }
-                            Spacer(Modifier.width(16.dp))
-                            Column {
-                                Text(
-                                    text = "¿Nueva clase disponible?",
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = Color.White,
-                                    fontSize = 16.sp
-                                )
-                                Text(
-                                    text = "Toca para buscar y unirte a la clase en vivo del profesor",
-                                    color = AccentCyan,
-                                    fontSize = 12.sp
-                                )
-                            }
-                        }
-                        Spacer(Modifier.height(16.dp))
-                        Button(
-                            onClick = onConnectClick,
-                            modifier = Modifier.fillMaxWidth().height(48.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
-                            shape = RoundedCornerShape(10.dp)
-                        ) {
-                            Text(
-                                text = "🔍 BUSCAR CLASE EN VIVO",
-                                fontWeight = FontWeight.Black,
-                                color = Color.Black,
-                                fontSize = 13.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                }
-            }
+
             
             Spacer(Modifier.height(16.dp))
             LazyColumn(
@@ -440,3 +391,85 @@ fun StudentClassTab(
         }
     }
 }
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true, backgroundColor = 0xFF0D1117)
+@Composable
+fun StudentClassTabOfflineWithUnitsPreview() {
+    com.example.ui.theme.MyApplicationTheme {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            StudentClassTab(
+                profile = null,
+                units = listOf(
+                    UnitData(
+                        index = 1,
+                        title = "Unidad 1: Introducción a la Programación",
+                        description = "Descripción unidad 1",
+                        summary = "Fundamentos y sintaxis básica",
+                        audioNarratorText = "",
+                        topicText = "",
+                        challengeTitle = "",
+                        challengeInstructions = "",
+                        challengeOptions = emptyList(),
+                        challengeAnswer = ""
+                    ),
+                    UnitData(
+                        index = 2,
+                        title = "Unidad 2: Estructuras de Control",
+                        description = "Descripción unidad 2",
+                        summary = "Condicionales y bucles en Kotlin",
+                        audioNarratorText = "",
+                        topicText = "",
+                        challengeTitle = "",
+                        challengeInstructions = "",
+                        challengeOptions = emptyList(),
+                        challengeAnswer = ""
+                    ),
+                    UnitData(
+                        index = 3,
+                        title = "Unidad 3: Programación Orientada a Objetos",
+                        description = "Descripción unidad 3",
+                        summary = "Clases, objetos y herencia",
+                        audioNarratorText = "",
+                        topicText = "",
+                        challengeTitle = "",
+                        challengeInstructions = "",
+                        challengeOptions = emptyList(),
+                        challengeAnswer = ""
+                    )
+                ),
+                isLocked = false,
+                isSyncing = false,
+                isStudyModeActive = true,
+                enabledReads = "1,2,3",
+                studyProgress = listOf(
+                    UnitProgress(unitIndex = 1, isRead = true)
+                ),
+                onUnitClick = {},
+                onConnectClick = {},
+                onLinkFolderClick = {}
+            )
+        }
+    }
+}
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true, backgroundColor = 0xFF0D1117)
+@Composable
+fun StudentClassTabOfflinePreview() {
+    com.example.ui.theme.MyApplicationTheme {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            StudentClassTab(
+                profile = null,
+                units = emptyList(),
+                isLocked = false,
+                isSyncing = false,
+                isStudyModeActive = false,
+                enabledReads = "",
+                studyProgress = emptyList(),
+                onUnitClick = {},
+                onConnectClick = {},
+                onLinkFolderClick = {}
+            )
+        }
+    }
+}
+
