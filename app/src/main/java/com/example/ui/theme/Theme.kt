@@ -10,11 +10,30 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
+enum class ThemeVariant {
+    TEAL,
+    INDIGO
+}
+
 private val DarkColorScheme =
   darkColorScheme(
     primary = AccentCyan,
     secondary = AccentTeal,
     tertiary = AccentAmber,
+    background = CosmicDarkBg,
+    surface = CosmicDarkSurface,
+    surfaceContainer = CosmicDarkCard,
+    onPrimary = CosmicDarkBg,
+    onSecondary = CosmicDarkBg,
+    onBackground = NeutralLight,
+    onSurface = NeutralLight
+  )
+
+private val IndigoDarkColorScheme =
+  darkColorScheme(
+    primary = IndigoPrimary,
+    secondary = IndigoSecondary,
+    tertiary = IndigoAccent,
     background = CosmicDarkBg,
     surface = CosmicDarkSurface,
     surfaceContainer = CosmicDarkCard,
@@ -40,7 +59,8 @@ private val LightColorScheme =
 @Composable
 fun MyApplicationTheme(
   darkTheme: Boolean = isSystemInDarkTheme(),
-  // Dynamic color disabled by default to preserve custom Slate and Teal branding
+  themeVariant: ThemeVariant = ThemeVariant.TEAL,
+  // Dynamic color disabled by default to preserve custom Slate and Teal/Indigo branding
   dynamicColor: Boolean = false,
   content: @Composable () -> Unit,
 ) {
@@ -51,7 +71,12 @@ fun MyApplicationTheme(
         if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
       }
 
-      darkTheme -> DarkColorScheme
+      darkTheme -> {
+          when (themeVariant) {
+              ThemeVariant.TEAL -> DarkColorScheme
+              ThemeVariant.INDIGO -> IndigoDarkColorScheme
+          }
+      }
       else -> LightColorScheme
     }
 

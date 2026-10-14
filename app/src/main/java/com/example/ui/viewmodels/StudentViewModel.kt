@@ -310,13 +310,23 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun performStudentCheckIn(onComplete: () -> Unit) {
-        val ip = _detectedTeacherIp.value
-        val section = _detectedSectionName.value
+        val ip = _detectedTeacherIp.value?.ifEmpty { null } ?: _manualServerIp.value?.ifEmpty { null }
+        val section = _detectedSectionName.value?.ifEmpty { null } ?: "Sección 101"
         val port = _manualServerPort.value.toIntOrNull() ?: 9999
-        if (ip == null || section == null) return
+        
+        if (ip.isNullOrEmpty()) {
+            viewModelScope.launch { _uiEvents.emit("Error: No hay IP del profesor especificada") }
+            onComplete()
+            return
+        }
 
         viewModelScope.launch {
-            val profile = withContext(Dispatchers.IO) { dao.getUserProfile() } ?: return@launch
+            val profile = withContext(Dispatchers.IO) { dao.getUserProfile() }
+            if (profile == null) {
+                _uiEvents.emit("Error: No se encontró perfil de usuario local")
+                onComplete()
+                return@launch
+            }
             
             // Si el perfil no tiene sección (legacy), usamos la detectada del profesor para completarlo la primera vez
             val officialSection = profile.activeSection.ifEmpty { section } 
@@ -353,7 +363,8 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                     onComplete()
                 },
                 onFailure = { error ->
-                    viewModelScope.launch { _uiEvents.emit("Error: $error") }
+                    viewModelScope.launch { _uiEvents.emit("Error al conectar: $error") }
+                    onComplete()
                 }
             )
         }
@@ -611,8 +622,12 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                             consecutiveFailures++
                             _isSyncing.value = false
                             
-                            // Tolerancia a fallos de red: Reintentar silenciosamente sin desconectar al alumno
-                            if (consecutiveFailures >= 2) {
+                            // Si los fallos son repetidos (profesor apagó servidor o fuera de alcance), pasar a Modo Casa
+                            if (consecutiveFailures >= 4) {
+                                unlockAndDisconnectStudent()
+                                _classEndedNotice.value = "Conexión finalizada. Pasando a Modo Estudio en Casa."
+                                viewModelScope.launch { _uiEvents.emit("Conexión finalizada. Unidades desbloqueadas para lectura.") }
+                            } else if (consecutiveFailures >= 2) {
                                 viewModelScope.launch {
                                     LocalNetworkManager.discoverTeacher(
                                         onSuccess = { newIp, newPort, _, _ ->

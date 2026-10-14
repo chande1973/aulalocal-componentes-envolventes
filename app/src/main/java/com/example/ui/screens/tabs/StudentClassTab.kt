@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOpen
@@ -30,12 +31,17 @@ import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.model.UnitData
 import com.example.data.UnitProgress
+import com.example.ui.components.AnimatedLoadingView
 import com.example.ui.components.FileExplorerDialog
+import com.example.ui.components.M3Carousel
+import com.example.ui.components.PrimaryActionButton
 import com.example.ui.components.UnitCard
 import com.example.ui.theme.AccentAmber
 import com.example.ui.theme.AccentCyan
 import com.example.ui.theme.AccentTeal
 import com.example.ui.theme.CosmicDarkSurface
+import com.example.ui.theme.Dimensions
+import com.example.ui.theme.StatusSuccess
 
 @Composable
 fun StudentClassTab(
@@ -59,23 +65,6 @@ fun StudentClassTab(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Contenedor con efecto de brillo
-                Box(
-                    modifier = Modifier
-                        .size(100.dp)
-                        .background(AccentCyan.copy(alpha = 0.15f), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CloudDownload,
-                        contentDescription = null,
-                        modifier = Modifier.size(48.dp),
-                        tint = AccentCyan
-                    )
-                }
-                
-                Spacer(Modifier.height(24.dp))
-                
                 Surface(
                     color = AccentCyan.copy(alpha = 0.1f),
                     shape = RoundedCornerShape(12.dp),
@@ -93,33 +82,13 @@ fun StudentClassTab(
 
                 Spacer(Modifier.height(16.dp))
 
-                Text(
-                    text = "Sincronizando Materiales", 
-                    style = MaterialTheme.typography.headlineMedium, 
-                    color = Color.White, 
-                    fontWeight = FontWeight.Black,
-                    textAlign = TextAlign.Center
-                )
-                
-                Spacer(Modifier.height(8.dp))
-                
-                Text(
-                    text = if (isSyncing) "Recibiendo el paquete de contenidos del profesor..." else "Conectado al servidor. Esperando inicio de sincronización...", 
-                    color = Color.Gray, 
-                    fontSize = 14.sp,
-                    textAlign = TextAlign.Center
-                )
-                
-                Spacer(Modifier.height(32.dp))
-
-                // Barra de progreso lineal moderna en lugar de solo un círculo
-                LinearProgressIndicator(
-                    modifier = Modifier.fillMaxWidth(0.8f).height(8.dp).clip(RoundedCornerShape(4.dp)),
-                    color = AccentCyan,
-                    trackColor = Color.DarkGray.copy(alpha = 0.5f)
+                AnimatedLoadingView(
+                    title = "Sincronizando Materiales",
+                    subtitle = if (isSyncing) "Recibiendo el paquete de contenidos del profesor..." else "Conectado al servidor. Esperando inicio de sincronización...",
+                    icon = Icons.Default.CloudDownload
                 )
 
-                Spacer(Modifier.height(32.dp))
+                Spacer(Modifier.height(24.dp))
 
                 // Tarjeta de consejos de sincronización
                 Card(
@@ -180,7 +149,7 @@ fun StudentClassTab(
                 ) {
                     Icon(Icons.Default.Wifi, null, tint = Color.Black)
                     Spacer(Modifier.width(12.dp))
-                    Text("BUSCAR CLASE EN VIVO", fontWeight = FontWeight.Black, color = Color.Black)
+                    Text("TOCA PARA CONECTAR AL AULA", fontWeight = FontWeight.Black, color = Color.Black)
                 }
                 
                 Spacer(Modifier.height(16.dp))
@@ -199,39 +168,6 @@ fun StudentClassTab(
         }
     } else {
         Column(Modifier.fillMaxSize()) {
-            if (profile != null) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(AccentCyan.copy(alpha = 0.1f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(profile.avatar.ifEmpty { "👤" }, fontSize = 22.sp)
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = "Hola, ${profile.firstName}",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
-                        )
-                        Text(
-                            text = if (profile.activeSection.isNotEmpty()) "Sección ${profile.activeSection}" else "ID: ${profile.cardId}",
-                            color = Color.Gray,
-                            fontSize = 12.sp
-                        )
-                    }
-                }
-            }
-
             Row(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -245,6 +181,22 @@ fun StudentClassTab(
                         fontWeight = FontWeight.Black
                     )
                     Spacer(Modifier.width(8.dp))
+                    if (isLocked) {
+                        Surface(
+                            color = StatusSuccess.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(Dimensions.CornerFull),
+                            border = BorderStroke(1.dp, StatusSuccess.copy(alpha = 0.4f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(modifier = Modifier.size(6.dp).background(StatusSuccess, CircleShape))
+                                Spacer(Modifier.width(4.dp))
+                                Text("EN VIVO", color = StatusSuccess, fontWeight = FontWeight.Bold, fontSize = 9.sp)
+                            }
+                        }
+                    }
                     var showExplorerDialog by remember { mutableStateOf(false) }
 
                     IconButton(
@@ -273,108 +225,71 @@ fun StudentClassTab(
                 // Se elimina el botón redundante de la cabecera para evitar duplicidad y saturación visual
             }
             
-            // Banner de Clase en Vivo Activa (cuando el alumno está conectado)
-            if (isLocked) {
-                Card(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                    colors = CardDefaults.cardColors(containerColor = AccentAmber.copy(alpha = 0.15f)),
-                    border = BorderStroke(2.dp, AccentAmber),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Column(Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier.size(40.dp).background(AccentAmber.copy(alpha = 0.2f), CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(Icons.Default.Wifi, null, tint = AccentAmber, modifier = Modifier.size(20.dp))
-                            }
-                            Spacer(Modifier.width(12.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(
-                                    text = "📡 CLASE EN VIVO EN CURSO",
-                                    color = AccentAmber,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    fontSize = 11.sp,
-                                    letterSpacing = 1.sp
-                                )
-                                Text(
-                                    text = "Conectado al servidor del profesor",
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+
 
 
             
-            Spacer(Modifier.height(16.dp))
+            // Tarjeta de Progreso General del Curso (Fija / Sticky arriba)
+            val completedCount = units.count { unit -> studyProgress.find { it.unitIndex == unit.index }?.isRead == true }
+            val progressPercent = if (units.isNotEmpty()) (completedCount.toFloat() / units.size * 100).toInt() else 0
+
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                colors = CardDefaults.cardColors(containerColor = CosmicDarkSurface),
+                shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(1.dp, AccentTeal.copy(alpha = 0.3f))
+            ) {
+                Column(Modifier.padding(16.dp)) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "PROGRESO DEL CURSO",
+                                color = AccentTeal,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 11.sp,
+                                letterSpacing = 1.sp
+                            )
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                text = "$completedCount de ${units.size} unidades completadas",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
+                        Surface(
+                            color = AccentTeal.copy(alpha = 0.2f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                text = "$progressPercent%",
+                                color = AccentTeal,
+                                fontWeight = FontWeight.Black,
+                                fontSize = 14.sp,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    LinearProgressIndicator(
+                        progress = { if (units.isNotEmpty()) completedCount.toFloat() / units.size else 0f },
+                        modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
+                        color = AccentTeal,
+                        trackColor = Color.DarkGray.copy(alpha = 0.5f)
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
             LazyColumn(
                 Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 80.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                item {
-                    // Tarjeta de Progreso General del Curso
-                    val completedCount = units.count { unit -> studyProgress.find { it.unitIndex == unit.index }?.isRead == true }
-                    val progressPercent = if (units.isNotEmpty()) (completedCount.toFloat() / units.size * 100).toInt() else 0
-
-                    Card(
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                        colors = CardDefaults.cardColors(containerColor = CosmicDarkSurface),
-                        shape = RoundedCornerShape(20.dp),
-                        border = BorderStroke(1.dp, AccentTeal.copy(alpha = 0.3f))
-                    ) {
-                        Column(Modifier.padding(16.dp)) {
-                            Row(
-                                Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text(
-                                        text = "PROGRESO DEL CURSO",
-                                        color = AccentTeal,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        fontSize = 11.sp,
-                                        letterSpacing = 1.sp
-                                    )
-                                    Spacer(Modifier.height(2.dp))
-                                    Text(
-                                        text = "$completedCount de ${units.size} unidades completadas",
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp
-                                    )
-                                }
-                                Surface(
-                                    color = AccentTeal.copy(alpha = 0.2f),
-                                    shape = RoundedCornerShape(12.dp)
-                                ) {
-                                    Text(
-                                        text = "$progressPercent%",
-                                        color = AccentTeal,
-                                        fontWeight = FontWeight.Black,
-                                        fontSize = 14.sp,
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                                    )
-                                }
-                            }
-                            Spacer(Modifier.height(12.dp))
-                            LinearProgressIndicator(
-                                progress = { if (units.isNotEmpty()) completedCount.toFloat() / units.size else 0f },
-                                modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
-                                color = AccentTeal,
-                                trackColor = Color.DarkGray.copy(alpha = 0.5f)
-                            )
-                        }
-                    }
-                }
-
                 items(units) { unit ->
                     val unitProgress = studyProgress.find { it.unitIndex == unit.index }
                     val isRead = unitProgress?.isRead == true

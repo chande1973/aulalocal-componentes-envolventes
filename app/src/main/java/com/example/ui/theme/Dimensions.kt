@@ -12,12 +12,12 @@ object Dimensions {
     val PaddingLarge = 24.dp
     val PaddingExtraLarge = 32.dp
 
-    // Radios de Esquinas (Corner Radii)
+    // Radios de Esquinas (Corner Radii unificados)
     val CornerSmall = 8.dp
-    val CornerMedium = 12.dp
-    val CornerLarge = 16.dp
+    val CornerMedium = 12.dp // Para botones y elementos interactivos
+    val CornerLarge = 16.dp  // Para tarjetas y contenedores
     val CornerExtraLarge = 24.dp
-    val CornerFull = 100.dp
+    val CornerFull = 100.dp  // Para píldoras / chips
 
     // Tamaños de Iconos
     val IconSmall = 16.dp
@@ -43,8 +43,8 @@ object Dimensions {
     val ElevationLarge = 8.dp
     val ElevationHuge = 16.dp
 
-    // Alturas de componentes comunes
-    val ButtonHeight = 56.dp
+    // Alturas de componentes comunes (Unificadas)
+    val ButtonHeight = 52.dp
     val CardHeightSmall = 48.dp
     val TopAppBarHeight = 64.dp
 }

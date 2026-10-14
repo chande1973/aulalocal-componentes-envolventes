@@ -3,6 +3,7 @@ package com.example.ui.screens.tabs
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BugReport
@@ -20,14 +21,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
+import com.example.ui.components.CosmicCard
 import com.example.ui.components.PrimaryActionButton
-import com.example.ui.theme.AccentCyan
-import com.example.ui.theme.AccentTeal
-import com.example.ui.theme.CosmicDarkSurface
-import com.example.ui.theme.StatusError
+import com.example.ui.theme.*
 
 @Composable
 fun TeacherCloseTab(
+    currentThemeVariant: com.example.ui.theme.ThemeVariant = com.example.ui.theme.ThemeVariant.TEAL,
+    onToggleTheme: () -> Unit = {},
     onGenerateAcademicReport: () -> Unit,
     onGenerateAttendanceReport: () -> Unit,
     onGenerateDetailedMasterReport: () -> Unit,
@@ -45,6 +46,35 @@ fun TeacherCloseTab(
             .verticalScroll(scrollState)
     ) {
         Text(stringResource(R.string.label_close_year_title), style = MaterialTheme.typography.titleLarge, color = Color.White)
+        Spacer(Modifier.height(16.dp))
+
+        // Tarjeta de Selector de Tema Visual
+        CosmicCard {
+            Column(Modifier.padding(16.dp)) {
+                Text(stringResource(R.string.label_theme_title), fontWeight = FontWeight.Bold, color = Color.White)
+                Text(stringResource(R.string.label_theme_desc), color = Color.Gray, fontSize = 11.sp)
+                Spacer(Modifier.height(12.dp))
+                val themeName = if (currentThemeVariant == ThemeVariant.TEAL) {
+                    stringResource(R.string.theme_teal)
+                } else {
+                    stringResource(R.string.theme_indigo)
+                }
+                Button(
+                    onClick = onToggleTheme,
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
+                    modifier = Modifier.fillMaxWidth().height(Dimensions.ButtonHeight),
+                    shape = RoundedCornerShape(Dimensions.CornerMedium)
+                ) {
+                    Text(
+                        text = stringResource(R.string.label_theme_btn, themeName),
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        fontSize = 12.sp
+                    )
+                }
+            }
+        }
+
         Spacer(Modifier.height(16.dp))
 
         // Tarjeta de Simulación

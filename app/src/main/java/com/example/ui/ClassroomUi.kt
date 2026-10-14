@@ -50,8 +50,9 @@ fun ClassroomMainScreen(
     studentViewModel: StudentViewModel
 ) {
     val userProfile by mainViewModel.userProfile.collectAsState()
+    val currentThemeVariant by mainViewModel.currentThemeVariant.collectAsState()
 
-    MyApplicationTheme(darkTheme = true) {
+    MyApplicationTheme(darkTheme = true, themeVariant = currentThemeVariant) {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             when {
                 userProfile == null -> SetupAssistantScreen(mainViewModel, studentViewModel)

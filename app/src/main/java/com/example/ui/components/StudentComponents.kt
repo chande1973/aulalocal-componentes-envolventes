@@ -138,20 +138,20 @@ fun UnitCard(
             
             Row(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (unit.topicText.isNotEmpty() || unit.summary.isNotEmpty()) {
                     ResourceBadge(icon = "📖", label = "Teoría")
                 }
                 if (!unit.videoFile.isNullOrEmpty() || unit.extendedContent.isNotEmpty()) {
-                    ResourceBadge(icon = "🎥", label = "Video/Media")
+                    ResourceBadge(icon = "🎥", label = "Video")
                 }
                 if (unit.challengeInstructions.isNotEmpty() || unit.challengeQuestions.isNotEmpty()) {
                     ResourceBadge(icon = "⚡", label = "Reto")
                 }
                 if (unit.examQuestions.isNotEmpty()) {
-                    ResourceBadge(icon = "📝", label = "Examen (${unit.examQuestions.size})")
+                    ResourceBadge(icon = "📝", label = "Examen")
                 }
             }
         }
@@ -162,18 +162,18 @@ fun UnitCard(
 fun ResourceBadge(icon: String, label: String) {
     Surface(
         color = Color.DarkGray.copy(alpha = 0.25f),
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(6.dp)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = icon, fontSize = 11.sp)
-            Spacer(Modifier.width(4.dp))
+            Text(text = icon, fontSize = 10.sp)
+            Spacer(Modifier.width(3.dp))
             Text(
                 text = label,
                 color = Color.LightGray,
-                fontSize = 10.sp,
+                fontSize = 9.sp,
                 fontWeight = FontWeight.Medium
             )
         }
@@ -416,8 +416,20 @@ fun ConnectionStatusIcon(isLocked: Boolean, isSyncing: Boolean, isListenerMode: 
             Box(Modifier.padding(Dimensions.PaddingSmall).size(8.dp).clip(CircleShape).background(color))
         }
     } else {
-        IconButton(onClick = onClick) {
-            Icon(Icons.Default.Wifi, null, tint = AccentCyan)
+        Row(
+            modifier = Modifier
+                .clickable { onClick() }
+                .padding(horizontal = 6.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Icon(Icons.Default.Wifi, contentDescription = "Conectar al aula", tint = AccentCyan, modifier = Modifier.size(18.dp))
+            Text(
+                text = "Conectar",
+                color = AccentCyan,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }

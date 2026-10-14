@@ -234,4 +234,9 @@
     <string name="label_doubt">Duda</string>
     <string name="btn_present">PRESENTE</string>
     <string name="hint_write_doubt">Escribe aquí tu duda</string>
+    <string name="label_theme_title">Tema Visual de la Aplicación</string>
+    <string name="label_theme_desc">Alterna entre Teal Profesional e Indigo Académico.</string>
+    <string name="label_theme_btn">🎨 Tema Activo: %1$s (Tocar para cambiar)</string>
+    <string name="theme_teal">Teal Profesional</string>
+    <string name="theme_indigo">Indigo Académico</string>
 </resources>

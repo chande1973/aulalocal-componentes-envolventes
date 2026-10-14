@@ -33,6 +33,7 @@ import com.example.data.model.UnitData
 import com.example.ui.MainViewModel
 import com.example.ui.components.FileExplorerDialog
 import com.example.ui.components.ReportViewerDialog
+import com.example.ui.components.ResetAppDialog
 import com.example.ui.components.StudentDetailAndRecuperativoDialog
 import com.example.ui.screens.tabs.*
 import com.example.ui.theme.*
@@ -65,6 +66,8 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
         teacherViewModel.allConnectedStudents.collect { allConnectedStudents = it }
     }
 
+    val currentThemeVariant by mainViewModel.currentThemeVariant.collectAsState()
+
     TeacherDashboardContent(
         teacherProfile = teacherProfile,
         sections = sections,
@@ -79,6 +82,8 @@ fun TeacherDashboardScreen(mainViewModel: MainViewModel, teacherViewModel: Teach
         localIp = localIp,
         syncedStudents = syncedStudents,
         allConnectedStudents = allConnectedStudents,
+        currentThemeVariant = currentThemeVariant,
+        onToggleTheme = { mainViewModel.toggleThemeVariant() },
         uiEventsFlow = teacherViewModel.uiEvents,
         onStartClassServer = { teacherViewModel.startClassServer(it) },
         onIncrementTotalClasses = { teacherViewModel.incrementTotalClasses() },
@@ -138,6 +143,8 @@ fun TeacherDashboardContent(
     onEnableNotebookRecuperativo: (String, Int) -> Unit = { _, _ -> },
     onAuthorizeProfileEdit: (String) -> Unit = {},
     onClearStudentDoubt: (String) -> Unit = {},
+    currentThemeVariant: com.example.ui.theme.ThemeVariant = com.example.ui.theme.ThemeVariant.TEAL,
+    onToggleTheme: () -> Unit = {},
     onSendPrivateMessage: (String, String) -> Unit = { _, _ -> },
     onRefreshCourse: () -> Unit = {},
     onUpdateActiveUnit: (Int) -> Unit = {},
@@ -520,6 +527,8 @@ fun TeacherDashboardContent(
                     onStudentClick = { selectedStudentHistory = it }
                 )
                 4 -> TeacherCloseTab(
+                    currentThemeVariant = currentThemeVariant,
+                    onToggleTheme = onToggleTheme,
                     onGenerateAcademicReport = { onGenerateAcademicReport(context, units.size) },
                     onGenerateAttendanceReport = { onGenerateAttendanceReport(context) },
                     onGenerateDetailedMasterReport = { onGenerateDetailedMasterReport(context, units.size) },
@@ -535,19 +544,12 @@ fun TeacherDashboardContent(
     }
     
     // Diálogo de Reset (Fuera del Scaffold)
-    if (showResetAppDialog) {
-        AlertDialog(
-            onDismissRequest = { showResetAppDialog = false },
-            title = { Text("Borrado de Fábrica") },
-            text = { Text("Se eliminarán todos los perfiles, secciones y registros. Esta acción no se puede deshacer.") },
-            confirmButton = {
-                Button(onClick = { onResetApp(context); showResetAppDialog = false }, colors = ButtonDefaults.buttonColors(containerColor = StatusError)) {
-                    Text("BORRAR TODO")
-                }
-            },
-            dismissButton = { TextButton(onClick = { showResetAppDialog = false }) { Text("CANCELAR") } }
-        )
-    }
+    ResetAppDialog(
+        show = showResetAppDialog,
+        onDismiss = { showResetAppDialog = false },
+        onConfirm = onResetApp,
+        context = context
+    )
 }
 
 @Preview(showBackground = true)

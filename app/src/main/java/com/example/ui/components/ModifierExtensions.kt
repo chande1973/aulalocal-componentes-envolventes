@@ -10,15 +10,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.example.ui.theme.AccentCyan
 import com.example.ui.theme.CosmicDarkSurface
 import com.example.ui.theme.Dimensions
 
 /**
- * Modificador reutilizable para tarjetas y contenedores estilo "Cosmic"
+ * Modificador reutilizable unificado para tarjetas y contenedores estilo "Cosmic"
  */
 fun Modifier.cosmicCardStyle(
-    borderColor: Color = AccentCyan.copy(alpha = 0.2f),
+    borderColor: Color = Color.Gray.copy(alpha = 0.15f),
     backgroundColor: Color = CosmicDarkSurface,
     cornerRadius: Dp = Dimensions.CornerLarge
 ): Modifier = this

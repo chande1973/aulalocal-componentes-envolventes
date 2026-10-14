@@ -37,12 +37,17 @@ import com.example.data.UserProfile
 import com.example.data.model.LoadResult
 import com.example.ui.MainViewModel
 import com.example.ui.avatarOptionsList
+import com.example.ui.components.AnimatedLoadingView
+import com.example.ui.components.CosmicCard
+import com.example.ui.components.M3AvatarSelector
 import com.example.ui.components.PrimaryActionButton
+import com.example.ui.components.SleekTextField
 import com.example.ui.theme.AccentAmber
 import com.example.ui.theme.AccentCyan
 import com.example.ui.theme.AccentTeal
 import com.example.ui.theme.CosmicDarkBg
 import com.example.ui.theme.CosmicDarkSurface
+import com.example.ui.theme.StatusSuccess
 import com.example.ui.viewmodels.StudentViewModel
 import kotlinx.coroutines.launch
 
@@ -179,56 +184,49 @@ fun SetupAssistantScreen(
                         Text(stringResource(R.string.setup_profile_info), style = MaterialTheme.typography.headlineSmall, color = Color.White, modifier = Modifier.fillMaxWidth())
                         Spacer(Modifier.height(24.dp))
                         
-                        OutlinedTextField(
-                            value = firstName, 
-                            onValueChange = { firstName = it }, 
-                            label = { Text(stringResource(R.string.label_first_name)) }, 
+                        SleekTextField(
+                            value = firstName,
+                            onValueChange = { firstName = it },
+                            label = stringResource(R.string.label_first_name),
                             isError = isFirstNameError,
-                            supportingText = { if (isFirstNameError) Text(stringResource(R.string.error_min_3_chars)) },
-                            modifier = Modifier.fillMaxWidth()
+                            errorMessage = stringResource(R.string.error_min_3_chars)
                         )
                         Spacer(Modifier.height(16.dp))
                         
-                        OutlinedTextField(
-                            value = lastName, 
-                            onValueChange = { lastName = it }, 
-                            label = { Text(stringResource(R.string.label_last_name)) }, 
+                        SleekTextField(
+                            value = lastName,
+                            onValueChange = { lastName = it },
+                            label = stringResource(R.string.label_last_name),
                             isError = isLastNameError,
-                            supportingText = { if (isLastNameError) Text(stringResource(R.string.error_min_3_chars)) },
-                            modifier = Modifier.fillMaxWidth()
+                            errorMessage = stringResource(R.string.error_min_3_chars)
                         )
                         Spacer(Modifier.height(16.dp))
                         
-                        OutlinedTextField(
-                            value = cardId, 
-                            onValueChange = { cardId = it }, 
-                            label = { Text(stringResource(R.string.label_card_id)) }, 
+                        SleekTextField(
+                            value = cardId,
+                            onValueChange = { cardId = it },
+                            label = stringResource(R.string.label_card_id),
                             isError = isCardIdError,
-                            supportingText = { if (isCardIdError) Text(stringResource(R.string.error_min_5_chars)) },
-                            modifier = Modifier.fillMaxWidth()
+                            errorMessage = stringResource(R.string.error_min_5_chars)
                         )
                         Spacer(Modifier.height(16.dp))
 
                         if (selectedRole == "student") {
-                            OutlinedTextField(
-                                value = studentSection, 
-                                onValueChange = { studentSection = it }, 
-                                label = { Text(stringResource(R.string.label_section)) }, 
+                            SleekTextField(
+                                value = studentSection,
+                                onValueChange = { studentSection = it },
+                                label = stringResource(R.string.label_section),
                                 isError = isSectionError,
-                                supportingText = { if (isSectionError) Text(stringResource(R.string.example_section)) },
-                                modifier = Modifier.fillMaxWidth()
+                                errorMessage = stringResource(R.string.example_section)
                             )
                             Spacer(Modifier.height(16.dp))
                         }
                         
-                        Text(stringResource(R.string.setup_choose_avatar), color = Color.White)
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                            avatarOptionsList.forEach { av ->
-                                Box(Modifier.size(50.dp).clip(CircleShape).background(if(selectedAvatarEmoji == av.emoji) av.color else Color.DarkGray).clickable { selectedAvatarEmoji = av.emoji }, contentAlignment = Alignment.Center) {
-                                    Text(av.emoji, fontSize = 24.sp)
-                                }
-                            }
-                        }
+                        M3AvatarSelector(
+                            avatarOptions = avatarOptionsList,
+                            selectedEmoji = selectedAvatarEmoji,
+                            onSelectAvatar = { selectedAvatarEmoji = it.emoji }
+                        )
 
                         Spacer(Modifier.height(40.dp))
                         
@@ -240,11 +238,32 @@ fun SetupAssistantScreen(
                         if (selectedRole != null) {
                             PrimaryActionButton(
                                 text = if (isFormValid) {
-                                    if (selectedRole == "teacher") "SIGUIENTE: MATERIALES" else "SIGUIENTE: CONEXIÓN Y MATERIALES"
+                                    if (selectedRole == "teacher") "SIGUIENTE: MATERIALES" else "FINALIZAR Y ENTRAR AL AULA"
                                 } else {
                                     "Completa tus datos para continuar"
                                 },
-                                onClick = { setupStep = 2 },
+                                onClick = {
+                                    if (selectedRole == "teacher") {
+                                        setupStep = 2
+                                    } else {
+                                        scope.launch {
+                                            mainViewModel.confirmSetupAndSaveProfile(
+                                                Uri.EMPTY,
+                                                UserProfile(
+                                                    role = "student",
+                                                    firstName = firstName.trim(),
+                                                    lastName = lastName.trim(),
+                                                    cardId = cardId.trim(),
+                                                    avatar = selectedAvatar.emoji,
+                                                    activeSection = studentSection.trim(),
+                                                    email = "",
+                                                    isLocked = false
+                                                )
+                                            )
+                                            Toast.makeText(context, "✅ ¡Configuración completada!", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                },
                                 enabled = isFormValid,
                                 containerColor = if (selectedRole == "teacher") AccentTeal else AccentCyan,
                                 contentColor = if (selectedRole == "student" && isFormValid) Color.Black else Color.White
@@ -262,24 +281,21 @@ fun SetupAssistantScreen(
                         if (selectedRole == "student") {
                             // PRIORIDAD PARA EL ALUMNO: RED
                             val isDiscovering by studentViewModel.isDiscovering.collectAsState()
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = CosmicDarkSurface),
-                                border = if (detectedIp != null) BorderStroke(1.dp, Color.Green) else null
+                            CosmicCard(
+                                borderColor = if (detectedIp != null) Color.Green else AccentCyan.copy(alpha = 0.2f)
                             ) {
                                 Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                     Icon(if(detectedIp != null) Icons.Default.Podcasts else Icons.Default.Wifi, null, tint = if(detectedIp != null) Color.Green else AccentCyan)
                                     Spacer(Modifier.height(16.dp))
                                     Text("Busca el servidor de tu profesor en la red WiFi actual para recibir el curso.", textAlign = TextAlign.Center, fontSize = 12.sp, color = Color.LightGray)
                                     Spacer(Modifier.height(16.dp))
-                                    Button(
+                                    PrimaryActionButton(
+                                        text = if (isDiscovering) "BUSCANDO..." else stringResource(R.string.setup_btn_discover),
                                         onClick = { studentViewModel.discoverActiveTeacher() },
                                         enabled = !isDiscovering,
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        if (isDiscovering) CircularProgressIndicator(Modifier.size(20.dp), color = Color.White)
-                                        else Text(stringResource(R.string.setup_btn_discover))
-                                    }
+                                        containerColor = AccentCyan,
+                                        contentColor = Color.Black
+                                    )
                                     if (detectedIp != null) {
                                         Text("✅ Profesor encontrado en: $detectedSection", color = Color.Green, fontSize = 11.sp, modifier = Modifier.padding(top = 8.dp))
                                     }
@@ -293,10 +309,8 @@ fun SetupAssistantScreen(
                         val res = wizardResult
                         val isAnySuccess = res is LoadResult.Success || res is LoadResult.PartialSuccess
                         
-                        Card(
-                            modifier = Modifier.fillMaxWidth(), 
-                            colors = CardDefaults.cardColors(containerColor = CosmicDarkSurface),
-                            border = if (isAnySuccess) BorderStroke(1.dp, AccentTeal) else if (res is LoadResult.Failure) BorderStroke(1.dp, Color.Red) else null
+                        CosmicCard(
+                            borderColor = if (isAnySuccess) AccentTeal else if (res is LoadResult.Failure) Color.Red else AccentCyan.copy(alpha = 0.2f)
                         ) {
                             Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(stringResource(R.string.course_content), fontWeight = FontWeight.Bold, color = Color.White)
@@ -304,69 +318,11 @@ fun SetupAssistantScreen(
                                 Spacer(Modifier.height(12.dp))
 
                                 if (loadingProgress.isLoading) {
-                                    Card(
-                                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                                        colors = CardDefaults.cardColors(containerColor = AccentAmber.copy(alpha = 0.15f)),
-                                        border = BorderStroke(1.dp, AccentAmber.copy(alpha = 0.6f)),
-                                        shape = RoundedCornerShape(12.dp)
-                                    ) {
-                                        Column(Modifier.padding(12.dp)) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Icon(Icons.Default.Inventory, null, tint = AccentAmber, modifier = Modifier.size(18.dp))
-                                                Spacer(Modifier.width(10.dp))
-                                                Column(Modifier.weight(1f)) {
-                                                    Text(
-                                                        text = loadingProgress.step.ifEmpty { "ANALIZANDO MATERIALES" }.uppercase(),
-                                                        color = AccentAmber,
-                                                        fontWeight = FontWeight.ExtraBold,
-                                                        fontSize = 11.sp,
-                                                        letterSpacing = 1.sp
-                                                    )
-                                                    Text(
-                                                        text = loadingProgress.step.ifEmpty { "Procesando contenido..." },
-                                                        color = Color.White,
-                                                        fontSize = 11.sp,
-                                                        fontWeight = FontWeight.Medium
-                                                    )
-                                                }
-                                                if (loadingProgress.total > 0) {
-                                                    val pct = (loadingProgress.current.toFloat() / loadingProgress.total * 100).toInt().coerceIn(0, 100)
-                                                    Text(
-                                                        text = "$pct%",
-                                                        color = AccentAmber,
-                                                        fontWeight = FontWeight.ExtraBold,
-                                                        fontSize = 14.sp
-                                                    )
-                                                }
-                                            }
-                                            if (loadingProgress.currentFile.isNotEmpty()) {
-                                                Spacer(Modifier.height(4.dp))
-                                                Text(
-                                                    text = "📄 Procesando: ${loadingProgress.currentFile}",
-                                                    color = Color.LightGray,
-                                                    fontSize = 10.sp,
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis
-                                                )
-                                            }
-                                            Spacer(Modifier.height(8.dp))
-                                            if (loadingProgress.total > 0) {
-                                                val pct = (loadingProgress.current.toFloat() / loadingProgress.total).coerceIn(0f, 1f)
-                                                LinearProgressIndicator(
-                                                    progress = { pct },
-                                                    modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
-                                                    color = AccentAmber,
-                                                    trackColor = Color.DarkGray.copy(alpha = 0.5f)
-                                                )
-                                            } else {
-                                                LinearProgressIndicator(
-                                                    modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
-                                                    color = AccentAmber,
-                                                    trackColor = Color.DarkGray.copy(alpha = 0.5f)
-                                                )
-                                            }
-                                        }
-                                    }
+                                    AnimatedLoadingView(
+                                        title = loadingProgress.step.ifEmpty { "ANALIZANDO MATERIALES" },
+                                        subtitle = loadingProgress.currentFile.ifEmpty { "Procesando contenido..." },
+                                        icon = Icons.Default.Inventory
+                                    )
                                 } else {
                                     when (res) {
                                     is LoadResult.Success -> {

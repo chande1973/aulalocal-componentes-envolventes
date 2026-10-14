@@ -14,6 +14,11 @@ val AccentTeal = Color(0xFF14B8A6)        // Teal 500
 val AccentCyan = Color(0xFF06B6D4)        // Cyan 500
 val AccentAmber = Color(0xFFF59E0B)       // Amber 500
 
+// Variante Indigo Académico
+val IndigoPrimary = Color(0xFF3B82F6)     // Blue 500
+val IndigoSecondary = Color(0xFF6366F1)   // Indigo 500
+val IndigoAccent = Color(0xFF8B5CF6)      // Purple 500
+
 val TealCyanGradient = androidx.compose.ui.graphics.Brush.horizontalGradient(
     colors = listOf(AccentTeal, AccentCyan)
 )

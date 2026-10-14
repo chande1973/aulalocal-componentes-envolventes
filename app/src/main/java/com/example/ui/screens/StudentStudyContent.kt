@@ -36,6 +36,7 @@ import com.example.data.model.Question
 import com.example.data.model.UnitData
 import com.example.ui.components.CosmicCard
 import com.example.ui.components.PrimaryActionButton
+import com.example.ui.components.ReadingProgressTopBar
 import com.example.ui.components.ReadingChallengeDialog
 import com.example.ui.components.VideoMissingAlert
 import com.example.ui.components.VideoPlayer
@@ -138,74 +139,13 @@ fun StudentStudyContent(
             .padding(horizontal = 8.dp)
     ) {
         // BARRA SUPERIOR DE PROGRESO Y CONTROLES DE LECTURA (FIJA / STICKY)
-        CosmicCard {
-            Column(Modifier.padding(14.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = if (isReadLocal) Icons.Default.CheckCircle else Icons.Default.MenuBook,
-                            contentDescription = null,
-                            tint = if (isReadLocal) StatusSuccess else AccentCyan,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = if (isReadLocal) "Lectura Completada" else "Avance de Lectura",
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            fontSize = 12.sp
-                        )
-                    }
-
-                    // Controles de tamaño de letra (A- / A+)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Surface(
-                            onClick = { if (fontSizeSp > 13) fontSizeSp-- },
-                            color = Color.DarkGray.copy(alpha = 0.4f),
-                            shape = CircleShape,
-                            modifier = Modifier.size(28.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(Icons.Default.Remove, "Reducir letra", tint = Color.White, modifier = Modifier.size(14.dp))
-                            }
-                        }
-                        Text(
-                            text = "${fontSizeSp}sp",
-                            fontSize = 10.sp,
-                            color = Color.Gray,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 6.dp)
-                        )
-                        Surface(
-                            onClick = { if (fontSizeSp < 22) fontSizeSp++ },
-                            color = Color.DarkGray.copy(alpha = 0.4f),
-                            shape = CircleShape,
-                            modifier = Modifier.size(28.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(Icons.Default.Add, "Aumentar letra", tint = Color.White, modifier = Modifier.size(14.dp))
-                            }
-                        }
-                    }
-                }
-
-                Spacer(Modifier.height(8.dp))
-
-                LinearProgressIndicator(
-                    progress = { if (isReadLocal) 1f else scrollProgress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .clip(RoundedCornerShape(3.dp)),
-                    color = if (isReadLocal) StatusSuccess else AccentCyan,
-                    trackColor = Color.DarkGray.copy(alpha = 0.5f)
-                )
-            }
-        }
+        ReadingProgressTopBar(
+            isReadLocal = isReadLocal,
+            scrollProgress = scrollProgress,
+            fontSizeSp = fontSizeSp,
+            onDecreaseFontSize = { if (fontSizeSp > 13) fontSizeSp-- },
+            onIncreaseFontSize = { if (fontSizeSp < 22) fontSizeSp++ }
+        )
 
         Spacer(Modifier.height(8.dp))
 

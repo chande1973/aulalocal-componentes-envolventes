@@ -52,6 +52,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     }
 
+    private val _currentThemeVariant = MutableStateFlow(com.example.ui.theme.ThemeVariant.TEAL)
+    val currentThemeVariant: StateFlow<com.example.ui.theme.ThemeVariant> = _currentThemeVariant.asStateFlow()
+
+    fun toggleThemeVariant() {
+        _currentThemeVariant.value = if (_currentThemeVariant.value == com.example.ui.theme.ThemeVariant.TEAL) {
+            com.example.ui.theme.ThemeVariant.INDIGO
+        } else {
+            com.example.ui.theme.ThemeVariant.TEAL
+        }
+    }
+
     // UI State - Course Content (Loaded from Course Pack)
     private val _units = MutableStateFlow<List<UnitData>>(emptyList())
     val units: List<UnitData> get() = _units.value

@@ -27,6 +27,7 @@ import com.example.ui.components.ConnectionStatusIcon
 import com.example.ui.components.ExamNotificationCard
 import com.example.ui.components.ReportViewerDialog
 import com.example.ui.components.StudentReportDialog
+import com.example.ui.components.StudentSettingsDialog
 import com.example.domain.ReportManager
 import com.example.ui.components.StudentMessageDialog
 import com.example.ui.screens.components.StudentDashboardBanners
@@ -364,51 +365,12 @@ fun StudentDashboardScreen(mainViewModel: MainViewModel, studentViewModel: Stude
             )
         }
 
-        if (showSettingsDialog) {
-            AlertDialog(
-                onDismissRequest = { showSettingsDialog = false },
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Settings, null, tint = AccentCyan)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Configuración de Estudiante", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    }
-                },
-                text = {
-                    Column {
-                        OutlinedButton(
-                            onClick = {
-                                showSettingsDialog = false
-                                showLogViewer = true
-                            },
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            border = BorderStroke(1.dp, AccentCyan)
-                        ) {
-                            Icon(Icons.Default.BugReport, null, tint = AccentCyan)
-                            Spacer(Modifier.width(8.dp))
-                            Text("Ver Registro de Consola / Logs (🐛)", fontSize = 12.sp, color = Color.White)
-                        }
-
-                        OutlinedButton(
-                            onClick = {
-                                showSettingsDialog = false
-                                showConnectionDialog = true
-                            },
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-                        ) {
-                            Icon(Icons.Default.Wifi, null, tint = AccentTeal)
-                            Spacer(Modifier.width(8.dp))
-                            Text("Estado de Conexión en Vivo", fontSize = 12.sp, color = Color.White)
-                        }
-                    }
-                },
-                confirmButton = {
-                    TextButton(onClick = { showSettingsDialog = false }) {
-                        Text("CERRAR")
-                    }
-                }
-            )
-        }
+        StudentSettingsDialog(
+            show = showSettingsDialog,
+            onDismiss = { showSettingsDialog = false },
+            onOpenLogs = { showLogViewer = true },
+            onOpenConnection = { showConnectionDialog = true }
+        )
     }
 
     if (showStudentReportDialog && studentProfile != null) {

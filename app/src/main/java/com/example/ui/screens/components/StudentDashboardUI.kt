@@ -127,7 +127,7 @@ fun StudentDashboardBanners(
                                     Icon(Icons.Default.Wifi, null, tint = Color.Black)
                                     Spacer(Modifier.width(8.dp))
                                     Text(
-                                        "BUSCAR Y UNIRSE A NUEVA CLASE",
+                                        "TOCA PARA CONECTAR A NUEVA CLASE",
                                         fontWeight = FontWeight.Black,
                                         color = Color.Black,
                                         fontSize = 13.sp
@@ -398,46 +398,7 @@ fun StudentDashboardBanners(
             }
         }
 
-        // Banner de Modo Offline
-        if (isStudyModeActive) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .clickable { onConnectClick() },
-                colors = CardDefaults.cardColors(containerColor = AccentCyan.copy(alpha = 0.05f)),
-                border = BorderStroke(1.dp, AccentCyan.copy(alpha = 0.4f)),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        Modifier.size(32.dp).background(AccentCyan.copy(alpha = 0.1f), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Default.Wifi, null, tint = AccentCyan, modifier = Modifier.size(18.dp))
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(
-                            text = stringResource(R.string.msg_offline_mode_desc),
-                            color = TextPrimary,
-                            fontSize = 11.sp,
-                            lineHeight = 14.sp
-                        )
-                        Text(
-                            text = stringResource(R.string.msg_tap_to_connect),
-                            color = AccentCyan,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Black
-                        )
-                    }
-                    Icon(Icons.Default.ChevronRight, null, tint = AccentCyan)
-                }
-            }
-        }
+
 
         // Banner de Mensaje del Profesor
         if (teacherMsg.isNotEmpty()) {

@@ -64,8 +64,8 @@ fun PrimaryActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    containerColor: Color = AccentTeal,
-    contentColor: Color = Color.White,
+    containerColor: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = MaterialTheme.colorScheme.onPrimary,
     icon: ImageVector? = null
 ) {
     Button(
@@ -73,8 +73,8 @@ fun PrimaryActionButton(
         enabled = enabled,
         modifier = modifier
             .fillMaxWidth()
-            .height(54.dp),
-        shape = RoundedCornerShape(14.dp),
+            .height(Dimensions.ButtonHeight),
+        shape = RoundedCornerShape(Dimensions.CornerMedium),
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor,
