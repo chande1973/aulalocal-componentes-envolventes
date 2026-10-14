@@ -19,6 +19,8 @@ import com.example.data.AttendanceRecord
 import com.example.data.SyncedStudent
 import com.example.data.model.UnitData
 import com.example.ui.theme.*
+import com.example.util.toSafeJSONArray
+import com.example.util.toSafeJSONObject
 import kotlinx.coroutines.flow.Flow
 import org.json.JSONArray
 import org.json.JSONObject
@@ -45,17 +47,13 @@ fun StudentDetailAndRecuperativoDialog(
     val history by historyFlow.collectAsState(initial = emptyList())
     val dateFormat = remember { SimpleDateFormat("dd/MM HH:mm", Locale.getDefault()) }
     val gradesObj = remember(student.examGradesString) {
-        try {
-            JSONObject(student.examGradesString)
-        } catch (e: Exception) {
-            JSONObject()
-        }
+        student.examGradesString.toSafeJSONObject()
     }
     val notebookGradesObj = remember(student.notebookGradesString) {
-        try { JSONObject(student.notebookGradesString) } catch (e: Exception) { JSONObject() }
+        student.notebookGradesString.toSafeJSONObject()
     }
     val notebookFeedbacksObj = remember(student.notebookFeedbacksString) {
-        try { JSONObject(student.notebookFeedbacksString) } catch (e: Exception) { JSONObject() }
+        student.notebookFeedbacksString.toSafeJSONObject()
     }
 
     AlertDialog(
@@ -118,11 +116,7 @@ fun StudentDetailAndRecuperativoDialog(
                         val notebookFeedback = notebookFeedbacksObj.optString(unit.index.toString(), "")
 
                         val readsList = remember(student.readProgressString) {
-                            try {
-                                JSONArray(student.readProgressString)
-                            } catch (e: Exception) {
-                                JSONArray()
-                            }
+                            student.readProgressString.toSafeJSONArray()
                         }
                         var readPct = 0
                         for (i in 0 until readsList.length()) {
@@ -134,7 +128,7 @@ fun StudentDetailAndRecuperativoDialog(
                         }
 
                         val challengesList = remember(student.challengeProgressString) {
-                            try { JSONArray(student.challengeProgressString) } catch (e: Exception) { JSONArray() }
+                            student.challengeProgressString.toSafeJSONArray()
                         }
                         var isChallengeDone = false
                         for (i in 0 until challengesList.length()) {

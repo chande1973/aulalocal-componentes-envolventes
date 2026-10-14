@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import com.example.util.toSafeJSONObject
 import androidx.documentfile.provider.DocumentFile
 import com.example.R
 import com.example.util.TestDataInjector
@@ -747,7 +748,7 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
     fun enableRecuperativoForStudent(cardId: String, unitIndex: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             val student = dao.getStudentByCardId(cardId) ?: return@launch
-            val gradesObj = try { JSONObject(student.examGradesString) } catch (e: Exception) { JSONObject() }
+            val gradesObj = student.examGradesString.toSafeJSONObject()
             
             gradesObj.remove(unitIndex.toString())
             

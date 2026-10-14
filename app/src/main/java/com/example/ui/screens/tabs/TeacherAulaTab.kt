@@ -27,6 +27,7 @@ import com.example.data.SyncedStudent
 import com.example.data.LocalNetworkManager
 import com.example.ui.components.StudentRowTeacher
 import com.example.ui.theme.*
+import com.example.util.toSafeJSONArray
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -150,7 +151,7 @@ fun TeacherAulaTab(
                 var readStudentsCount = 0
 
                 officialStudents.forEach { student ->
-                    val readsList = try { JSONArray(student.readProgressString) } catch (e: Exception) { JSONArray() }
+                    val readsList = student.readProgressString.toSafeJSONArray()
                     var p = 0
                     for (i in 0 until readsList.length()) {
                         val item = readsList.opt(i)

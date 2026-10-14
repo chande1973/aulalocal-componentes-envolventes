@@ -28,6 +28,7 @@ import com.example.data.SyncedStudent
 import com.example.data.LocalSection
 import com.example.ui.components.TeacherReportDialog
 import com.example.ui.theme.*
+import com.example.util.toSafeJSONObject
 import org.json.JSONObject
 
 @Composable
@@ -57,7 +58,7 @@ fun TeacherMetricsTab(
         var totalGradesSum = 0f
         var totalGradesCount = 0
         syncedStudents.forEach { s ->
-            val gradesObj = try { JSONObject(s.examGradesString) } catch (e: Exception) { JSONObject() }
+            val gradesObj = s.examGradesString.toSafeJSONObject()
             units.forEach { unit ->
                 val g = gradesObj.optString(unit.index.toString(), "")
                 if (g.isNotEmpty()) {
@@ -138,7 +139,7 @@ fun TeacherMetricsTab(
             
             LazyColumn(Modifier.weight(1f)) {
                 items(syncedStudents) { student ->
-                    val gradesObj = try { JSONObject(student.examGradesString) } catch (e: Exception) { JSONObject() }
+                    val gradesObj = student.examGradesString.toSafeJSONObject()
                     var sum = 0f
                     var count = 0
                     units.forEach { unit ->

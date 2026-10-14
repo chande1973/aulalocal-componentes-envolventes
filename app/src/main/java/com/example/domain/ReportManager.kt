@@ -8,7 +8,7 @@ import com.example.data.AppLogger
 import com.example.data.AttendanceRecord
 import com.example.data.UnitProgress
 import com.example.data.UserProfile
-import org.json.JSONObject
+import com.example.util.toSafeJSONObject
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -202,7 +202,7 @@ object ReportManager {
 
             // 2. Exámenes por Unidad
             sb.append("• CALIFICACIONES DE EXÁMENES:\n")
-            val gradesObj = try { JSONObject(student.examGradesString) } catch (e: Exception) { JSONObject() }
+            val gradesObj = student.examGradesString.toSafeJSONObject()
             var examSum = 0f
             var examCount = 0
             for (i in 1..totalUnits) {
@@ -226,8 +226,8 @@ object ReportManager {
 
             // 3. Cuadernos OCR por Unidad
             sb.append("• EVALUACIONES OCR DE CUADERNO:\n")
-            val nbGradesObj = try { JSONObject(student.notebookGradesString) } catch (e: Exception) { JSONObject() }
-            val nbFeedbacksObj = try { JSONObject(student.notebookFeedbacksString) } catch (e: Exception) { JSONObject() }
+            val nbGradesObj = student.notebookGradesString.toSafeJSONObject()
+            val nbFeedbacksObj = student.notebookFeedbacksString.toSafeJSONObject()
             var nbSum = 0f
             var nbCount = 0
             for (i in 1..totalUnits) {
