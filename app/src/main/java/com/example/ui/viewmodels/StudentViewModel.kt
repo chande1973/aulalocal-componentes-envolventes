@@ -429,6 +429,7 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                             val personalAttendance = res.optInt("personalAttendance", 0)
                             val privateMsg = res.optString("privateMessage", "").ifEmpty { null }
                             val pendingFile = res.optJSONObject("pendingFile")
+                            pendingFileRetry = pendingFile
                             val privateFile = res.optJSONObject("privateFile")
                             val isListener = res.optBoolean("isListenerMode", false)
                             val sessionId = res.optString("sessionId", "")
@@ -508,6 +509,8 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                                     lastProcessedFileId = ""
                                     _teacherMessage.value = ""
                                     _incomingPrivateMessage.value = null
+                                    pendingFileRetry = null
+                                    _updateState.value = UpdateState.Idle
                                 }
                             }
                             lastSessionId = sessionId
