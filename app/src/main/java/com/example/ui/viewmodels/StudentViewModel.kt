@@ -623,11 +623,11 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                             _isSyncing.value = false
                             
                             // Si los fallos son repetidos (profesor apagó servidor o fuera de alcance), pasar a Modo Casa
-                            if (consecutiveFailures >= 4) {
+                            if (consecutiveFailures >= 12) {
                                 unlockAndDisconnectStudent()
                                 _classEndedNotice.value = "Conexión finalizada. Pasando a Modo Estudio en Casa."
                                 viewModelScope.launch { _uiEvents.emit("Conexión finalizada. Unidades desbloqueadas para lectura.") }
-                            } else if (consecutiveFailures >= 2) {
+                            } else if (consecutiveFailures >= 1) {
                                 viewModelScope.launch {
                                     LocalNetworkManager.discoverTeacher(
                                         onSuccess = { newIp, newPort, _, _ ->
