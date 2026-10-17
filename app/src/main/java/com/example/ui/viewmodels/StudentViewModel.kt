@@ -305,6 +305,8 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                 lastProcessedFileId = ""
                 lastSessionId = ""
                 _isSyncing.value = false
+                pendingFileRetry = null
+                _updateState.value = UpdateState.Idle
             }
         }
     }
@@ -827,6 +829,7 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                 
                 if (isCourseUpdate) {
                     val tempFile = File(context.cacheDir, "temp_update.zip")
+                    if (tempFile.exists()) tempFile.delete()
                     FileOutputStream(tempFile).use { output ->
                         var offset = 0L
                         val chunkSize = 131072 // 128 KB
@@ -941,6 +944,8 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                 if (e.message != "Cancelado") {
                     AppLogger.e("StudentViewModel", "Download failed", e)
                     _updateState.value = UpdateState.Error("Error en descarga: ${e.message}", canRetry = true)
+                } else {
+                    _updateState.value = UpdateState.Idle
                 }
                 withContext(Dispatchers.Main) { onComplete(null) }
             }
