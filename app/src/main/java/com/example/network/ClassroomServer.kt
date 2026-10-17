@@ -143,7 +143,25 @@ object ClassroomServer {
 
                 ACTION_SYNC -> {
                     val cardId = request.optString("cardId")
-                    val existing = dao.getStudentByCardId(cardId)
+                    var existing = dao.getStudentByCardId(cardId)
+                    if (existing == null && cardId.isNotEmpty()) {
+                        // Auto-registro del alumno si se conecta a una nueva clase/sesión
+                        val newStudent = SyncedStudent(
+                            cardId = cardId,
+                            firstName = request.optString("firstName"),
+                            lastName = request.optString("lastName"),
+                            email = request.optString("email"),
+                            avatar = request.optString("avatar", "👤"),
+                            sectionName = request.optString("sectionName"),
+                            lastSeen = System.currentTimeMillis(),
+                            firstSeenInSession = System.currentTimeMillis(),
+                            attendanceCount = 0,
+                            checkpointCount = 0,
+                            lastCheckpointSeen = -1
+                        )
+                        dao.insertSyncedStudent(newStudent)
+                        existing = newStudent
+                    }
                     if (existing != null) {
                         val currentServerSection = getState().optString("sectionName")
                         

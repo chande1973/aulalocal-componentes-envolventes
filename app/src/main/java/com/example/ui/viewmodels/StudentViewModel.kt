@@ -287,8 +287,6 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                 
                 val updated = profile.copy(
                     activeSection = profile.activeSection, // Mantener su sección oficial
-                    registeredTeacherIp = "",
-                    registeredTeacherPort = 9999,
                     isLocked = false
                 )
                 dao.insertProfile(updated)
@@ -297,8 +295,6 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
             withContext(Dispatchers.Main) {
                 clientSyncJob?.cancel()
                 clientSyncJob = null
-                _detectedTeacherIp.value = null
-                _detectedSectionName.value = null
                 _activeUnitIndexStudent.value = 1
                 _isExamActiveStudent.value = false
                 _incomingFile.value = null
@@ -628,11 +624,11 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                             _isSyncing.value = false
                             
                             // Si los fallos son repetidos (profesor apagó servidor o fuera de alcance), pasar a Modo Casa
-                            if (consecutiveFailures >= 12) {
+                            if (consecutiveFailures >= 4) {
                                 unlockAndDisconnectStudent()
                                 _classEndedNotice.value = "Conexión finalizada. Pasando a Modo Estudio en Casa."
                                 viewModelScope.launch { _uiEvents.emit("Conexión finalizada. Unidades desbloqueadas para lectura.") }
-                            } else if (consecutiveFailures >= 1) {
+                            } else if (consecutiveFailures >= 2) {
                                 viewModelScope.launch {
                                     LocalNetworkManager.discoverTeacher(
                                         onSuccess = { newIp, newPort, _, _ ->
